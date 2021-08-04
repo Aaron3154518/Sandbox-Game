@@ -1,0 +1,20 @@
+Air {
+	barrier : false,
+	map_color {
+		red : 64,
+		green : 64,
+		blue : 255
+	},
+	Type : LightTile,
+	light_radius : 2.5
+}
+
+Dirt {
+	map_color {red:150,green:75,blue:0},
+	hp : 2
+}
+
+Stone {
+	map_color {red:200,green:200,blue:200},
+	hardness : 1
+}
