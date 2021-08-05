@@ -1,14 +1,18 @@
 #ifndef ASSET_MANAGER_H
 #define ASSET_MANAGER_H
 
+#define RENDER_DEBUG
+
 #include <sstream>
 #include <string>
 #include <map>
+#include <cmath>
 #include <sys/stat.h>
 
 #include <SDL.h>
 #include <SDL_ttf.h>
 
+#include "UI.h"
 #include "Rect.h"
 //#include "Number.h"
 
@@ -66,6 +70,10 @@
     public:
         AssetManager();
         ~AssetManager();
+
+        void clean();
+
+        static void getFontSize(const char* fileName, int size, int* w, int* h);
 
         void loadAsset(std::string id, const char* fileName);
         void loadFont(std::string id, const char* fileName, int w, int h);

@@ -4,27 +4,17 @@
 
 #include <SDL.h>
 
-#include "Game.h"
+#include "Game/Game.h"
+#include "Utils/Utils.h"
+#include "Utils/UI.h"
 
 int main(int argc, char* argv[]) {
-    const int FPS = 60;
-    const int frameDelay = 1000 / FPS;
 
-    Game& game = Game::get();
-    game.init();
+    UI::init();
 
-    while (game.running()) {
-        game.updateTime();
-        game.handleEvents();
-        game.update();
-        game.render();
+    Game().run();
 
-        int dt = SDL_GetTicks() - game.gameTime;
-        if (dt < frameDelay) {
-            SDL_Delay(frameDelay - dt);
-        }
-    }
+    UI::clean();
 
-    game.clean();
     return 0;
 }

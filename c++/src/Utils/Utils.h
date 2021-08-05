@@ -1,6 +1,7 @@
 #ifndef UTILS_H
 #define UTILS_H
 
+#include <iostream>
 #include <cstdint>
 #include <sstream>
 #include <algorithm>
@@ -31,14 +32,20 @@ private:
 
 struct EventButton {
     bool pressed = false, clicked = false;
-    SDL_Point clickPos = { 0,0 }, clickPosGlobal = { 0,0 };
+    SDL_Point clickPos = { 0,0 };
     uint32_t duration = 0;
 };
 
 struct Event {
     bool handled = false;
+    Timestep dt;
 
-    SDL_Point mouse, globalMouse;
+    bool quit = false;
+
+    bool resize = false;
+    int newW = 0, newH = 0;
+
+    SDL_Point mouse;
     double mouseDx = 0., mouseDy = 0.;
 
     EventButton left, middle, right;

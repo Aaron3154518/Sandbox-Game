@@ -1,5 +1,4 @@
 #include "AssetManager.h"
-#include "../Game.h"
 
 //namespace utils {
     void TextData::setRectPos(Rect& r) {
@@ -16,7 +15,21 @@
     }
 
     AssetManager::AssetManager() {}
-    AssetManager::~AssetManager() {}
+    AssetManager::~AssetManager() { clean(); }
+
+    void AssetManager::clean() {
+        for (auto pair : assets) { SDL_DestroyTexture(pair.second); }
+        assets.clear();
+        for (auto pair : fonts) { TTF_CloseFont(pair.second); }
+        fonts.clear();
+    }
+
+    void AssetManager::getFontSize(const char* fileName, int size, int* w, int* h) {
+        TTF_Font* font = TTF_OpenFont(fileName, size);
+        TTF_SizeText(font, "|", w, NULL);
+        *h = TTF_FontHeight(font);
+        TTF_CloseFont(font);
+    }
 
     void AssetManager::loadAsset(std::string id, const char* fileName) {
         struct stat buffer;
@@ -25,7 +38,7 @@
             return;
         }
         SDL_Surface* tmpSurface = IMG_Load(fileName);
-        SDL_Texture* tex = SDL_CreateTextureFromSurface(Game::get().renderer, tmpSurface);
+        SDL_Texture* tex = SDL_CreateTextureFromSurface(UI::renderer(), tmpSurface);
         SDL_FreeSurface(tmpSurface);
         assets[id] = tex;
         std::cout << "Successfully loaded asset: " << id << std::endl;
@@ -33,25 +46,21 @@
 
     void AssetManager::loadFont(std::string id, const char* fileName, int maxW, int maxH) {
         int minSize = 1, maxSize = 10;
-        TTF_Font* font = TTF_OpenFont(fileName, maxSize);
         int w, h;
-        TTF_SizeText(font, "|", &w, &h);
+        getFontSize(fileName, 1, &w, &h);
+
         while ((maxW != -1 && w < maxW) || (maxH != -1 && h < maxH)) {
             minSize = maxSize;
             maxSize *= 2;
-            font = TTF_OpenFont(fileName, maxSize);
-            TTF_SizeText(font, "|", &w, &h);
+            getFontSize(fileName, maxSize, &w, &h);
         }
-        TTF_Font* font2;
         while (true) {
             int size = (int)((maxSize + minSize) / 2);
-            font = TTF_OpenFont(fileName, size);
-            TTF_SizeText(font, "|", &w, &h);
-            if ((maxW != -1 && w < maxW) || (maxH != -1 && h < maxH)) {
-                font2 = TTF_OpenFont(fileName, size + 1);
-                TTF_SizeText(font2, "|", &w, &h);
-                if ((maxW == -1 || w >= maxW) && (maxH == -1 || h >= maxH)) {
-                    fonts[id] = font2;
+            getFontSize(fileName, size, &w, &h);
+            if ((maxW != -1 && w <= maxW) || (maxH != -1 && h <= maxH)) {
+                getFontSize(fileName, size + 1, &w, &h);
+                if ((maxW == -1 || w > maxW) && (maxH == -1 || h > maxH)) {
+                    fonts[id] = TTF_OpenFont(fileName, size + 1);
                     return;
                 }
                 else {
@@ -59,13 +68,12 @@
                 }
             }
             else {
-                font2 = TTF_OpenFont(fileName, size - 1);
-                TTF_SizeText(font2, "|", &w, &h);
-                if ((maxW == -1 || w >= maxW) && (maxH == -1 || h >= maxH)) {
+                getFontSize(fileName, size - 1, &w, &h);
+                if ((maxW == -1 || w > maxW) && (maxH == -1 || h > maxH)) {
                     maxSize = size - 1;
                 }
                 else {
-                    fonts[id] = font2;
+                    fonts[id] = TTF_OpenFont(fileName, size - 1);
                     return;
                 }
             }
@@ -74,15 +82,17 @@
 
     SDL_Texture* AssetManager::renderText(TextData& data, Rect& rect) const {
         TTF_Font* font = getFont(data.fontId);
-        if (font == nullptr) {
+        if (!font) {
             std::cout << "Font: " << data.fontId << " not loaded" << std::endl;
-            return nullptr;
+            return NULL;
         }
         SDL_Surface* surface = TTF_RenderText_Blended(font, data.text.c_str(), data.color);
-        SDL_Texture* tex = SDL_CreateTextureFromSurface(Game::get().renderer, surface);
+        SDL_Texture* tex = SDL_CreateTextureFromSurface(UI::renderer(), surface);
         SDL_FreeSurface(surface);
-        rect = Rect::getMinRect(tex, data.w, data.h);
-        data.setRectPos(rect);
+        if (tex) {
+            rect = Rect::getMinRect(tex, data.w, data.h);
+            data.setRectPos(rect);
+        }
         return tex;
     }
 
@@ -157,18 +167,18 @@
             y += lineH;
         }
         lines.clear();
-        SDL_Texture* tex = SDL_CreateTextureFromSurface(Game::get().renderer, surf);
+        SDL_Texture* tex = SDL_CreateTextureFromSurface(UI::renderer(), surf);
         SDL_FreeSurface(surf);
         return tex;
     }
 
     void AssetManager::drawTexture(SDL_Texture* tex, Rect& destRect, Rect* boundary) const {
-        if (tex == nullptr) {
+        if (tex == NULL) {
             std::cout << "Invalid Texture" << std::endl;
             return;
         }
-        Rect screen = Game::get().screen;
-        if (boundary == nullptr) {
+        Rect screen = Rect(0, 0, UI::width(), UI::height());
+        if (boundary == NULL) {
             boundary = &screen;
         }
         else {
@@ -205,13 +215,13 @@
             return;
         }
 
-        SDL_RenderCopy(Game::get().renderer, tex, &texRect, &drawRect);
+        SDL_RenderCopy(UI::renderer(), tex, &texRect, &drawRect);
     }
 
     void AssetManager::drawText(TextData& data, Rect* boundary) const {
         Rect r;
         SDL_Texture* tex = renderText(data, r);
-        if (tex != nullptr) {
+        if (tex != NULL) {
             drawTexture(tex, r, boundary);
             SDL_DestroyTexture(tex);
         }
@@ -231,12 +241,12 @@
         Number quot(cap == 0 ? 1 : amnt / cap);
         int w = fmax(0, fmin(1, quot.toDouble())) * rect.w;
         Game::get().setDrawColor(bkgrnd);
-        SDL_RenderFillRect(Game::get().renderer, &rect);
+        SDL_RenderFillRect(UI::renderer(), &rect);
         Rect r = Rect(rect.x, rect.y, w, rect.h);
         Game::get().setDrawColor(color);
-        SDL_RenderFillRect(Game::get().renderer, &r);
+        SDL_RenderFillRect(UI::renderer(), &r);
         Game::get().setDrawColor(BLACK);
-        SDL_RenderDrawRect(Game::get().renderer, &rect);
+        SDL_RenderDrawRect(UI::renderer(), &rect);
         Game::get().resetDrawColor();
     }
     void AssetManager::drawProgressBarLog(Number amnt, Number cap, Rect& rect,
