@@ -12,7 +12,8 @@ int main(int argc, char* argv[]) {
 
     UI::init();
 
-    Game().run();
+    UI::activeUIs.push_back(std::make_shared<Game>(0));
+    UI::run();
 
     UI::clean();
 

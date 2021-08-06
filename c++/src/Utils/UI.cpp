@@ -9,9 +9,12 @@ SDL_Renderer* UI::mRenderer = NULL;
 SDL_Window* UI::mWindow = NULL;
 AssetManager UI::mAssetManager = AssetManager();
 
-void UI::run() {
+std::deque<std::shared_ptr<UI>> UI::activeUIs;
+
+void UI::runUI() {
     std::cerr << "Running" << std::endl;
     Event e;
+    running = true;
     while (running) {
         Timestep dt(SDL_GetTicks() - gameTime);
         gameTime += dt.milliseconds();
@@ -31,10 +34,15 @@ void UI::run() {
     }
 }
 
-int UI::width() { return w; }
-int UI::height() { return h; }
-SDL_Renderer* UI::renderer() { return mRenderer; }
-AssetManager& UI::assets() { return mAssetManager; }
+/*std::shared_ptr<UI> UI::addNextUI(UI* ui) {
+    nextUIs.push_back(std::shared_ptr<UI>(ui));
+    return nextUIs.back();
+}
+
+std::shared_ptr<UI> UI::addSubUI(UI* ui) {
+    subUIs.push_back(std::shared_ptr<UI>(ui));
+    return subUIs.back();
+}*/
 
 void UI::init() {
     // Initialize main SDL module
@@ -76,6 +84,36 @@ void UI::clean() {
     initialized = false;
     std::cout << "SDL Uninitialized" << std::endl;
 }
+
+void UI::run() {
+    while (!UI::activeUIs.empty()) {
+        // Add current
+        std::shared_ptr<UI> current = activeUIs.front();
+        activeUIs.pop_front();
+
+        if (!current) { std::cerr << "Null UI" << std::endl; continue; }
+
+        // Run current
+        current->runUI();
+
+        // Add any new UIs
+        for (auto it = current->nextUIs.end(); it != current->nextUIs.begin();) {
+            activeUIs.push_front(std::move(*(--it)));
+        }
+        current->nextUIs.clear();
+        if (current->subUIs.size() > 0) { activeUIs.push_front(current); }
+        for (auto it = current->subUIs.end(); it != current->subUIs.begin();) {
+            activeUIs.push_front(std::move(*(--it)));
+        }
+        current->subUIs.clear();
+        current.reset();
+    }
+}
+
+int UI::width() { return w; }
+int UI::height() { return h; }
+SDL_Renderer* UI::renderer() { return mRenderer; }
+AssetManager& UI::assets() { return mAssetManager; }
 
 void UI::setDrawColor(const SDL_Color& c) {
     SDL_SetRenderDrawColor(mRenderer, c.r, c.g, c.b, c.a);
