@@ -1,7 +1,7 @@
 #ifndef ASSET_MANAGER_H
 #define ASSET_MANAGER_H
 
-#define RENDER_DEBUG
+//#define RENDER_DEBUG
 
 #include <sstream>
 #include <string>
@@ -14,7 +14,6 @@
 
 #include "UI.h"
 #include "Rect.h"
-//#include "Number.h"
 
 //namespace utils {
     // ARGB masks for creating surfaces and colors
@@ -75,17 +74,17 @@
 
         void clean();
 
-        static void getFontSize(const char* fileName, int size, int* w, int* h);
+        static void getFontSize(std::string fileName, int size, int* w, int* h);
 
-        void loadAsset(std::string id, const char* fileName);
-        void loadFont(std::string id, const char* fileName, int w, int h);
+        SDL_Texture* loadAsset(std::string id, std::string fileName);
+        TTF_Font* loadFont(std::string id, std::string fileName, int w, int h);
 
-        SDL_Texture* getAsset(std::string id) const { return assets.find(id) == assets.end() ? assets.at("placeholder") : assets.at(id); }
-        TTF_Font* getFont(std::string id) const { return fonts.find(id) == fonts.end() ? nullptr : fonts.at(id); }
+        SDL_Texture* getAsset(std::string id);
+        TTF_Font* getFont(std::string id) const;
         SDL_Texture* renderText(TextData& data, Rect& rect) const;
         SDL_Texture* renderTextWrapped(TextData& data, Rect& rect, Uint32 bkgrnd = -1) const;
         void drawTexture(SDL_Texture* tex, Rect& destRect, Rect* boundary) const;
-        void drawTexture(std::string id, Rect& destRect, Rect* boundary) const { drawTexture(getAsset(id), destRect, boundary); }
+        void drawTexture(std::string id, Rect& destRect, Rect* boundary) { drawTexture(getAsset(id), destRect, boundary); }
         void drawText(TextData& data, Rect* boundary) const;
         void drawTextWrapped(TextData& data, Rect* boundary, Uint32 bkgrnd = -1) const;
 

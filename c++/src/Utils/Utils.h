@@ -2,9 +2,11 @@
 #define UTILS_H
 
 #include <iostream>
+#include <sstream>
 #include <cstdint>
 #include <sstream>
 #include <algorithm>
+#include <sys/stat.h>
 
 #include <SDL.h>
 
@@ -14,7 +16,16 @@ struct Recipe;
 
 std::string lowerCase(std::string str);
 
-bool strToDouble(std::string str, double& result);
+bool strToDouble(const std::string& str, double& result);
+
+std::string replaceInString(const std::string& source,
+    const std::string& search, const std::string& replace);
+
+bool isFile(const std::string& fileName);
+bool isDir(const std::string& dirName);
+
+std::string createFile(const std::string& folder,
+    const std::string& file, const std::string& ext);
 
 // Helper classes
 class Timestep {

@@ -26,44 +26,61 @@
         fonts.clear();
     }
 
-    void AssetManager::getFontSize(const char* fileName, int size, int* w, int* h) {
-        TTF_Font* font = TTF_OpenFont(fileName, size);
+    SDL_Texture* AssetManager::getAsset(std::string id) {
+        auto it = assets.find(id);
+        return it == assets.end() ? loadAsset(id, id) : it->second;
+    }
+
+    TTF_Font* AssetManager::getFont(std::string id) const {
+        auto it = fonts.find(id);
+        return it == fonts.end() ? NULL : it->second;
+    }
+
+    void AssetManager::getFontSize(std::string fileName, int size, int* w, int* h) {
+        TTF_Font* font = TTF_OpenFont(fileName.c_str(), size);
         TTF_SizeText(font, "|", w, NULL);
         *h = TTF_FontHeight(font);
         TTF_CloseFont(font);
     }
 
-    void AssetManager::loadAsset(std::string id, const char* fileName) {
+    SDL_Texture* AssetManager::loadAsset(std::string id, std::string fileName) {
         struct stat buffer;
-        if (stat(fileName, &buffer) != 0) {
+        if (stat(fileName.c_str(), &buffer) != 0) {
             std::cout << "Could not find " << fileName << std::endl;
-            return;
+            return NULL;
         }
-        SDL_Surface* tmpSurface = IMG_Load(fileName);
+        SDL_Surface* tmpSurface = IMG_Load(fileName.c_str());
         SDL_Texture* tex = SDL_CreateTextureFromSurface(UI::renderer(), tmpSurface);
         SDL_FreeSurface(tmpSurface);
-        assets[id] = tex;
-        std::cout << "Successfully loaded asset: " << id << std::endl;
+        if (tex) {
+            auto it = assets.find(id);
+            if (it == assets.end()) { assets[id] = tex; }
+            else { SDL_DestroyTexture(it->second); it->second = tex; }
+#ifdef RENDER_DEBUG
+            std::cout << "Successfully loaded asset: " << id << std::endl;
+#endif
+        }
+        return tex;
     }
 
-    void AssetManager::loadFont(std::string id, const char* fileName, int maxW, int maxH) {
+    TTF_Font* AssetManager::loadFont(std::string id, std::string fileName, int maxW, int maxH) {
         int minSize = 1, maxSize = 10;
         int w, h;
         getFontSize(fileName, 1, &w, &h);
-
         while ((maxW != -1 && w < maxW) || (maxH != -1 && h < maxH)) {
             minSize = maxSize;
             maxSize *= 2;
             getFontSize(fileName, maxSize, &w, &h);
         }
+        TTF_Font* font;
         while (true) {
             int size = (int)((maxSize + minSize) / 2);
             getFontSize(fileName, size, &w, &h);
             if ((maxW != -1 && w <= maxW) || (maxH != -1 && h <= maxH)) {
                 getFontSize(fileName, size + 1, &w, &h);
                 if ((maxW == -1 || w > maxW) && (maxH == -1 || h > maxH)) {
-                    fonts[id] = TTF_OpenFont(fileName, size + 1);
-                    return;
+                    font = TTF_OpenFont(fileName.c_str(), size + 1);
+                    break;
                 }
                 else {
                     minSize = size + 1;
@@ -75,11 +92,20 @@
                     maxSize = size - 1;
                 }
                 else {
-                    fonts[id] = TTF_OpenFont(fileName, size - 1);
-                    return;
+                    font = TTF_OpenFont(fileName.c_str(), size - 1);
+                    break;
                 }
             }
         }
+        if (font) {
+            auto it = fonts.find(id);
+            if (it == fonts.end()) { fonts[id] = font; }
+            else { TTF_CloseFont(it->second); it->second = font; }
+#ifdef RENDER_DEBUG
+            std::cerr << "Successfully loaded font: " << id << std::endl;
+#endif
+        }
+        return font;
     }
 
     SDL_Texture* AssetManager::renderText(TextData& data, Rect& rect) const {
@@ -147,6 +173,7 @@
             }
         }
 
+        // TODO: Switch to all SDL_Texture* (faster)
         int lineH;
         TTF_SizeText(font, "|", NULL, &lineH);
         rect = Rect(0, 0, maxW, (int)(lineH * lines.size()));

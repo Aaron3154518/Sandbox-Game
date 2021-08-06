@@ -6,10 +6,40 @@ std::string lowerCase(std::string str) {
     return str;
 }
 
-bool strToDouble(std::string str, double& result) {
+bool strToDouble(const std::string& str, double& result) {
     std::istringstream ss(str);
     ss >> result;
     return !ss.fail() && ss.eof() ? true : false;
+}
+
+std::string replaceInString(const std::string& source,
+    const std::string& search, const std::string& replace) {
+    std::ostringstream result;
+    size_t pos = source.find(search), loc = 0;
+    while (pos != std::string::npos) {
+        result << source.substr(loc, pos) << replace;
+        loc = pos + search.length();
+        pos = source.find(search, loc);
+    }
+    return result.str();
+}
+
+bool isFile(const std::string &fileName) {
+    struct stat info;
+    return stat(fileName.c_str(), &info) == 0 &&
+        info.st_mode & S_IFREG;
+}
+
+bool isDir(const std::string& dirName) {
+    struct stat info;
+    return stat(dirName.c_str(), &info) == 0 &&
+        info.st_mode & S_IFDIR;
+}
+
+// Functions to put files together
+std::string createFile(const std::string& folder,
+    const std::string& file, const std::string& ext) {
+    return folder + file + ext;
 }
 
 // Event

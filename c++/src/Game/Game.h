@@ -27,12 +27,11 @@ public:
         switch (id) {
         case 0:
             td.text = "Hello World";
-            //addSubUI(new Game(1));
-            subUIs.push_back(std::make_shared<Game>(1));
+            /*subUIs.push_back(std::make_shared<Game>(1));
             subUIs.push_back(std::make_shared<Game>(2));
             nextUIs.push_back(std::make_shared<Game>(3));
             nextUIs.push_back(std::make_shared<Game>(4));
-            nextUIs.push_back(std::make_shared<Game>(5));
+            nextUIs.push_back(std::make_shared<Game>(5));*/
             break;
         case 1:
             td.text = "More like Wassup World!";
@@ -58,8 +57,7 @@ public:
         td.xMode = PosType::center;
         td.yMode = PosType::center;
     }
-    //~Game() = default;
-    ~Game() { std::cerr << "Deinitialized: " << td.text << std::endl; }
+    ~Game() = default;
 
     void tick(Event &e);
 private:

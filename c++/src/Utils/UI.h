@@ -18,11 +18,10 @@ class UI {
 	friend int ::main(int argc, char* argv[]);
 public:
 	UI() = default;
-	//~UI() = default;
-	~UI() { std::cerr << "Deinitialized: Oops" << std::endl; }
+	~UI() = default;
 
 	// Functions for running the UI
-	void runUI();
+	virtual void runUI();
 	virtual void tick(Event& e) { std::cerr << "Wrong Tick" << std::endl; }
 
 	static void resize(int nW, int nH) { w = nW; h = nH; }

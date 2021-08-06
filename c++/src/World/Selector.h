@@ -6,39 +6,47 @@
 
 #include "../Definitions.h"
 #include "../Utils/UI.h"
+#include "../Utils/Utils.h"
 #include "../Utils/Rect.h"
+#include "../Utils/AssetManager.h"
 
 class Selector : public UI {
 public:
-	Selector() = default;
-	~Selector() { if (scrollTex) { SDL_DestroyTexture(scrollTex); } }
+	Selector();
+	~Selector() = default;
 
+	void runUI();
 	void tick(Event& e);
 
-	void resize(Rect* rect = nullptr);
+	virtual void resize(Rect* rect = nullptr);
 
-	void draw();
-	bool handleEvents(Event& e) { return true; }
+	virtual void handleEvents(Event& e);
+	virtual void draw() { drawScroll(); }
+	virtual void drawScroll();
 
 	Rect getRect() { return mRect; }
-private:
-	void loadFiles() {}
-	SDL_Texture* drawItem(int idx) { return NULL; }
+protected:
+	virtual SDL_Texture* drawItem(int idx) { return NULL; }
 
 	int scroll = 0, maxScroll = 0;
 	Rect mRect, scrollRect;
+	TextData itemText;
 
 	// Constants
-	static const SDL_Color BKGRND{ 128,128,128 };
-	static const SDL_Color SCROLL_BKGRND{ 0,0,128 };
+	static const SDL_Color BKGRND;
+	static const SDL_Color SCROLL_BKGRND;
 	enum SType { player = 0, universe };
 	// Dimensions
 	int itemW = (int)(gameVals::MIN_W / 2);
 	int itemH = (int)(gameVals::MIN_W / 10);
-	int buttonW = (int)(ITEM_H / 2);
-	int scrollAmnt = (int)(ITEM_H / 3);
+	//int buttonW = (int)(ITEM_H / 2);
+	int scrollAmnt = (int)(itemH / 3);
+	// Font resources
+	const std::string ITEM_FONT;
 	// Image resources
-
+	static const std::string PLAY_IMG;
+	static const std::string DELETE_IMG;
+	static const std::string ADD_IMG;
 };
 
 #endif

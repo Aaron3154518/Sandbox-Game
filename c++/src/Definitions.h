@@ -4,20 +4,24 @@
 
 #include <algorithm>
 
-// For generating file paths
-#define STR(str) #str
+// Folders
 // Resources
-#define RES(str) STR(res/str)
-#define FONT(str) RES(fonts/str)
-#define IMG(str) RES(images/str)
-#define ITEM_IMG(str) RES(items/str)
-#define PROJ_IMG(str) RES(projectiles/str)
-#define PLAYER_IMG(str) RES(player/str)
-#define ENTITY_IMG(str) RES(entities/str)
+#define RES "res/"
+#define FONTS RES "fonts/"
+#define IMAGES RES "images/"
+#define ITEM_IMGS RES "items/"
+#define PROJ_IMGS RES "projectiles/"
+#define PLAYER_IMGS RES "player/"
+#define ENTITY_IMGS RES "enitites/"
+
 // Saves
-#define SAVE(str) STR(saves/str)
-#define PLAYER(str) SAVE(players/str)
-#define UNIVERSE(str) SAVE(universes/str)
+#define SAVES "saves/"
+#define PLAYERS SAVES "players/"
+#define UNIVERSES SAVES "universes/"
+
+// File Extensions
+#define WORLD_EXT ".wld"
+#define PLAYER_EXT ".plr"
 
 namespace gameVals {
 	// FPS info
