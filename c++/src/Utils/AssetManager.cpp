@@ -3,14 +3,16 @@
 //namespace utils {
     void TextData::setRectPos(Rect& r) {
         switch (xMode) {
-        case CENTER: r.setCenterX(x); break;
-        case BOTRIGHT: r.setX2(x); break;
-        default: r.x = x; break;
+        case PosType::topleft: r.x = x; break;
+        case PosType::center: r.setCenterX(x); break;
+        case PosType::botright: r.setX2(x); break;
+        default: break;
         }
         switch (yMode) {
-        case CENTER: r.setCenterY(y); break;
-        case BOTRIGHT: r.setY2(y); break;
-        default: r.y = y; break;
+        case PosType::topleft: r.y = y; break;
+        case PosType::center: r.setCenterY(y); break;
+        case PosType::botright: r.setY2(y); break;
+        default: break;
         }
     }
 

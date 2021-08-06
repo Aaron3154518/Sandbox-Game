@@ -54,13 +54,15 @@
 #endif
     }
 
-    constexpr int TOPLEFT = 0, CENTER = 1, BOTRIGHT = 2;
+    enum PosType {
+        topleft = 0, center, botright
+    };
 
     struct TextData {
         std::string fontId = "", text = "";
         SDL_Color color = BLACK;
         double x = 0., y = 0.;
-        int xMode = TOPLEFT, yMode = TOPLEFT;
+        PosType xMode = PosType::topleft, yMode = PosType::topleft;
         int w = 0, h = 0; // <= 0 for unbounded
 
         void setRectPos(Rect& r);

@@ -55,8 +55,8 @@ public:
             break;
         }
         td.color = PURPLE;
-        td.xMode = CENTER;
-        td.yMode = CENTER;
+        td.xMode = PosType::center;
+        td.yMode = PosType::center;
     }
     //~Game() = default;
     ~Game() { std::cerr << "Deinitialized: " << td.text << std::endl; }
