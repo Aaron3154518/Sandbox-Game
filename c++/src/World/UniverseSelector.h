@@ -2,6 +2,7 @@
 #define UNIVERSE_SELECTOR_H
 
 #include <iostream>
+#include <sys/stat.h>
 
 #include <dirent.h>
 #include <SDL.h>
@@ -17,20 +18,13 @@ public:
 	UniverseSelector();
 	UniverseSelector(std::string _player);
 	~UniverseSelector() = default;
-
-	void handleEvents(Event& e);
-	void draw() { drawScroll(); drawOverlay(); }
-	void drawOverlay();
-
 private:
-	SDL_Texture* drawItem(int idx);
-
-	std::string player = "";
-
-	std::vector<std::string> files;
+	bool newItem();
+	bool deleteItem(int idx);
+	void selectItem(int idx);
 	void loadFiles();
 
-	TextInput input;
+	std::string player = "";
 };
 
 #endif

@@ -21,26 +21,13 @@ public:
 	PlayerSelector();
 	PlayerSelector(std::string univ);
 	~PlayerSelector() = default;
-
-	void handleEvents(Event& e);
-	void draw() { drawScroll(); drawOverlay(); }
-	void drawOverlay();
-
-	void resize(Rect* rect = nullptr);
-
 private:
-	void newPlayer();
-	void deletePlayer(int idx);
-
-	std::string universe = "";
-
-	std::vector<std::string> files;
+	bool newItem();
+	bool deleteItem(int idx);
+	void selectItem(int idx);
 	void loadFiles();
 
-	Rect buttonPlay, buttonDelete;
-	Rect buttonNew, inputName;
-	TextInput input;
-	SDL_Texture* drawItem(int idx);
+	std::string universe = "";
 };
 
 #endif

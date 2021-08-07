@@ -8,6 +8,7 @@
 #include <cstdint>
 #include <cmath>
 #include <algorithm>
+#include <fcntl.h>
 #include <sys/stat.h>
 
 #include <SDL.h>

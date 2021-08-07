@@ -1,5 +1,5 @@
 CXX := g++
-CXXFLAGS := 
+CXXFLAGS :=
 
 CEXT := cpp
 

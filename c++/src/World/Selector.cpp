@@ -15,9 +15,23 @@ Selector::Selector() :
 	itemText.fontId = ITEM_FONT;
 	itemText.color = WHITE;
 	itemText.xMode = itemText.yMode = PosType::center;
+
+	textInput = true;
+
+	TextData td;
+	td.fontId = ITEM_FONT;
+	td.color = WHITE;
+	td.xMode = PosType::topleft;
+	td.yMode = PosType::center;
+	input.setBackground(BLACK);
+	input.setTextData(td);
+	input.setCharConstraint([](const char& ch) {
+		return isalnum(ch) || ch == ' ';
+		});
 }
 
 void Selector::runUI() {
+	loadFiles();
 	resize(NULL);
 	UI::runUI();
 }
@@ -25,15 +39,6 @@ void Selector::runUI() {
 void Selector::tick(Event& e) {
 	handleEvents(e);
 	draw();
-}
-
-void Selector::handleEvents(Event& e) {
-	if (e.quit) {
-		running = false;
-		return;
-	} else if (e.resize) {
-		resize(NULL);
-	}
 }
 
 void Selector::resize(Rect* rect) {
@@ -52,8 +57,86 @@ void Selector::resize(Rect* rect) {
 	scrollRect = Rect((int)((mRect.w - itemW) / 2), itemH,
 		itemW, mRect.h - 2 * itemH);
 
+	int half = (int)(itemH / 2);
+	int quarter = (int)(itemH / 4);
+	int eigth = (int)(itemH / 8);
+	buttonPlay = Rect(itemW - half, 0, half, half);
+	buttonDelete = Rect(buttonPlay.x, buttonPlay.y2(), half, half);
+
+	if (allowNewItems) { scrollRect.h -= itemH; }
+
+	SDL_Point offset{ scrollRect.x, scrollRect.y2() };
+	buttonNew = Rect(itemW - half - quarter, quarter, half, half) + offset;
+	inputName = Rect(eigth, eigth, itemW - itemH, itemH - quarter) + offset;
+	
+	maxScroll = std::max(0, (int)files.size() * itemH - scrollRect.h);
+
 	UI::assets().loadFont(ITEM_FONT, createFile(FONTS, "times", ".ttf"),
-		-1, (int)(itemH / 2));
+		-1, half);
+}
+
+void Selector::handleEvents(Event& e) {
+	if (e.quit) {
+		running = false;
+		return;
+	}
+	if (e.resize) { resize(NULL); }
+	if (SDL_PointInRect(&e.mouse, &mRect)) {
+		SDL_Point mouse = e.mouse - mRect.topLeft();
+		if (SDL_PointInRect(&mouse, &scrollRect)) {
+			scroll = std::max(0,
+				std::min(maxScroll, scroll - e.scroll * scrollAmnt));
+			// Left click in scroll window
+			if (e.clicked(e.left)) {
+				mouse -= scrollRect.topLeft();
+				mouse.y += scroll;
+				int idx = (int)(mouse.y / itemH);
+				// Clicked player or delete button
+				if (idx < files.size() && mouse.x >= buttonPlay.x) {
+					if (std::fmod(mouse.y, itemH) < buttonPlay.h) {
+						selectItem(idx);
+					} else {
+						if (deleteItem(idx)) {
+							maxScroll = std::max(0,
+								(int)files.size() * itemH - scrollRect.h);
+							scroll = std::min(maxScroll, scroll);
+						}
+					}
+				}
+			}
+		} else if (allowNewItems &&
+			SDL_PointInRect(&mouse, &buttonNew) && e.clicked(e.left)) {
+			if (newItem()) {
+				maxScroll = std::max(0,
+					(int)files.size() * itemH - scrollRect.h);
+				scroll = maxScroll;
+			}
+		}
+	}
+	if (allowNewItems) {
+		if (e.keyReleased(SDLK_RETURN)) {
+			if (newItem()) {
+				maxScroll = std::max(0,
+					(int)files.size() * itemH - scrollRect.h);
+				scroll = maxScroll;
+			}
+		}
+		input.handleEvents(e);
+	}
+}
+
+void Selector::draw() {
+	drawScroll();
+	if (allowNewItems) {
+		// Draw current text input
+		Rect r = inputName + mRect.topLeft();
+		input.setRect(r);
+		input.render();
+
+		// Draw add button
+		r = buttonNew + mRect.topLeft();
+		UI::assets().drawTexture(ADD_IMG, r, NULL);
+	}
 }
 
 void Selector::drawScroll() {
@@ -69,7 +152,33 @@ void Selector::drawScroll() {
 		int y = i * itemH - scroll;
 		Rect dest(scrollRect.x, scrollRect.y + y, itemW, itemH);
 		UI::assets().drawTexture(tex, dest, &scrollRect);
-		//SDL_RenderCopy(UI::renderer(), tex, src, dest);
 		SDL_DestroyTexture(tex);
 	}
+}
+
+SDL_Texture* Selector::drawItem(int idx) {
+	if (idx >= files.size()) { return NULL; }
+
+	SDL_Texture* tex = SDL_CreateTexture(UI::renderer(),
+		SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, itemW, itemH);
+	UI::setRenderTarget(tex);
+
+	UI::setDrawColor(BLACK);
+	SDL_RenderFillRect(UI::renderer(), NULL);
+	UI::resetDrawColor();
+
+	UI::assets().drawTexture(PLAY_IMG, buttonPlay, NULL);
+	UI::assets().drawTexture(DELETE_IMG, buttonDelete, NULL);
+
+	itemText.text = files[idx];
+	Rect r(0, 0, itemW - buttonPlay.w, itemH);
+	UI::assets().drawText(itemText, &r);
+
+	UI::resetRenderTarget();
+	return tex;
+}
+
+bool Selector::setAllowNewItems(bool val) {
+	allowNewItems = val;
+	if (running) { resize(&mRect); }
 }
