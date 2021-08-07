@@ -1,7 +1,72 @@
 #include "PlayerSelector.h"
 
 PlayerSelector::PlayerSelector() {
+	textInput = true;
+
 	loadFiles();
+
+	inputTextData.fontId = ITEM_FONT;
+	inputTextData.color = WHITE;
+	inputTextData.xMode = PosType::topleft;
+	inputTextData.yMode = PosType::center;
+}
+
+void PlayerSelector::handleEvents(Event& e) {
+	Selector::handleEvents(e);
+	if (!running) { return; }
+	if (SDL_PointInRect(&e.mouse, &mRect)) {
+		SDL_Point mouse = e.mouse - mRect.topLeft();
+		if (SDL_PointInRect(&mouse, &scrollRect)) {
+			scroll = std::max(0,
+				std::min(maxScroll, scroll - e.scroll * scrollAmnt));
+			// Left click in scroll window
+			if (e.clicked(e.left)) {
+				mouse -= scrollRect.topLeft();
+				mouse.y += scroll;
+				int idx = (int)(mouse.y / itemH);
+				// Clicked player or delete button
+				if (idx < files.size() && mouse.x >= buttonPlay.x) {
+					if (std::fmod(mouse.y, itemH) < buttonPlay.h) {
+						std::cerr << "Play: " << idx << std::endl;
+					} else {
+						std::cerr << "Delete: " << idx << std::endl;
+					}
+				}
+			}
+		} else if (SDL_PointInRect(&mouse, &buttonNew) && e.clicked(e.left)) {
+			std::cerr << "New: \"" << currInput.str() << "\"" << std::endl;
+			//createNew();
+		}
+	}
+	if (e.keyReleased(SDLK_RETURN)) {
+		std::cerr << "New: \"" << currInput.str() << "\"" << std::endl;
+		//createNew();
+	} else if (e.keyPressed(SDLK_BACKSPACE)) {
+		std::string str = currInput.str();
+		if (str.length() > 0) { str.erase(str.end() - 1); }
+		currInput.str(str);
+	} else {
+		currInput << e.inputText;
+	}
+}
+
+void PlayerSelector::drawOverlay() {
+	// Fill black
+	UI::setDrawColor(BLACK);
+	Rect r = inputName + mRect.topLeft();
+	SDL_RenderFillRect(UI::renderer(), &inputName);
+	UI::resetDrawColor();
+
+	// Draw current text input
+	inputTextData.x = r.x;
+	inputTextData.y = r.cY();
+	inputTextData.text = currInput.str();
+	if ((int)(gameTime / 500) % 2 == 0) { inputTextData.text.append("|"); }
+	UI::assets().drawText(inputTextData, &r);
+
+	// Draw add button
+	r = buttonNew + mRect.topLeft();
+	UI::assets().drawTexture(ADD_IMG, r, NULL);
 }
 
 void PlayerSelector::resize(Rect* rect) {
@@ -13,19 +78,11 @@ void PlayerSelector::resize(Rect* rect) {
 	int eigth = (int)(itemH / 8);
 	buttonPlay = Rect(itemW - half, 0, half, half);
 	buttonDelete = Rect(buttonPlay.x, buttonPlay.y2(), half, half);
-	buttonNew = Rect(itemW - half - quarter, quarter, half, half);
-	inputName = Rect(eigth, eigth, itemW - itemH, itemH - quarter);
-	newPlayerR = Rect(scrollRect.x, scrollRect.x2(), itemW, itemH);
+	SDL_Point offset{ scrollRect.x, scrollRect.y2() };
+	buttonNew = Rect(itemW - half - quarter, quarter, half, half) + offset;
+	inputName = Rect(eigth, eigth, itemW - itemH, itemH - quarter) + offset;
 
 	maxScroll = std::max(0, (int)files.size() * itemH - scrollRect.h);
-}
-
-void PlayerSelector::handleEvents(Event& e) {
-	Selector::handleEvents(e);
-}
-
-void PlayerSelector::drawOverlay() {
-
 }
 
 void PlayerSelector::loadFiles() {

@@ -3,12 +3,16 @@
 
 #include <iostream>
 #include <sstream>
+#include <set>
+#include <map>
 #include <cstdint>
-#include <sstream>
+#include <cmath>
 #include <algorithm>
 #include <sys/stat.h>
 
 #include <SDL.h>
+
+#include "Rect.h"
 
 // TODO: fix
 struct Animation;
@@ -27,6 +31,9 @@ bool isDir(const std::string& dirName);
 std::string createFile(const std::string& folder,
     const std::string& file, const std::string& ext);
 
+double magnitude(SDL_Point p);
+double distance(SDL_Point p1, SDL_Point p2);
+
 // Helper classes
 class Timestep {
 public:
@@ -37,6 +44,8 @@ public:
 
     float seconds() const { return mTime / 1000.0f; }
     uint32_t milliseconds() const { return mTime; }
+
+    void add(Timestep t) { mTime += t.mTime; }
 private:
     uint32_t mTime;
 };
@@ -58,6 +67,14 @@ struct Event {
 
     SDL_Point mouse;
     double mouseDx = 0., mouseDy = 0.;
+    Sint32 scroll = 0;
+
+    // Keys currently down
+    std::map<SDL_Keycode, Timestep> down;
+    // Set of just pressed/released keys
+    std::set<SDL_Keycode> pressed, released;
+    // Inputted text
+    std::string inputText;
 
     EventButton left, middle, right;
 
@@ -65,9 +82,16 @@ struct Event {
     void update(Timestep ts);
     void update(SDL_Event& e);
 
+    bool keyDown(SDL_Keycode key, Timestep& ts) const;
+    bool keyPressed(SDL_Keycode key) const;
+    bool keyReleased(SDL_Keycode key) const;
+
+    bool clicked(const EventButton& button) const;
 private:
-    EventButton& getButton(int sdl_button_type) {
-        switch (sdl_button_type) {
+    static constexpr int MAX_CLICK_DIFF = 10;
+
+    EventButton& getButton(int sdlButtonType) {
+        switch (sdlButtonType) {
         case SDL_BUTTON_LEFT:
             return left;
             break;

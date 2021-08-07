@@ -13,6 +13,7 @@ std::deque<std::shared_ptr<UI>> UI::activeUIs;
 
 void UI::runUI() {
     std::cerr << "Running" << std::endl;
+    if (textInput) { SDL_StartTextInput(); }
     Event e;
     running = true;
     while (running) {
@@ -32,6 +33,7 @@ void UI::runUI() {
             SDL_Delay(gameVals::FRAME_DELAY - dt.milliseconds());
         }
     }
+    if (textInput) { SDL_StopTextInput(); }
 }
 
 /*std::shared_ptr<UI> UI::addNextUI(UI* ui) {

@@ -1,6 +1,8 @@
 #ifndef PLAYER_SELECTOR_H
 #define PLAYER_SELECTOR_H
 
+#include <sstream>
+
 #include <dirent.h>
 #include <SDL.h>
 
@@ -24,11 +26,11 @@ public:
 private:
 	std::vector<std::string> files;
 	void loadFiles();
+	TextData inputTextData;
 
 	Rect buttonPlay, buttonDelete;
-	Rect buttonNew, inputName, newPlayerR;
-	std::string currInput;
-	bool cursor = false;
+	Rect buttonNew, inputName;
+	std::ostringstream currInput;
 	SDL_Texture* drawItem(int idx);
 };
 

@@ -45,6 +45,7 @@ void Selector::resize(Rect* rect) {
 	//buttonW = (int)(itemH / 2);
 	scrollAmnt = (int)(itemH / 3);
 
+	// Set item text location
 	itemText.y = (int)(itemH / 2);
 	itemText.x = (int)((itemW - itemText.y) / 2);
 
@@ -62,28 +63,11 @@ void Selector::drawScroll() {
 	SDL_RenderFillRect(UI::renderer(), &scrollRect);
 	UI::resetDrawColor();
 	for (int i = (int)(scroll / itemH);
-		i < (int)((scroll + scrollRect.h) / itemH); i++) {
+		i <= (int)((scroll + scrollRect.h) / itemH); i++) {
 		SDL_Texture* tex = drawItem(i);
 		if (!tex) { continue; }
-		int w, h;
-		SDL_QueryTexture(tex, NULL, NULL, &w, &h);
 		int y = i * itemH - scroll;
-		Rect src(0, 0, w, h), dest(scrollRect.x, scrollRect.y + y, itemW, itemH);
-		/*// Check upper bouunds
-		if (y < 0) {
-			int dh = (int)(h * y / itemH);
-			src.y -= dh;
-			src.h += dh;
-			dest.y -= y;
-			dest.h += y;
-		}
-		y += h - scrollRect.h;
-		// Check lower bounds
-		if (y > 0) {
-			int dh = (int)(h * y / itemH);
-			src.h -= dh;
-			dest.h -= y;
-		}*/
+		Rect dest(scrollRect.x, scrollRect.y + y, itemW, itemH);
 		UI::assets().drawTexture(tex, dest, &scrollRect);
 		//SDL_RenderCopy(UI::renderer(), tex, src, dest);
 		SDL_DestroyTexture(tex);

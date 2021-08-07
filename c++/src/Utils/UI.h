@@ -39,7 +39,7 @@ public:
 	static AssetManager& assets();
 protected:
 	Uint32 gameTime = 0;
-	bool running = false;
+	bool running = false, textInput = false;
 
 	// nextUis - All UIs to run after the current one
 	// subUIs - All UIs to run after the current one but then

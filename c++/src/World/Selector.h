@@ -15,8 +15,8 @@ public:
 	Selector();
 	~Selector() = default;
 
-	void runUI();
-	void tick(Event& e);
+	virtual void runUI();
+	virtual void tick(Event& e);
 
 	virtual void resize(Rect* rect = nullptr);
 
