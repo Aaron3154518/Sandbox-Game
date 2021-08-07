@@ -13,10 +13,10 @@
 #include <SDL_ttf.h>
 
 #include "../Definitions.h"
+#include "UI.h"
 #include "../Utils/Utils.h"
 #include "../Utils/Rect.h"
 #include "../Utils/AssetManager.h"
-#include "../Utils/UI.h"
 
 // Game class
 class Game : public UI {

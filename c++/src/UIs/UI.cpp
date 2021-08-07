@@ -1,7 +1,6 @@
 #include "UI.h"
 
-#include "Utils.h"
-#include "AssetManager.h"
+#include "../Utils/AssetManager.h"
 
 bool UI::initialized = false;
 int UI::maxW = 0, UI::maxH = 0, UI::w = 0, UI::h = 0;

@@ -12,7 +12,7 @@
 #include <SDL.h>
 #include <SDL_ttf.h>
 
-#include "UI.h"
+#include "../UIs/UI.h"
 #include "Rect.h"
 
 //namespace utils {

@@ -11,10 +11,10 @@
 #include "../Definitions.h"
 #include "Selector.h"
 #include "TextInput.h"
+#include "Game.h"
 #include "../Utils/Utils.h"
 #include "../Utils/Rect.h"
 #include "../Utils/AssetManager.h"
-#include "../Game/Game.h"
 
 class PlayerSelector : public Selector {
 public:

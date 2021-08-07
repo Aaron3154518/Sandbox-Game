@@ -4,10 +4,8 @@
 
 #include <SDL.h>
 
-#include "Game/Game.h"
-#include "World/PlayerSelector.h"
-#include "Utils/Utils.h"
-#include "Utils/UI.h"
+#include "UIs/UI.h"
+#include "UIs/PlayerSelector.h"
 
 int main(int argc, char* argv[]) {
 
