@@ -1,5 +1,6 @@
 #include "Utils.h"
 
+// String functions
 std::string lowerCase(std::string str) {
     std::transform(str.begin(), str.end(), str.begin(),
         [](unsigned char c) { return std::tolower(c); });
@@ -17,13 +18,16 @@ std::string replaceInString(const std::string& source,
     std::ostringstream result;
     size_t pos = source.find(search), loc = 0;
     while (pos != std::string::npos) {
-        result << source.substr(loc, pos) << replace;
+        result << source.substr(loc, pos - loc) << replace;
         loc = pos + search.length();
         pos = source.find(search, loc);
     }
+    result << source.substr(loc);
     return result.str();
 }
 
+
+// File functions
 bool isFile(const std::string &fileName) {
     struct stat info;
     return stat(fileName.c_str(), &info) == 0 &&
@@ -36,12 +40,25 @@ bool isDir(const std::string& dirName) {
         info.st_mode & S_IFDIR;
 }
 
+bool validSaveFile(const std::string& fileName) {
+    return std::find_if_not(fileName.begin(), fileName.end(),
+        [](const char& ch) { return isalnum(ch) || ch == ' '; }) == fileName.end();
+}
+
 // Function to put files together
 std::string createFile(const std::string& folder,
     const std::string& file, const std::string& ext) {
     return folder + file + ext;
 }
 
+std::string toFileName(const std::string& displayName) {
+    return replaceInString(displayName, " ", "_");
+}
+std::string toDisplayName(const std::string& fileName) {
+    return replaceInString(fileName, "_", " ");
+}
+
+// Point/vector functions
 double magnitude(SDL_Point p) {
     return sqrt(p.x * p.x + p.y * p.y);
 }

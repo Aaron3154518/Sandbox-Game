@@ -16,6 +16,26 @@
         }
     }
 
+    void TextData::getPosFromRect(const Rect& r) {
+        switch (xMode) {
+        case PosType::topleft: x = r.x; break;
+        case PosType::center: x = r.cX(); break;
+        case PosType::botright: x = r.x2(); break;
+        default: break;
+        }
+        switch (yMode) {
+        case PosType::topleft: y = r.y; break;
+        case PosType::center: y = r.cY(); break;
+        case PosType::botright: y = r.y2(); break;
+        default: break;
+        }
+    }
+
+    void TextData::constrainToRect(const Rect& r) {
+        getPosFromRect(r);
+        w = r.w; h = r.h;
+    }
+
     AssetManager::AssetManager() {}
     AssetManager::~AssetManager() { clean(); }
 

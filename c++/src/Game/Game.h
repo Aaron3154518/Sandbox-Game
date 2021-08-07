@@ -57,6 +57,14 @@ public:
         td.xMode = PosType::center;
         td.yMode = PosType::center;
     }
+    Game(std::string player, std::string universe) {
+        td.fontId = gameVals::LARGE_FONT;
+        td.text = "Player: " + createFile(PLAYERS, player, PLAYER_EXT) +
+            "\nUniverse: " + createFile(UNIVERSES, universe, "/");
+        td.color = PURPLE;
+        td.xMode = PosType::center;
+        td.yMode = PosType::center;
+    }
     ~Game() = default;
 
     void tick(Event &e);

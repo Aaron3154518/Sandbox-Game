@@ -18,6 +18,7 @@
 struct Animation;
 struct Recipe;
 
+// String functions
 std::string lowerCase(std::string str);
 
 bool strToDouble(const std::string& str, double& result);
@@ -25,12 +26,19 @@ bool strToDouble(const std::string& str, double& result);
 std::string replaceInString(const std::string& source,
     const std::string& search, const std::string& replace);
 
+// File functions
 bool isFile(const std::string& fileName);
 bool isDir(const std::string& dirName);
+
+bool validSaveFile(const std::string& fileName);
 
 std::string createFile(const std::string& folder,
     const std::string& file, const std::string& ext);
 
+std::string toFileName(const std::string& displayName);
+std::string toDisplayName(const std::string& fileName);
+
+// Point/vector functions
 double magnitude(SDL_Point p);
 double distance(SDL_Point p1, SDL_Point p2);
 

@@ -1,14 +1,25 @@
 #include "PlayerSelector.h"
+#include "UniverseSelector.h"
 
 PlayerSelector::PlayerSelector() {
 	textInput = true;
 
 	loadFiles();
 
-	inputTextData.fontId = ITEM_FONT;
-	inputTextData.color = WHITE;
-	inputTextData.xMode = PosType::topleft;
-	inputTextData.yMode = PosType::center;
+	TextData td;
+	td.fontId = ITEM_FONT;
+	td.color = WHITE;
+	td.xMode = PosType::topleft;
+	td.yMode = PosType::center;
+	input.setBackground(BLACK);
+	input.setTextData(td);
+	input.setCharConstraint([](const char& ch) {
+		return isalnum(ch) || ch == ' ';
+		});
+}
+
+PlayerSelector::PlayerSelector(std::string univ) : PlayerSelector() {
+	universe = univ;
 }
 
 void PlayerSelector::handleEvents(Event& e) {
@@ -27,42 +38,31 @@ void PlayerSelector::handleEvents(Event& e) {
 				// Clicked player or delete button
 				if (idx < files.size() && mouse.x >= buttonPlay.x) {
 					if (std::fmod(mouse.y, itemH) < buttonPlay.h) {
-						std::cerr << "Play: " << idx << std::endl;
+						if (universe.empty()) {
+							nextUIs.push_back(std::make_shared<UniverseSelector>(files[idx]));
+						} else {
+							nextUIs.push_back(std::make_shared<Game>(files[idx], universe));
+						}
+						running = false;
+						return;
 					} else {
-						std::cerr << "Delete: " << idx << std::endl;
+						deletePlayer(idx);
 					}
 				}
 			}
 		} else if (SDL_PointInRect(&mouse, &buttonNew) && e.clicked(e.left)) {
-			std::cerr << "New: \"" << currInput.str() << "\"" << std::endl;
-			//createNew();
+			newPlayer();
 		}
 	}
-	if (e.keyReleased(SDLK_RETURN)) {
-		std::cerr << "New: \"" << currInput.str() << "\"" << std::endl;
-		//createNew();
-	} else if (e.keyPressed(SDLK_BACKSPACE)) {
-		std::string str = currInput.str();
-		if (str.length() > 0) { str.erase(str.end() - 1); }
-		currInput.str(str);
-	} else {
-		currInput << e.inputText;
-	}
+	if (e.keyReleased(SDLK_RETURN)) { newPlayer(); }
+	input.handleEvents(e);
 }
 
 void PlayerSelector::drawOverlay() {
-	// Fill black
-	UI::setDrawColor(BLACK);
-	Rect r = inputName + mRect.topLeft();
-	SDL_RenderFillRect(UI::renderer(), &inputName);
-	UI::resetDrawColor();
-
 	// Draw current text input
-	inputTextData.x = r.x;
-	inputTextData.y = r.cY();
-	inputTextData.text = currInput.str();
-	if ((int)(gameTime / 500) % 2 == 0) { inputTextData.text.append("|"); }
-	UI::assets().drawText(inputTextData, &r);
+	Rect r = inputName + mRect.topLeft();
+	input.setRect(r);
+	input.render();
 
 	// Draw add button
 	r = buttonNew + mRect.topLeft();
@@ -95,7 +95,7 @@ void PlayerSelector::loadFiles() {
 			if (isFile(createFile(PLAYERS, name, ""))) {
 				size_t idx = name.find_last_of(".");
 				if (idx != std::string::npos && name.substr(idx) == PLAYER_EXT) {
-					files.push_back(name.substr(0, idx));
+					files.push_back(toDisplayName(name.substr(0, idx)));
 				}
 			}
 		}
@@ -118,8 +118,36 @@ SDL_Texture* PlayerSelector::drawItem(int idx) {
 	UI::assets().drawTexture(DELETE_IMG, buttonDelete, NULL);
 
 	itemText.text = files[idx];
-	UI::assets().drawText(itemText, NULL);
+	Rect r(0, 0, itemW - buttonPlay.w, itemH);
+	UI::assets().drawText(itemText, &r);
 
 	UI::resetRenderTarget();
 	return tex;
+}
+
+void PlayerSelector::newPlayer() {
+	std::string fileName = toFileName(input.getInput());
+	if (fileName.empty()) { return; }
+	std::string fullFile = createFile(PLAYERS, fileName, PLAYER_EXT);
+	if (!isFile(fullFile)) {
+		std::ofstream file(fullFile);
+		file << "Wassup World" << std::endl;
+		file.close();
+		files.push_back(input.getInput());
+		maxScroll += itemH;
+		scroll = maxScroll;
+		input.clearInput();
+	}
+}
+
+void PlayerSelector::deletePlayer(int idx) {
+	if (idx < 0 || idx >= files.size()) { return; }
+	auto it = files.begin() + idx;
+	std::string fullFile = createFile(PLAYERS, toFileName(*it), PLAYER_EXT);
+	if (isFile(fullFile)) {
+		std::remove(fullFile.c_str());
+		files.erase(it);
+		maxScroll -= itemH;
+		scroll = std::min(scroll, maxScroll);
+	}
 }

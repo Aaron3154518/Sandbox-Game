@@ -88,27 +88,31 @@ void Rect::resizeFactor(double factor, bool center) {
     resize((int)(w * factor + .5), (int)(h * factor + .5), center);
 }
 
-Rect Rect::getMinRect(SDL_Texture* tex, double w, double h) {
+Rect Rect::getMinRect(SDL_Texture* tex, int maxW, int maxH) {
     int imgW, imgH;
     if (SDL_QueryTexture(tex, NULL, NULL, &imgW, &imgH) != 0) {
         SDL_Log("SDL_QueryTexture failed: %s", SDL_GetError());
     }
-    double factor;
-    if (w <= 0 && h <= 0) {
-        factor = 1;
-    }         else if (w <= 0) {
-        factor = h / imgH;
-    }         else if (h <= 0) {
-        factor = w / imgW;
-    }         else {
-        factor = std::min(w / imgW, h / imgH);
-    }
-    Rect r = Rect(0, 0, (int)(imgW * factor), (int)(imgH * factor));
+    Rect r = getMinRect(imgW, imgH, maxW, maxH);
 #ifdef DEBUG
     std::cout << "Got " << r <<
         " from image with size " << imgW << " x " << imgH << std::endl;
 #endif
     return r;
+}
+
+Rect Rect::getMinRect(int w, int h, int maxW, int maxH) {
+    double factor;
+    if (maxW <= 0 && maxH <= 0) {
+        factor = 1;
+    } else if (maxW <= 0) {
+        factor = maxH / h;
+    } else if (maxW <= 0) {
+        factor = maxW / w;
+    } else {
+        factor = std::min(maxW / w, maxH / h);
+    }
+    return Rect(0, 0, (int)(w * factor), (int)(h * factor));
 }
 
 std::ostream& operator <<(std::ostream& os, const Rect& rhs) {

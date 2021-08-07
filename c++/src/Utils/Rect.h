@@ -39,7 +39,8 @@ public:
     void resize(int nW, int nH, bool center);
     void resizeFactor(double factor, bool center);
 
-    static Rect getMinRect(SDL_Texture* tex, double w, double h);
+    static Rect getMinRect(SDL_Texture* tex, int maxW, int maxH);
+    static Rect getMinRect(int w, int h, int maxW, int maxH);
 
     operator bool() { return w != 0 && h != 0; }
     friend std::ostream& operator <<(std::ostream&, const Rect& rhs);

@@ -65,6 +65,8 @@
         int w = 0, h = 0; // <= 0 for unbounded
 
         void setRectPos(Rect& r);
+        void getPosFromRect(const Rect& r);
+        void constrainToRect(const Rect& r);
     };
 
     class AssetManager {

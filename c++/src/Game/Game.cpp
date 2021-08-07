@@ -27,5 +27,5 @@ void Game::render() {
 #endif
     td.x = td.w = UI::width() / 2;
     td.y = td.h = UI::height() / 2;
-    UI::assets().drawText(td, NULL);
+    UI::assets().drawTextWrapped(td, NULL);
 }
