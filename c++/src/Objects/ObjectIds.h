@@ -2,27 +2,29 @@
 #define OBJECT_IDS_H
 
 namespace object {
-	enum TileId {
-		// Normal Tiles
-		AIR = 0, DIRT, STONE, SNOW, WOOD, LEAVES, SAND, GLASS,
-		BOULDER1, BOULDER2, BOULDER3, SHINY_STONE_1, SHINY_STONE_2, SHINY_STONE_3,
-		GEODE,
-		DRAGON_EGG,
+	namespace Tile {
+		enum TileId : uint16_t {
+			// Normal Tiles
+			AIR = 0, DIRT, STONE, SNOW, WOOD, LEAVES, SAND, GLASS,
+			BOULDER1, BOULDER2, BOULDER3, SHINY_STONE_1, SHINY_STONE_2, SHINY_STONE_3,
+			GEODE,
+			DRAGON_EGG,
 
-		// Usables
-		DIMENSION_HOPPER, CHEST, WORLD_BUILDER, CRUSHER,
-		UPGRADE_STATION, PORTAL, PEDESTAL,
+			// Usables
+			DIMENSION_HOPPER, CHEST, WORLD_BUILDER, CRUSHER,
+			UPGRADE_STATION, PORTAL, PEDESTAL,
 
-		// Crafters
-		WORK_TABLE, FORGE,
+			// Crafters
+			WORK_TABLE, FORGE,
 
-		// Spawners
-		CAT, ZOMBIE, DOOM_BUNNY, HELICOPTER, BIRDIE,
+			// Spawners
+			CAT, ZOMBIE, DOOM_BUNNY, HELICOPTER, BIRDIE,
 
-		numTiles
-	};
+			numTiles
+		};
+	}
 
-	const static std::string tileNames[TileId::numTiles] = {
+	const static std::string tileNames[Tile::TileId::numTiles] = {
 		// Normal Tiles
 		"Air", "Dirt", "Stone", "Snow", "Wood", "Leaves", "Sand", "Glass",
 		"Boulder1", "Boulder2", "Boulder3", "ShinyStone1", "ShinyStone2", "ShinyStone3",
@@ -42,27 +44,29 @@ namespace object {
 		""
 	};
 
-	enum ItemId {
-		// Normal Items
-		AIR = 0, DIRT, STONE, SNOW, WOOD, LEAVES, SAND, GLASS,
-		BOULDER1, BOULDER2, BOULDER3, SHINY_STONE_1, SHINY_STONE_2, SHINY_STONE_3,
-		GEODE,
-		DRAGON_EGG,
+	namespace Item {
+		enum ItemId : uint16_t {
+			// Normal Items
+			AIR = 0, DIRT, STONE, SNOW, WOOD, LEAVES, SAND, GLASS,
+			BOULDER1, BOULDER2, BOULDER3, SHINY_STONE_1, SHINY_STONE_2, SHINY_STONE_3,
+			GEODE,
+			DRAGON_EGG,
 
-		// Usables
-		DIMENSION_HOPPER, CHEST, WORLD_BUILDER, CRUSHER,
-		UPGRADE_STATION, PORTAL, PEDESTAL,
+			// Usables
+			DIMENSION_HOPPER, CHEST, WORLD_BUILDER, CRUSHER,
+			UPGRADE_STATION, PORTAL, PEDESTAL,
 
-		// Crafters
-		WORK_TABLE, FORGE,
+			// Crafters
+			WORK_TABLE, FORGE,
 
-		// Spawners
-		CAT, ZOMBIE, DOOM_BUNNY, HELICOPTER, BIRDIE,
+			// Spawners
+			CAT, ZOMBIE, DOOM_BUNNY, HELICOPTER, BIRDIE,
 
-		numItems
-	};
+			numItems
+		};
+	}
 
-	const static std::string ItemNames[ItemId::numItems] = {
+	const static std::string ItemNames[Item::ItemId::numItems] = {
 		// Normal Items
 		"Air", "Dirt", "Stone", "Snow", "Wood", "Leaves", "Sand", "Glass",
 		"Boulder1", "Boulder2", "Boulder3", "ShinyStone1", "ShinyStone2", "ShinyStone3",

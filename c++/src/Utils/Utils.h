@@ -1,8 +1,13 @@
 #ifndef UTILS_H
 #define UTILS_H
 
+/*#define FILE_IO_DEF(type) \
+void read##type(std::fstream& fs, type* t); \
+void write##type(std::fstream& fs, type* t);*/
+
 #include <iostream>
 #include <sstream>
+#include <fstream>
 #include <set>
 #include <map>
 #include <cstdint>
@@ -38,6 +43,31 @@ std::string createFile(const std::string& folder,
 
 std::string toFileName(const std::string& displayName);
 std::string toDisplayName(const std::string& fileName);
+
+// File I/O functions
+/*template<typename T>
+void readFile(std::fstream& fs, T* val);
+
+template<typename T>
+void writeFile(std::fstream& fs, T* val);*/
+
+template<typename T>
+void readFile(std::fstream& fs, T* val) {
+    if (fs.is_open() && val) {
+        fs.read(reinterpret_cast<char*>(val), sizeof(T));
+    }
+}
+
+template<typename T>
+void writeFile(std::fstream& fs, T* val) {
+    if (fs.is_open() && val) {
+        fs.write((char*)val, sizeof(T));
+    }
+}
+
+/*char* operator char* (const SDL_Point& p);
+
+FILE_IO_DEF(SDL_Point)*/
 
 // Point/vector functions
 double magnitude(SDL_Point p);

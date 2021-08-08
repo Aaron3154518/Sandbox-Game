@@ -2,6 +2,11 @@
 
 //#define DEBUG_GAME
 
+Game::Game(const std::string& player, const std::string& universe) {
+    std::cerr << "Player: " << player << "\nUniverse: " << universe << std::endl;
+    world.setFile(UNIVERSES + universe + "/world" + WORLD_EXT);
+}
+
 void Game::tick(Event& e) {
     handleEvents(e);
     update();
@@ -25,7 +30,4 @@ void Game::render() {
 #ifdef DEBUG_GAME
     std::cout << "Render" << std::endl;
 #endif
-    td.x = td.w = UI::width() / 2;
-    td.y = td.h = UI::height() / 2;
-    UI::assets().drawTextWrapped(td, NULL);
 }

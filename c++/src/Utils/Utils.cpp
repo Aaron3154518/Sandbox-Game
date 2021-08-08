@@ -1,5 +1,17 @@
 #include "Utils.h"
 
+/*#define FILE_IO_IMP(type, readCode, writeCode) \
+void read##type(std::fstream& fs, type* t) { \
+    if (fs.is_open() && t) { \
+        readCode \
+    } \
+} \
+void write##type(std::fstream& fs, type* t) { \
+    if (fs.is_open() && t) { \
+        writeCode \
+    } \
+}*/
+
 // String functions
 std::string lowerCase(std::string str) {
     std::transform(str.begin(), str.end(), str.begin(),
@@ -57,6 +69,38 @@ std::string toFileName(const std::string& displayName) {
 std::string toDisplayName(const std::string& fileName) {
     return replaceInString(fileName, "_", " ");
 }
+
+/*template<typename T>
+void readFile(std::fstream& fs, T* val) {
+    if (fs.is_open() && val) {
+        fs.read(reinterpret_cast<char*>(val), sizeof(T));
+    }
+}
+
+template<typename T>
+void writeFile(std::fstream& fs, T* val) {
+    if (fs.is_open() && val) {
+        fs.write((char*)val, sizeof(T));
+    }
+}*/
+
+/*FILE_IO_IMP(SDL_Point,
+*t = SDL_Point{ 0, 0 };
+readFile<int16_t>(fs, &(t->x));
+readFile<int16_t>(fs, &(t->y));
+,
+writeFile<int16_t>(fs, &(t->x));
+writeFile<int16_t>(fs, &(t->y));
+)
+
+char* operator char* (const SDL_Point& p) {
+    char bytes[4];
+    bytes[0] = p.x & 0xFF;
+    bytes[1] = (p.x >> 8) & 0xFF;
+    bytes[2] = p.y & 0xFF;
+    bytes[3] = (p.y >> 8) & 0xFF;
+    return (char*)bytes;
+}*/
 
 // Point/vector functions
 double magnitude(SDL_Point p) {

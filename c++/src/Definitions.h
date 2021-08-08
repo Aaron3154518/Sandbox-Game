@@ -2,7 +2,12 @@
 #define DEFINITIONS
 //#define DEBUG
 
+#include <map>
 #include <algorithm>
+
+// Frequently used types
+template <typename T>
+using Map2D = std::map<int, std::map<int, T>>;
 
 // Folders
 // Resources

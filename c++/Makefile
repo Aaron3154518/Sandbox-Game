@@ -13,7 +13,8 @@ TARGET := $(BIN)/sandbox
 
 #SRCS := $(wildcard $(SRC)/*.$(CEXT) $(SRC)/**/*.$(CEXT))
 SRCS := Main Utils/Utils Utils/Rect Utils/AssetManager \
-UIs/UI UIs/Game UIs/Selector UIs/PlayerSelector UIs/UniverseSelector UIs/TextInput
+UIs/UI UIs/Game UIs/Selector UIs/PlayerSelector UIs/UniverseSelector UIs/TextInput \
+World/World
 SRCS := $(patsubst %, $(SRC)/%.$(CEXT), $(SRCS))
 EXCLUDE := $(wildcard $(SRC)/*_unittest.$(CEXT) $(SRC)/**/*_unittest.$(CEXT))
 SRCS := $(filter-out $(EXCLUDE), $(SRCS))
