@@ -8,30 +8,33 @@ const int World::NIGHT = World::DAY * 3;
 
 World::setFile(const std::string& fName) {
 	fileName = fName;
+	std::cerr << "World File: " << fileName << std::endl;
 	// Create the file if it doesn't already exist
-	file.open(fileName, std::ios_base::out | std::ios_base::app);
-	file.close();
-	newWorld({10, 10});
-	blocks[0][0] = object::Tile::TileId::STONE;
-	std::cerr << dim.x << " x " << dim.y << std::endl;
-	for (int i = 0; i < dim.x; i++) {
-		for (int j = 0; j < dim.y; j++) {
-			std::cerr << blocks[i][j] << " ";
+	if (!isFile(fileName)) {
+		newWorld({ 10, 10 });
+		blocks[0][0].id = TileId::STONE;
+		std::cerr << dim.x << " x " << dim.y << std::endl;
+		for (int i = 0; i < dim.x; i++) {
+			for (int j = 0; j < dim.y; j++) {
+				std::cerr << blocks[i][j].id << " ";
+			}
+			std::cerr << std::endl;
 		}
-		std::cerr << std::endl;
+		double progress = 0.;
+		while (progress < 1) { progress = saveWorld(progress); }
+		newWorld({ 100, 100 });
 	}
 	double progress = 0.;
-	while (progress < 1) { progress = saveWorld(progress); }
-	newWorld({ 100, 100 });
-	progress = 0.;
 	while (progress < 1) { progress = loadWorld(progress); }
 	std::cerr << dim.x << " x " << dim.y << std::endl;
 	for (int i = 0; i < dim.x; i++) {
 		for (int j = 0; j < dim.y; j++) {
-			std::cerr << blocks[i][j] << " ";
+			std::cerr << blocks[i][j].id << " ";
 		}
 		std::cerr << std::endl;
 	}
+	std::cerr << Tile::getTile(TileId::AIR)->id() << std::endl;
+	std::cerr << DragonEgg::Id() << " " << Portal::Id() << std::endl;
 }
 
 World::~World() {
@@ -60,7 +63,7 @@ void World::newWorld(const SDL_Point& newDim) {
 	dim = newDim;
 	numBlocks = dim.x * dim.y;
 	blocks.clear();
-	std::vector<object::Tile::TileId> row = std::vector<object::Tile::TileId>(dim.x, object::Tile::TileId::AIR);
+	std::vector<Block> row(dim.x, Block{ TileId::AIR, 0x00 });
 	blocks.resize(dim.x, row);
 	row.clear();
 	// Map
@@ -68,6 +71,7 @@ void World::newWorld(const SDL_Point& newDim) {
 
 double World::loadWorld(double progress) {
 	if (progress == 0) {
+		std::cerr << "Loading World" << std::endl;
 		// Reset world data
 		//blockData.clear();
 		crafters.clear();
@@ -76,9 +80,9 @@ double World::loadWorld(double progress) {
 		loadInfo(false);
 	}
 	progress *= 2;
-	if (progress < 1.) { return loadBlocks(progress) / 2; }
-	progress = drawWorld(progress - 1) / 2 + .5;
-	if (progress == 1.) {
+	if (progress < 1.) { progress = loadBlocks(progress, 3) / 2.; }
+	else { progress = drawWorld(progress - 1) / 2. + .5; }
+	if (progress >= 1.) {
 		file.close();
 		//manager.setup();
 		//manager.load_all();
@@ -91,38 +95,74 @@ void World::loadInfo(bool closeFile) {
 	file.close();
 	file.open(fileName, std::ios_base::in | std::ios_base::binary);
 	// Load file data
-	readFile(file, &canDelete);
-	readFile(file, &type);
-	readFile(file, &time);
-	readFile(file, &dim);
-	readFile(file, &spawn);
+	//readFile(file, &canDelete);
+	//readFile(file, &type);
+	//readFile(file, &time);
+	//readFile(file, &dim);
+	//readFile(file, &spawn);
 	// Check if we should close the file
 	if (closeFile) { file.close(); }
 
 	newWorld(dim);
 }
 
-double World::loadBlocks(double progress) {
-	// Get current row, column, and blocks left to load
+double World::loadBlocks(double progress, int numRows) {
+	// If there is no data, just end the process
+	if (blocks.empty()) { return 1.; }
+	// Get current row, column, and blocks left to save
+	const int startRow = (int)(progress * dim.y);
+	for (int row = startRow; row < startRow + numRows && row < dim.y; row++) {
+		int col = 0;
+		while (col < dim.x) {
+			// Extract tile id and number of tiles
+			TileId val;
+			//readFile(file, &val);
+			int num;
+			//readFile(file, &num);
+			// Add blocks
+			for (int i = col; i < col + num;) {
+				blocks[row][i].id = val;
+				// If not multiblock part
+				if (blocks[row][i].src == 0) {
+					// Create multiblock
+					// TODO: get tile dimensions
+					SDL_Point bDim{ 1, 1 };
+					for (int dy = 0; dy < bDim.y; dy++) {
+						for (int dx = 0; dx < bDim.x; dx++) {
+							blocks[row + dy][i + dx].setSrc(dx, dy);
+							addBlock(i + dx, row + dy,
+								blocks[row + dy][i + dx].id);
+						}
+					}
+					// Load file data
+					// TODO: Load tile data
+					i += bDim.x;
+				} else { i++; }
+			}
+			col += num;
+		}
+	}
+	return (double)(startRow + numRows) / dim.y;
+	/*// Get current row, column, and blocks left to load
 	int currentBlock = (int)(progress * numBlocks + .5 / numBlocks);
 	int col = currentBlock % dim.x, row = (int)(currentBlock / dim.x);
 	int blocksLeft = (int)std::ceil(numBlocks / 100);
 	// Write data to array
 	while (blocksLeft > 0) {
 		// Extract tile id and number of tiles
-		object::Tile::TileId val;
+		TileId val;
 		readFile(file, &val);
 		int num;
 		readFile(file, &num);
 		// TODO: Tile defaults to air if it doesn't exist
 		// Make sure we don't go over the row
 		if (col + num > dim.x) { num = dim.x - col; }
-		if (val != object::Tile::TileId::AIR) {
+		if (val != TileId::AIR) {
 			for (int i = 0; i < num; i++) {
 				blocks[row][col + i] = val;
 			}
-			// TODO: Everything with the blcok objects
-			/*tile = game_vars.tiles[val]
+			// TODO: Everything with the tile objects
+			tile = game_vars.tiles[val]
 				// If the block has a width > 1, there is automatically only one block in this strip
 				if tile.dim[0] != 1 :
 			// Save multiblock parts
@@ -145,7 +185,7 @@ double World::loadBlocks(double progress) {
 						if tile.has_data :
 							amnt = int.from_bytes(f_obj.read(2), byteorder)
 							c.update_dict(col1, row, f_obj.read(amnt), block_data)
-							*/
+							
 		}
 		// Update our column and blocks left
 		blocksLeft -= num;
@@ -159,7 +199,7 @@ double World::loadBlocks(double progress) {
 		}
 	}
 	// Return our progress
-	return (double)(row * dim.x + col) / numBlocks;
+	return (double)(row * dim.x + col) / numBlocks;*/
 }
 
 double World::drawWorld(double progress) {
@@ -168,13 +208,14 @@ double World::drawWorld(double progress) {
 
 double World::saveWorld(double progress) {
 	if (progress == 0) {
+		std::cerr << "Saving World" << std::endl;
 		// Save world info, automatically opens the file
 		saveInfo();
 	}
 	progress *= 2;
-	if (progress < 1.) { return saveBlocks(progress, 3) / 2; }
-	progress = saveMap(progress - 1) / 2 + .5;
-	if (progress == 1.) { file.close(); }
+	if (progress < 1.) { progress = saveBlocks(progress, 3) / 2.; }
+	else { progress = saveMap(progress - 1) / 2. + .5; }
+	if (progress >= 1.) { file.close(); }
 	return progress;
 }
 
@@ -183,35 +224,29 @@ void World::saveInfo() {
 	file.close();
 	file.open(fileName, std::ios_base::out | std::ios_base::binary);
 	// Write data
-	writeFile(file, &canDelete);
-	writeFile(file, &type);
-	writeFile(file, &time);
-	writeFile(file, &dim);
-	writeFile(file, &spawn);
+	//writeFile(file, &canDelete);
+	//writeFile(file, &type);
+	//writeFile(file, &time);
+	//writeFile(file, &dim);
+	//writeFile(file, &spawn);
 }
 
-// TODO: Multiblocks!
 double World::saveBlocks(double progress, int numRows) {
 	// If there is no data, just end the process
 	if (blocks.empty()) { return 1.; }
 	// Get current row, column, and blocks left to save
-	int currentBlock = (int)(progress * numBlocks + .5 / numBlocks);
-	int col = currentBlock % dim.x, row = (int)(currentBlock / dim.x);
-	int blocksLeft = numRows * dim.x;
-	while (blocksLeft > 0) {
+	const int startRow = (int)(progress * dim.y);
+	for (int row = startRow; row < startRow + numRows && row < dim.y; row++) {
+		int col = 0;
 		// Save the tile id
-		object::Tile::TileId val = blocks[row][col];
+		TileId val = blocks[row][col].id;
 		// Keep going until we hit a new tile or the end of the row
 		// This ignores blocks_left so we can store the entire strip of this block type
-		int col1;
-		for (col1 = col + 1; col1 < dim.x && val == blocks[row][col1]; col1++) {
-			/*object::Tile::TileId val1 = blocks[row][col1];
-			if (val != val1 && (val != object::Tile::TileId::AIR ||
-				val1 != object::Tile::TileId::AIR)) { break; }*/
+		while (col < dim.x && val == blocks[row][col].id) {
+			col += 1; // TODO: += Block width
 		}
-		int num = col1 - col;
-		writeFile(file, &val);
-		writeFile(file, &num);
+		//writeFile(file, &val);
+		//writeFile(file, &col);
 		/*// Write data
 		f_obj.write(val.to_bytes(2, byteorder))
 			f_obj.write(num_byte)
@@ -228,31 +263,21 @@ double World::saveBlocks(double progress, int numRows) {
 					else:
 		f_obj.write(len(bytes_).to_bytes(2, byteorder))
 			f_obj.write(bytes_)*/
-		// Now that we are done, update our column and blocks left
-		blocksLeft -= num;
-		col += num;
-		// Check if we made it to the next row
-		if (col >= dim.x) {
-			col %= dim.x;
-			row += 1;
-			// Check if we hit the end of the map
-			if (row >= dim.y) { return 1.; }
-		}
 	}
-	return (double)(row * dim.x + col) / numBlocks;
+	return (double)(startRow + numRows) / dim.y;
 }
 
 double World::saveMap(double progress) {
 	return 1.;
 }
 
-void World::placeBlock(int x, int y, object::Tile::TileId block) {}
+void World::placeBlock(int x, int y, TileId block) {}
 
 void World::destroyBlock(int x, int y) {}
 
-void World::addBlock(int x, int y, object::Tile::TileId block) {}
+void World::addBlock(int x, int y, TileId block) {}
 
-void World::removeBlock(int x, int y, object::Tile::TileId block) {}
+void World::removeBlock(int x, int y, TileId block) {}
 
 Rect World::getScreenRect(const SDL_Point& playerPos) {
 	return Rect();

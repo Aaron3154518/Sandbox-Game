@@ -1,6 +1,23 @@
 #include "TileObjects.h"
 
+// Dragon Egg
+ADD_TILE(DragonEgg)
+
+DragonEgg::DragonEgg() {
+
+}
+
+void DragonEgg::onBreak() {
+
+}
+
 // Portal
+ADD_TILE(Portal)
+
+Portal::Portal() {
+
+}
+
 void Portal::summon() {
     /*data = game_vars.get_block_data(pos)
         if data:
@@ -38,7 +55,7 @@ void Portal::onPlace() {
     //game_vars.write_block_data(pos, bytearray(8))
 }
 
-void Portal::(int x, int y, Timestep dt) {
+void Portal::tick(int x, int y, Timestep dt) {
     /*magic = 0
         rect = pg.Rect(x * BLOCK_W, y * BLOCK_W, self.dim[0] * BLOCK_W, self.dim[1] * BLOCK_W)
         items = game_vars.handler.items

@@ -1,13 +1,13 @@
 #include "Utils.h"
 
 /*#define FILE_IO_IMP(type, readCode, writeCode) \
-void read##type(std::fstream& fs, type* t) { \
-    if (fs.is_open() && t) { \
+void read_##type(std::fstream& fs, type& t) { \
+    if (fs.is_open()) { \
         readCode \
     } \
 } \
-void write##type(std::fstream& fs, type* t) { \
-    if (fs.is_open() && t) { \
+void write_##type(std::fstream& fs, type& t) { \
+    if (fs.is_open()) { \
         writeCode \
     } \
 }*/
@@ -84,16 +84,24 @@ void writeFile(std::fstream& fs, T* val) {
     }
 }*/
 
-/*FILE_IO_IMP(SDL_Point,
-*t = SDL_Point{ 0, 0 };
-readFile<int16_t>(fs, &(t->x));
-readFile<int16_t>(fs, &(t->y));
+/*FILE_IO_IMP(int,
+    const std::size_t s = sizeof(int);
+    char bytes[s];
+    for (std::size_t i = 0; i < s; i++) {
+        bytes[i] = (t >> 8 * i) & 0x0F;
+    }
 ,
-writeFile<int16_t>(fs, &(t->x));
-writeFile<int16_t>(fs, &(t->y));
 )
 
-char* operator char* (const SDL_Point& p) {
+FILE_IO_IMP(SDL_Point,
+read_int(fs, t.x);
+read_int(fs, t.y);
+,
+write_int(fs, t.x);
+write_int(fs, t.y);
+)*/
+
+/*char* operator char* (const SDL_Point& p) {
     char bytes[4];
     bytes[0] = p.x & 0xFF;
     bytes[1] = (p.x >> 8) & 0xFF;

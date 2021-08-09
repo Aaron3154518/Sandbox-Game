@@ -3,6 +3,7 @@
 
 #include <cmath>
 #include <vector>
+#include <fstream>
 #include <stack>
 #include <unordered_map>
 #include <sys/stat.h>

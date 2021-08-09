@@ -2,8 +2,8 @@
 #define UTILS_H
 
 /*#define FILE_IO_DEF(type) \
-void read##type(std::fstream& fs, type* t); \
-void write##type(std::fstream& fs, type* t);*/
+void read_##type(std::fstream& fs, type& t); 
+void write_##type(std::fstream& fs, type& t);*/
 
 #include <iostream>
 #include <sstream>
@@ -46,27 +46,24 @@ std::string toDisplayName(const std::string& fileName);
 
 // File I/O functions
 /*template<typename T>
-void readFile(std::fstream& fs, T* val);
-
-template<typename T>
-void writeFile(std::fstream& fs, T* val);*/
-
-template<typename T>
 void readFile(std::fstream& fs, T* val) {
-    if (fs.is_open() && val) {
+    if (!val) { std::cerr << "Null Value in readFile()" << std::endl; }
+    if (fs.is_open()) {
         fs.read(reinterpret_cast<char*>(val), sizeof(T));
     }
 }
 
 template<typename T>
 void writeFile(std::fstream& fs, T* val) {
-    if (fs.is_open() && val) {
+    if (!val) { std::cerr << "Null Value in writeFile()" << std::endl; }
+    if (fs.is_open()) {
         fs.write((char*)val, sizeof(T));
     }
-}
+}*/
 
-/*char* operator char* (const SDL_Point& p);
-
+/*FILE_IO_DEF(int)
+FILE_IO_DEF(char)
+FILE_IO_DEF(string)
 FILE_IO_DEF(SDL_Point)*/
 
 // Point/vector functions

@@ -25,6 +25,10 @@ private:
 	void loadFiles();
 
 	std::string player = "";
+
+	static constexpr auto INFO_FILE = "info.txt";
+	static bool createUniverse(std::string dirName);
+	static bool deleteUniverse(std::string dirName);
 };
 
 #endif
