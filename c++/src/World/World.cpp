@@ -6,39 +6,23 @@ const int World::NOON = (int)(World::MS_PER_DAY / 2);
 const int World::DAY = (int)(World::MS_PER_DAY / 4);
 const int World::NIGHT = World::DAY * 3;
 
+World::~World() {
+
+}
+
 World::setFile(const std::string& fName) {
 	fileName = fName;
 	std::cerr << "World File: " << fileName << std::endl;
 	// Create the file if it doesn't already exist
 	if (!isFile(fileName)) {
-		newWorld({ 10, 10 });
-		blocks[0][0].id = TileId::STONE;
-		std::cerr << dim.x << " x " << dim.y << std::endl;
-		for (int i = 0; i < dim.x; i++) {
-			for (int j = 0; j < dim.y; j++) {
-				std::cerr << blocks[i][j].id << " ";
-			}
-			std::cerr << std::endl;
-		}
-		double progress = 0.;
-		while (progress < 1) { progress = saveWorld(progress); }
+		std::cerr << "World::setFile(): File does not exist" << std::endl;
 		newWorld({ 100, 100 });
-	}
-	double progress = 0.;
-	while (progress < 1) { progress = loadWorld(progress); }
-	std::cerr << dim.x << " x " << dim.y << std::endl;
-	for (int i = 0; i < dim.x; i++) {
-		for (int j = 0; j < dim.y; j++) {
-			std::cerr << blocks[i][j].id << " ";
-		}
-		std::cerr << std::endl;
+	} else {
+		double progress = 0.;
+		while (progress < 1) { progress = loadWorld(progress); }
 	}
 	std::cerr << Tile::getTile(TileId::AIR)->id() << std::endl;
 	std::cerr << DragonEgg::Id() << " " << Portal::Id() << std::endl;
-}
-
-World::~World() {
-
 }
 
 void World::tick(Timestep& dt) {
@@ -76,37 +60,41 @@ double World::loadWorld(double progress) {
 		//blockData.clear();
 		crafters.clear();
 		spawners.clear();
-		// Load world info, automatically opens the file
-		loadInfo(false);
+		// Open the file
+		file.open(fileName, std::ios_base::in | std::ios_base::binary);
+		CHECK_FILE_OPEN(file, return 1.;)
+		// Load world info
+		loadInfo();
+		// Initialize new world
+		newWorld(dim);
 	}
 	progress *= 2;
 	if (progress < 1.) { progress = loadBlocks(progress, 3) / 2.; }
 	else { progress = drawWorld(progress - 1) / 2. + .5; }
 	if (progress >= 1.) {
 		file.close();
+		CHECK_FILE_IO(file,
+			std::cerr << "In World::loadWorld()" << std::endl;)
 		//manager.setup();
 		//manager.load_all();
 	}
 	return progress;
 }
 
-void World::loadInfo(bool closeFile) {
-	// Open the file
-	file.close();
-	file.open(fileName, std::ios_base::in | std::ios_base::binary);
+void World::loadInfo() {
+	CHECK_FILE_IS_OPEN(file, "World::loadInfo(): File not open",
+		return;)
 	// Load file data
-	//readFile(file, &canDelete);
-	//readFile(file, &type);
-	//readFile(file, &time);
-	//readFile(file, &dim);
-	//readFile(file, &spawn);
-	// Check if we should close the file
-	if (closeFile) { file.close(); }
-
-	newWorld(dim);
+	readValue(file, canDelete);
+	readValue(file, type);
+	readValue(file, time);
+	readObject(file, dim);
+	readObject(file, spawn);
 }
 
 double World::loadBlocks(double progress, int numRows) {
+	CHECK_FILE_IS_OPEN(file, "World::loadBlocks(): File not open",
+		return 1.;)
 	// If there is no data, just end the process
 	if (blocks.empty()) { return 1.; }
 	// Get current row, column, and blocks left to save
@@ -116,9 +104,9 @@ double World::loadBlocks(double progress, int numRows) {
 		while (col < dim.x) {
 			// Extract tile id and number of tiles
 			TileId val;
-			//readFile(file, &val);
+			readValue(file, val);
 			int num;
-			//readFile(file, &num);
+			readValue(file, num);
 			// Add blocks
 			for (int i = col; i < col + num;) {
 				blocks[row][i].id = val;
@@ -203,50 +191,68 @@ double World::loadBlocks(double progress, int numRows) {
 }
 
 double World::drawWorld(double progress) {
+	CHECK_FILE_IS_OPEN(file, "World::drawWorld(): File not open",
+		return 1.;)
+
 	return 1.;
 }
 
 double World::saveWorld(double progress) {
 	if (progress == 0) {
 		std::cerr << "Saving World" << std::endl;
-		// Save world info, automatically opens the file
+		// Open the file
+		file.close();
+		file.open(fileName, std::ios_base::out | std::ios_base::binary);
+		CHECK_FILE_OPEN(file, return 1.;)
+		// Save world info
 		saveInfo();
 	}
 	progress *= 2;
 	if (progress < 1.) { progress = saveBlocks(progress, 3) / 2.; }
 	else { progress = saveMap(progress - 1) / 2. + .5; }
-	if (progress >= 1.) { file.close(); }
+	if (progress >= 1.) {
+		file.close();
+		CHECK_FILE_IO(file,
+			std::cerr << "In World::saveWorld()" << std::endl;)
+	}
 	return progress;
 }
 
 void World::saveInfo() {
-	// Opend the file
-	file.close();
-	file.open(fileName, std::ios_base::out | std::ios_base::binary);
+	CHECK_FILE_IS_OPEN(file, "World::saveInfo(): File not open",
+		return;)
 	// Write data
-	//writeFile(file, &canDelete);
-	//writeFile(file, &type);
-	//writeFile(file, &time);
-	//writeFile(file, &dim);
-	//writeFile(file, &spawn);
+	writeValue(file, canDelete);
+	writeValue(file, type);
+	writeValue(file, time);
+	writeObject(file, dim);
+	writeObject(file, spawn);
 }
 
 double World::saveBlocks(double progress, int numRows) {
+	CHECK_FILE_IS_OPEN(file, "World::saveBlocks(): File not open",
+		return 1.;)
 	// If there is no data, just end the process
 	if (blocks.empty()) { return 1.; }
 	// Get current row, column, and blocks left to save
 	const int startRow = (int)(progress * dim.y);
 	for (int row = startRow; row < startRow + numRows && row < dim.y; row++) {
-		int col = 0;
 		// Save the tile id
-		TileId val = blocks[row][col].id;
-		// Keep going until we hit a new tile or the end of the row
-		// This ignores blocks_left so we can store the entire strip of this block type
-		while (col < dim.x && val == blocks[row][col].id) {
-			col += 1; // TODO: += Block width
+		TileId val = blocks[row][0].id;
+		int cnt = 0;
+		// Iterate through this row
+		for (int col = 0; col < dim.x; col++) {
+			// If the block changes, save id and count
+			if (blocks[row][col].id != val) {
+				writeValue(file, val);
+				writeValue(file, cnt);
+				val = blocks[row][col].id;
+				cnt = 0;
+			}
+			cnt++;
 		}
-		//writeFile(file, &val);
-		//writeFile(file, &col);
+		writeValue(file, val);
+		writeValue(file, cnt);
 		/*// Write data
 		f_obj.write(val.to_bytes(2, byteorder))
 			f_obj.write(num_byte)
@@ -268,6 +274,9 @@ double World::saveBlocks(double progress, int numRows) {
 }
 
 double World::saveMap(double progress) {
+	CHECK_FILE_IS_OPEN(file, "World::saveMap(): File not open",
+		return 1.;)
+
 	return 1.;
 }
 

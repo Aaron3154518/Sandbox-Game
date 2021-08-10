@@ -35,16 +35,6 @@ void UI::runUI() {
     if (textInput) { SDL_StopTextInput(); }
 }
 
-/*std::shared_ptr<UI> UI::addNextUI(UI* ui) {
-    nextUIs.push_back(std::shared_ptr<UI>(ui));
-    return nextUIs.back();
-}
-
-std::shared_ptr<UI> UI::addSubUI(UI* ui) {
-    subUIs.push_back(std::shared_ptr<UI>(ui));
-    return subUIs.back();
-}*/
-
 void UI::init() {
     // Initialize main SDL module
     int flags = SDL_WINDOW_RESIZABLE;

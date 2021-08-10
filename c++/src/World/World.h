@@ -28,15 +28,9 @@ public:
 
 	// Loads world
 	double loadWorld(double progress);
-	void loadInfo(bool closeFile);
-	double loadBlocks(double progress, int numRows);
-	double drawWorld(double progress);
 
 	// Saves world
 	double saveWorld(double progress);
-	void saveInfo();
-	double saveBlocks(double progress, int numRows);
-	double saveMap(double progress);
 
 	// Update world blocks
 	void placeBlock(int x, int y, TileId block);
@@ -72,6 +66,14 @@ public:
 		uint8_t ySrc() const { return (src >> sizeof(uint8_t)) & 0x0F; }
 	};
 private:
+	void loadInfo();
+	double loadBlocks(double progress, int numRows);
+	double drawWorld(double progress);
+
+	void saveInfo();
+	double saveBlocks(double progress, int numRows);
+	double saveMap(double progress);
+
 	// map
 	// light
 

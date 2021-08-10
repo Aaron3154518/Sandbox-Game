@@ -1,16 +1,42 @@
 #ifndef UTILS_H
 #define UTILS_H
 
-/*#define FILE_IO_DEF(type) \
-void read_##type(std::fstream& fs, type& t); 
-void write_##type(std::fstream& fs, type& t);*/
+#define FILE_READ_FUNC(type) \
+readObject(std::fstream& fs, type& t)
+#define FILE_WRITE_FUNC(type) \
+writeObject(std::fstream& fs, const type& t)
+#define READ_V(var) \
+readValue(fs, var)
+#define WRITE_V(var) \
+writeValue(fs, var)
+#define READ_O(obj) \
+readObject(fs, obj)
+#define WRITE_O(obj) \
+writeObject(fs, obj)
+#define CHECK_FILE_IS_OPEN(file, msg, code) \
+if (!file.is_open()) { \
+    std::cerr << msg << std::endl; \
+    code \
+}
+#define CHECK_FILE_OPEN(file, code) \
+if (!file) { \
+    std::cerr << "File Open Unsuccessful" << std::endl; \
+    code \
+}
+#define CHECK_FILE_IO(file, code) \
+if (!file.good()) { \
+    std::cerr << "File I/O Operation Unsuccessful" << std::endl; \
+    code \
+}
 
 #include <iostream>
 #include <sstream>
 #include <fstream>
+#include <vector>
 #include <set>
 #include <map>
 #include <cstdint>
+#include <cstring>
 #include <cmath>
 #include <algorithm>
 #include <fcntl.h>
@@ -45,26 +71,74 @@ std::string toFileName(const std::string& displayName);
 std::string toDisplayName(const std::string& fileName);
 
 // File I/O functions
-/*template<typename T>
-void readFile(std::fstream& fs, T* val) {
-    if (!val) { std::cerr << "Null Value in readFile()" << std::endl; }
+// Is value type (primitive or enum)
+template<typename T>
+constexpr bool isValueType() {
+    return std::is_fundamental<T>::value || std::is_enum<T>::value;
+}
+
+// For values
+template<typename T>
+void readValue(std::fstream& fs, T& t) {
+    static_assert(isValueType<T>(),
+        "Read type must be primitive or enum");
     if (fs.is_open()) {
-        fs.read(reinterpret_cast<char*>(val), sizeof(T));
+        char* a = new char[sizeof(T)];
+        fs.read(a, sizeof(T));
+        std::memcpy(&t, a, sizeof(T));
+        delete a;
     }
 }
 
 template<typename T>
-void writeFile(std::fstream& fs, T* val) {
-    if (!val) { std::cerr << "Null Value in writeFile()" << std::endl; }
+void writeValue(std::fstream& fs, T& t) {
+    static_assert(isValueType<T>(),
+        "Write type must be primitive or enum");
     if (fs.is_open()) {
-        fs.write((char*)val, sizeof(T));
+        char* a = new char[sizeof(T)];
+        std::memcpy(a, &t, sizeof(T));
+        fs.write(a, sizeof(T));
+        delete a;
     }
-}*/
+}
 
-/*FILE_IO_DEF(int)
-FILE_IO_DEF(char)
-FILE_IO_DEF(string)
-FILE_IO_DEF(SDL_Point)*/
+// For objects
+void FILE_READ_FUNC(std::string);
+void FILE_WRITE_FUNC(std::string);
+
+void FILE_READ_FUNC(SDL_Point);
+void FILE_WRITE_FUNC(SDL_Point);
+
+template<typename T>
+typename std::enable_if_t<isValueType<T>(), void>
+FILE_READ_FUNC(std::vector<T>) {
+    size_t l;
+    READ_V(l);
+    t.resize(l);
+    for (T& elem : t) { READ_V(elem); }
+}
+template<typename T>
+typename std::enable_if_t<isValueType<T>(), void>
+FILE_WRITE_FUNC(std::vector<T>) {
+    size_t l = t.size();
+    WRITE_V(l);
+    for (const T& elem : t) { WRITE_V(elem); }
+}
+template<typename T>
+typename std::enable_if_t<!isValueType<T>(), void>
+FILE_READ_FUNC(std::vector<T>) {
+    size_t l;
+    READ_V(l);
+    t.resize(l);
+    for (T& elem : t) { READ_O(elem); }
+}
+template<typename T>
+typename std::enable_if_t<!isValueType<T>(), void>
+FILE_WRITE_FUNC(std::vector<T>) {
+    size_t l = t.size();
+    WRITE_V(l);
+    for (const T& elem : t) { WRITE_O(elem); }
+}
 
 // Point/vector functions
 double magnitude(SDL_Point p);

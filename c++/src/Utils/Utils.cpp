@@ -1,17 +1,5 @@
 #include "Utils.h"
 
-/*#define FILE_IO_IMP(type, readCode, writeCode) \
-void read_##type(std::fstream& fs, type& t) { \
-    if (fs.is_open()) { \
-        readCode \
-    } \
-} \
-void write_##type(std::fstream& fs, type& t) { \
-    if (fs.is_open()) { \
-        writeCode \
-    } \
-}*/
-
 // String functions
 std::string lowerCase(std::string str) {
     std::transform(str.begin(), str.end(), str.begin(),
@@ -70,45 +58,27 @@ std::string toDisplayName(const std::string& fileName) {
     return replaceInString(fileName, "_", " ");
 }
 
-/*template<typename T>
-void readFile(std::fstream& fs, T* val) {
-    if (fs.is_open() && val) {
-        fs.read(reinterpret_cast<char*>(val), sizeof(T));
-    }
+// Object file I/O
+void FILE_READ_FUNC(std::string) {
+    uint16_t l;
+    READ_V(l);
+    t.resize(l);
+    for (char& ch : t) { READ_V(ch); }
+}
+void FILE_WRITE_FUNC(std::string) {
+    uint16_t l = t.length();
+    WRITE_V(l);
+    for (const char& ch : t) { WRITE_V(ch); }
 }
 
-template<typename T>
-void writeFile(std::fstream& fs, T* val) {
-    if (fs.is_open() && val) {
-        fs.write((char*)val, sizeof(T));
-    }
-}*/
-
-/*FILE_IO_IMP(int,
-    const std::size_t s = sizeof(int);
-    char bytes[s];
-    for (std::size_t i = 0; i < s; i++) {
-        bytes[i] = (t >> 8 * i) & 0x0F;
-    }
-,
-)
-
-FILE_IO_IMP(SDL_Point,
-read_int(fs, t.x);
-read_int(fs, t.y);
-,
-write_int(fs, t.x);
-write_int(fs, t.y);
-)*/
-
-/*char* operator char* (const SDL_Point& p) {
-    char bytes[4];
-    bytes[0] = p.x & 0xFF;
-    bytes[1] = (p.x >> 8) & 0xFF;
-    bytes[2] = p.y & 0xFF;
-    bytes[3] = (p.y >> 8) & 0xFF;
-    return (char*)bytes;
-}*/
+void FILE_READ_FUNC(SDL_Point) {
+    READ_V(t.x);
+    READ_V(t.y);
+}
+void FILE_WRITE_FUNC(SDL_Point) {
+    WRITE_V(t.x);
+    WRITE_V(t.y);
+}
 
 // Point/vector functions
 double magnitude(SDL_Point p) {
