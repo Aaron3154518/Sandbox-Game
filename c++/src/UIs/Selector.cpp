@@ -71,8 +71,11 @@ void Selector::resize(Rect* rect) {
 	
 	maxScroll = std::max(0, (int)files.size() * itemH - scrollRect.h);
 
-	UI::assets().loadFont(ITEM_FONT, createFile(FONTS, "times", ".ttf"),
-		-1, half);
+	UI::assets().loadFont(ITEM_FONT, TIMES_FONT, -1, half);
+
+	Rect promptRect(0, 0, (int)(mRect.w / 3), (int)(mRect.h / 3));
+	promptRect.setCenter(mRect.cX(), mRect.cY());
+	deletePrompt.setRect(promptRect);
 }
 
 void Selector::handleEvents(Event& e) {
@@ -81,11 +84,22 @@ void Selector::handleEvents(Event& e) {
 		return;
 	}
 	if (e.resize) { resize(NULL); }
+
+	if (deletePrompt.active()) {
+		if (deletePrompt.handleEvents(e) && deletePrompt.getAnswer()
+			&& deleteItem(deleteIdx)) {
+			maxScroll = std::max(0,
+				(int)files.size() * itemH - scrollRect.h);
+			scroll = std::min(maxScroll, scroll);
+		}
+		return;
+	}
+
 	if (SDL_PointInRect(&e.mouse, &mRect)) {
 		SDL_Point mouse = e.mouse - mRect.topLeft();
 		if (SDL_PointInRect(&mouse, &scrollRect)) {
 			scroll = std::max(0,
-				std::min(maxScroll, scroll - e.scroll * scrollAmnt));
+				std::min(maxScroll, scroll + e.scroll * scrollAmnt));
 			// Left click in scroll window
 			if (e.clicked(e.left)) {
 				mouse -= scrollRect.topLeft();
@@ -96,11 +110,15 @@ void Selector::handleEvents(Event& e) {
 					if (std::fmod(mouse.y, itemH) < buttonPlay.h) {
 						selectItem(idx);
 					} else {
-						if (deleteItem(idx)) {
-							maxScroll = std::max(0,
-								(int)files.size() * itemH - scrollRect.h);
-							scroll = std::min(maxScroll, scroll);
-						}
+						deleteIdx = idx;
+						std::ostringstream ss;
+						ss << "Delete " << files[idx] << "?";
+						ss << " I mean, it's a really good question. Who knows what " << files[idx]
+							<< " may contain. Rare shit? Nothing? I dunno. Anyways, make this decision carefully."
+							<< " Deletion is permanent. (Or mabe not, Idk)";
+						deletePrompt.setPrompt(ss.str());
+						deletePrompt.setActive(true);
+						return;
 					}
 				}
 			}
@@ -136,6 +154,9 @@ void Selector::draw() {
 		// Draw add button
 		r = buttonNew + mRect.topLeft();
 		UI::assets().drawTexture(ADD_IMG, r, NULL);
+	}
+	if (deletePrompt.active()) {
+		deletePrompt.draw();
 	}
 }
 

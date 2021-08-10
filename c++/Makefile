@@ -14,6 +14,7 @@ TARGET := $(BIN)/sandbox
 #SRCS := $(wildcard $(SRC)/*.$(CEXT) $(SRC)/**/*.$(CEXT))
 SRCS := Main Utils/Utils Utils/Rect Utils/AssetManager \
 UIs/UI UIs/Game UIs/Selector UIs/PlayerSelector UIs/UniverseSelector UIs/TextInput \
+UIElements/YesNo \
 World/World \
 Objects/Tile Objects/TileObjects
 SRCS := $(patsubst %, $(SRC)/%.$(CEXT), $(SRCS))

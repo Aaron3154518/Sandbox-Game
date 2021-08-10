@@ -50,8 +50,6 @@ protected:
 	//std::shared_ptr<UI> addNextUI(UI* ui);
 	//std::shared_ptr<UI> addSubUI(UI* ui);
 private:
-	std::shared_ptr<UI> me;
-
 	static bool initialized;
 	static int maxH, maxW, w, h;
 	static SDL_Renderer* mRenderer;

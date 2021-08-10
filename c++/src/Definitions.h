@@ -19,6 +19,8 @@ using Map2D = std::map<int, std::map<int, T>>;
 #define PLAYER_IMGS RES "player/"
 #define ENTITY_IMGS RES "enitites/"
 
+#define TIMES_FONT FONTS "times.ttf"
+
 // Saves
 #define SAVES "saves/"
 #define PLAYERS SAVES "players/"

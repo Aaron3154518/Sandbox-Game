@@ -161,7 +161,7 @@ void Event::update(SDL_Event& e) {
     break;
     case SDL_MOUSEWHEEL:
     {
-        scroll = e.wheel.y;
+        scroll = -e.wheel.y;
     }
     break;
     case SDL_KEYDOWN:

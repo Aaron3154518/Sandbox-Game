@@ -44,8 +44,10 @@ public:
 
     operator bool() { return w != 0 && h != 0; }
     friend std::ostream& operator <<(std::ostream&, const Rect& rhs);
-    friend Rect operator +(const Rect& lhs, const SDL_Point& rhs);
-    friend Rect operator -(const Rect& lhs, const SDL_Point& rhs);
+    friend Rect& operator +=(Rect& lhs, const SDL_Point& rhs);
+    friend Rect operator +(Rect lhs, const SDL_Point& rhs);
+    friend Rect& operator -=(Rect& lhs, const SDL_Point& rhs);
+    friend Rect operator -(Rect lhs, const SDL_Point& rhs);
 };
 //}
 
@@ -53,8 +55,8 @@ public:
 // For comparing SDL_Points
 bool operator ==(const SDL_Point& lhs, const SDL_Point& rhs);
 SDL_Point& operator +=(SDL_Point& lhs, const SDL_Point& rhs);
-SDL_Point operator +(const SDL_Point& lhs, const SDL_Point& rhs);
+SDL_Point operator +(SDL_Point lhs, const SDL_Point& rhs);
 SDL_Point& operator -=(SDL_Point& lhs, const SDL_Point& rhs);
-SDL_Point operator -(const SDL_Point& lhs, const SDL_Point& rhs);
+SDL_Point operator -(SDL_Point lhs, const SDL_Point& rhs);
 
 #endif /* Rect */

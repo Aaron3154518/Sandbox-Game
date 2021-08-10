@@ -122,12 +122,22 @@ std::ostream& operator <<(std::ostream& os, const Rect& rhs) {
     return os;
 }
 
-Rect operator +(const Rect& lhs, const SDL_Point& rhs) {
-    return Rect(lhs.x + rhs.x, lhs.y + rhs.y, lhs.w, lhs.h);
+Rect& operator +=(Rect& lhs, const SDL_Point& rhs) {
+    lhs.x += rhs.x; lhs.y += rhs.y;
+    return lhs;
 }
 
-Rect operator -(const Rect& lhs, const SDL_Point& rhs) {
-    return Rect(lhs.x - rhs.x, lhs.y - rhs.y, lhs.w, lhs.h);
+Rect operator +(Rect lhs, const SDL_Point& rhs) {
+    return lhs += rhs;
+}
+
+Rect& operator -=(Rect& lhs, const SDL_Point& rhs) {
+    lhs.x -= rhs.x; lhs.y -= rhs.y;
+    return lhs;
+}
+
+Rect operator -(Rect lhs, const SDL_Point& rhs) {
+    return lhs -= rhs;
 }
 //}
 
@@ -139,13 +149,13 @@ SDL_Point& operator +=(SDL_Point& lhs, const SDL_Point& rhs) {
     lhs.x += rhs.x; lhs.y += rhs.y;
     return lhs;
 }
-SDL_Point operator +(const SDL_Point& lhs, const SDL_Point& rhs) {
-    return SDL_Point{ lhs.x + rhs.x, lhs.y + rhs.y };
+SDL_Point operator +(SDL_Point lhs, const SDL_Point& rhs) {
+    return lhs += rhs;
 }
 SDL_Point& operator -=(SDL_Point& lhs, const SDL_Point& rhs) {
     lhs.x -= rhs.x; lhs.y -= rhs.y;
     return lhs;
 }
-SDL_Point operator -(const SDL_Point& lhs, const SDL_Point& rhs) {
-    return SDL_Point{ lhs.x - rhs.x, lhs.y - rhs.y };
+SDL_Point operator -(SDL_Point lhs, const SDL_Point& rhs) {
+    return lhs -= rhs;
 }

@@ -58,6 +58,7 @@
     };
 
     struct TextData {
+        TTF_Font* font = NULL;
         std::string fontId = "", text = "";
         SDL_Color color = BLACK;
         double x = 0., y = 0.;
@@ -67,6 +68,7 @@
         void setRectPos(Rect& r);
         void getPosFromRect(const Rect& r);
         void constrainToRect(const Rect& r);
+        void deleteFont();
     };
 
     class AssetManager {
@@ -78,17 +80,23 @@
 
         static void getFontSize(std::string fileName, int size, int* w, int* h);
 
-        SDL_Texture* loadAsset(std::string id, std::string fileName);
+        SDL_Texture* loadAsset(std::string fileName);
         TTF_Font* loadFont(std::string id, std::string fileName, int w, int h);
+        // Doesn't store the resulting TTF_Font*
+        // caller is responsible for deallocating
+        TTF_Font* loadFont(std::string fileName, int w, int h);
 
-        SDL_Texture* getAsset(std::string id);
+        SDL_Texture* getAsset(std::string fileName);
         TTF_Font* getFont(std::string id) const;
+
         SDL_Texture* renderText(TextData& data, Rect& rect) const;
         SDL_Texture* renderTextWrapped(TextData& data, Rect& rect, Uint32 bkgrnd = -1) const;
-        void drawTexture(SDL_Texture* tex, Rect& destRect, Rect* boundary) const;
-        void drawTexture(std::string id, Rect& destRect, Rect* boundary) { drawTexture(getAsset(id), destRect, boundary); }
+        void drawTexture(SDL_Texture* tex, Rect& destRect, Rect* boundary = NULL) const;
+        void drawTexture(std::string fileName, Rect& destRect, Rect* boundary = NULL) { drawTexture(getAsset(fileName), destRect, boundary); }
         void drawText(TextData& data, Rect* boundary) const;
         void drawTextWrapped(TextData& data, Rect* boundary, Uint32 bkgrnd = -1) const;
+
+        void thickRect(const Rect& r, int thickness) const;
 
         //void drawProgressBar(Number amnt, Number cap, Rect& rect, SDL_Color color, SDL_Color bkgrnd) const;
         //void drawProgressBarLog(Number amnt, Number cap, Rect& rect, SDL_Color color, SDL_Color bkgrnd) const;

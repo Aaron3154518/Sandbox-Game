@@ -59,10 +59,10 @@ void UI::init() {
     // Initialize SDL fonts module
     if (TTF_Init() == 0) {
         std::cout << "SDL_TTF Initialized" << std::endl;
-        UI::mAssetManager.loadFont(gameVals::LARGE_FONT,
-            createFile(FONTS, "times", ".ttf"), -1, gameVals::MIN_H / 10);
-        UI::mAssetManager.loadFont(gameVals::SMALL_FONT,
-            createFile(FONTS, "times", ".ttf"), -1, gameVals::MIN_H / 25);
+        UI::mAssetManager.loadFont(gameVals::LARGE_FONT, TIMES_FONT,
+            -1, gameVals::MIN_H / 10);
+        UI::mAssetManager.loadFont(gameVals::SMALL_FONT, TIMES_FONT,
+            -1, gameVals::MIN_H / 25);
     }
 
     initialized = true;
@@ -84,7 +84,6 @@ void UI::run() {
         activeUIs.pop_front();
 
         if (!current) { std::cerr << "Null UI" << std::endl; continue; }
-
         // Run current
         current->runUI();
 

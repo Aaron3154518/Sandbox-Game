@@ -7,6 +7,7 @@
 #include "../Definitions.h"
 #include "UI.h"
 #include "TextInput.h"
+#include "../UIElements/YesNo.h"
 #include "../Utils/Utils.h"
 #include "../Utils/Rect.h"
 #include "../Utils/AssetManager.h"
@@ -44,6 +45,9 @@ protected:
 
 	Rect buttonNew, inputName;
 	TextInput input;
+
+	int deleteIdx = 0;
+	YesNo deletePrompt;
 
 	// Constants
 	static const SDL_Color BKGRND;

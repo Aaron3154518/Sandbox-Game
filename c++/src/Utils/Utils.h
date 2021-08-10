@@ -177,6 +177,7 @@ struct Event {
 
     SDL_Point mouse;
     double mouseDx = 0., mouseDy = 0.;
+    // < 0 = down, > 0 = up
     Sint32 scroll = 0;
 
     // Keys currently down
