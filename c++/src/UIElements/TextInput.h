@@ -5,18 +5,18 @@
 #include <functional>
 
 #include "../Definitions.h"
-#include "UI.h"
+#include "UIElement.h"
 #include "../Utils/Utils.h"
 #include "../Utils/Rect.h"
 #include "../Utils/AssetManager.h"
 
-class TextInput {
+class TextInput : public UIElement {
 public:
 	TextInput() = default;
 	~TextInput() = default;
 
-	void handleEvents(Event& e);
-	void render();
+	bool handleEvents(Event& e);
+	void draw();
 
 	void setRect(Rect rect);
 	void setBackground(const SDL_Color& c) { bkgrnd = c; }
@@ -27,7 +27,6 @@ public:
 	void clearInput() { currInput.str(""); }
 	void addInput(const std::string& str);
 private:
-	Rect mRect;
 	TextData textData;
 	SDL_Color bkgrnd = BLACK;
 

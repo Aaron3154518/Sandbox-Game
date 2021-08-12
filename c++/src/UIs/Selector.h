@@ -6,7 +6,7 @@
 
 #include "../Definitions.h"
 #include "UI.h"
-#include "TextInput.h"
+#include "../UIElements/TextInput.h"
 #include "../UIElements/YesNo.h"
 #include "../Utils/Utils.h"
 #include "../Utils/Rect.h"
@@ -14,7 +14,8 @@
 
 class Selector : public UI {
 public:
-	Selector();
+	Selector() : Selector(false) {}
+	Selector(bool allowTextInput);
 	~Selector() = default;
 
 	virtual void runUI();
@@ -29,7 +30,7 @@ public:
 	Rect getRect() { return mRect; }
 protected:
 	virtual SDL_Texture* drawItem(int idx);
-	bool setAllowNewItems(bool val);
+	bool toggleTextInput(bool val);
 
 	virtual bool newItem() { return false; }
 	virtual bool deleteItem(int idx) { return false; }
@@ -62,8 +63,6 @@ protected:
 	static const std::string PLAY_IMG;
 	static const std::string DELETE_IMG;
 	static const std::string ADD_IMG;
-private:
-	bool allowNewItems = false;
 };
 
 #endif

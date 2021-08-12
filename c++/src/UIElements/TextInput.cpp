@@ -2,7 +2,7 @@
 
 const int TextInput::CURSOR_DELAY = 500;
 
-void TextInput::handleEvents(Event& e) {
+bool TextInput::handleEvents(Event& e) {
 	time += e.dt.milliseconds();
 	time = time % (2 * CURSOR_DELAY);
 	if (e.keyPressed(SDLK_BACKSPACE)) {
@@ -12,9 +12,10 @@ void TextInput::handleEvents(Event& e) {
 	} else {
 		addInput(e.inputText);
 	}
+	return false;
 }
 
-void TextInput::render() {
+void TextInput::draw() {
 	UI::setDrawColor(bkgrnd);
 	SDL_RenderFillRect(UI::renderer(), &mRect);
 	UI::resetDrawColor();

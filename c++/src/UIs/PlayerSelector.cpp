@@ -1,9 +1,7 @@
 #include "PlayerSelector.h"
 #include "UniverseSelector.h"
 
-PlayerSelector::PlayerSelector() {
-	setAllowNewItems(true);
-}
+PlayerSelector::PlayerSelector() : Selector(true) {}
 
 PlayerSelector::PlayerSelector(std::string univ) : PlayerSelector() {
 	universe = univ;

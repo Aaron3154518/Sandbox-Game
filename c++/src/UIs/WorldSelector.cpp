@@ -1,8 +1,6 @@
 #include "WorldSelector.h"
 
-WorldSelector::WorldSelector() {
-
-}
+WorldSelector::WorldSelector() : Selector(false) {}
 
 void WorldSelector::handleEvents(Event& e) {
 

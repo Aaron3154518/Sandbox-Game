@@ -46,7 +46,6 @@ void YesNo::draw() {
 void YesNo::setRect(Rect rect) {
 	if (mTex) { SDL_DestroyTexture(mTex); }
 	if (promptTex) { SDL_DestroyTexture(promptTex); }
-
 	mRect = rect;
 
 	// Calculate UI variables

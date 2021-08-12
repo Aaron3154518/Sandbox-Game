@@ -10,6 +10,7 @@ public:
 	UIElement() = default;
 	~UIElement() = default;
 
+	// Return true when something of note happens
 	virtual bool handleEvents(Event& e) { mActive = false; return true; }
 	virtual void draw() {}
 

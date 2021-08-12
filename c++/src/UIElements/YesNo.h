@@ -32,8 +32,8 @@ private:
 	std::string prompt = "No prompt provided";
 	int scroll = 0, maxScroll = 0, scrollAmnt = 1;
 	Rect promptRect, promptRectFull, yesRect, noRect;
-	SDL_Texture* mTex;
-	SDL_Texture* promptTex;
+	SDL_Texture* mTex = NULL;
+	SDL_Texture* promptTex = NULL;
 
 	const static std::string YES_IMG, NO_IMG;
 };
