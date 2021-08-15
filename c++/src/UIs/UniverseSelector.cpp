@@ -25,6 +25,9 @@ void UniverseSelector::loadFiles() {
 bool UniverseSelector::newItem() {
 	std::string fileName = toFileName(input.getInput());
 	if (fileName.empty()) { return false; }
+	if (std::find(files.begin(), files.end(), fileName) != files.end()) {
+		return false;
+	}
 	if (createUniverse(fileName)) {
 		files.push_back(input.getInput());
 		input.clearInput();
@@ -58,13 +61,18 @@ bool UniverseSelector::createUniverse(std::string dirName) {
 	if (!isDir(fullDir)) {
 		// Create folder
 		mkdir(fullDir.c_str());
-		std::cerr << "Info File: " << createFile(fullDir, INFO_FILE, "") << std::endl;
 		// Create info file
-		std::fstream file(createFile(fullDir, INFO_FILE, "").c_str(),
-			std::ios_base::out | std::ios_base::binary);
-		CHECK_FILE_OPEN(file, return false;)
-		file.close();
-		CHECK_FILE_IO(file, return false;)
+		FileWrite fw;
+		if (!fw.open(createFile(fullDir, INFO_FILE, ""))) {
+			std::cerr << "Could not open universe info file" << std::endl;
+			rmdir(fullDir.c_str());
+			return false;
+		}
+		if (!fw.commit()) {
+			std::cerr << "Failed to write to universe info file" << std::endl;
+			rmdir(fullDir.c_str());
+			return false;
+		}
 		return true;
 	}
 	return false;

@@ -3,11 +3,10 @@
 //#define DEBUG_GAME
 
 Game::Game(const std::string& player, const std::string& universe) {
-    std::cerr << "Player: " << player << "\nUniverse: " << universe << std::endl;
-    std::cerr << "Info File: " << createFile(UNIVERSES, universe, "/info.txt") << std::endl;
-    std::fstream file(createFile(UNIVERSES, universe, "/info.txt").c_str(),
-        std::ios_base::in | std::ios_base::binary);
-    file.close();
+    std::string infoFile = UNIVERSES + universe + "/" + INFO_FILE;
+    FileRead fr;
+    fr.open(infoFile);
+    fr.close();
     world.setFile(UNIVERSES + universe + "/world" + WORLD_EXT);
 }
 

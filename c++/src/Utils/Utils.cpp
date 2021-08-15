@@ -58,34 +58,12 @@ std::string toDisplayName(const std::string& fileName) {
     return replaceInString(fileName, "_", " ");
 }
 
-// Object file I/O
-void FILE_READ_FUNC(std::string) {
-    uint16_t l;
-    READ_V(l);
-    t.resize(l);
-    for (char& ch : t) { READ_V(ch); }
-}
-void FILE_WRITE_FUNC(std::string) {
-    uint16_t l = t.length();
-    WRITE_V(l);
-    for (const char& ch : t) { WRITE_V(ch); }
-}
-
-void FILE_READ_FUNC(SDL_Point) {
-    READ_V(t.x);
-    READ_V(t.y);
-}
-void FILE_WRITE_FUNC(SDL_Point) {
-    WRITE_V(t.x);
-    WRITE_V(t.y);
-}
-
 // Point/vector functions
-double magnitude(SDL_Point p) {
+double magnitude(const SDL_Point& p) {
     return sqrt(p.x * p.x + p.y * p.y);
 }
 
-double distance(SDL_Point p1, SDL_Point p2) {
+double distance(const SDL_Point& p1, const SDL_Point& p2) {
     return magnitude(p1 - p2);
 }
 

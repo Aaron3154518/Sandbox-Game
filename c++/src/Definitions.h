@@ -27,8 +27,12 @@ using Map2D = std::map<int, std::map<int, T>>;
 #define UNIVERSES SAVES "universes/"
 
 // File Extensions
-#define WORLD_EXT ".wld"
-#define PLAYER_EXT ".plr"
+constexpr auto WORLD_EXT = ".wld";
+constexpr auto PLAYER_EXT = ".plr";
+constexpr auto TMP_EXT = ".tmp";
+
+// Special Files
+constexpr auto INFO_FILE = "info.bin";
 
 namespace gameVals {
 	// FPS info

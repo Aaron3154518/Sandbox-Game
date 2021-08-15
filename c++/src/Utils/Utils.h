@@ -1,34 +1,6 @@
 #ifndef UTILS_H
 #define UTILS_H
 
-#define FILE_READ_FUNC(type) \
-readObject(std::fstream& fs, type& t)
-#define FILE_WRITE_FUNC(type) \
-writeObject(std::fstream& fs, const type& t)
-#define READ_V(var) \
-readValue(fs, var)
-#define WRITE_V(var) \
-writeValue(fs, var)
-#define READ_O(obj) \
-readObject(fs, obj)
-#define WRITE_O(obj) \
-writeObject(fs, obj)
-#define CHECK_FILE_IS_OPEN(file, msg, code) \
-if (!file.is_open()) { \
-    std::cerr << msg << std::endl; \
-    code \
-}
-#define CHECK_FILE_OPEN(file, code) \
-if (!file) { \
-    std::cerr << "File Open Unsuccessful" << std::endl; \
-    code \
-}
-#define CHECK_FILE_IO(file, code) \
-if (!file.good()) { \
-    std::cerr << "File I/O Operation Unsuccessful" << std::endl; \
-    code \
-}
-
 #include <iostream>
 #include <sstream>
 #include <fstream>
@@ -64,85 +36,16 @@ bool isDir(const std::string& dirName);
 
 bool validSaveFile(const std::string& fileName);
 
+// TODO: This function sucks - split into specific file creators
 std::string createFile(const std::string& folder,
     const std::string& file, const std::string& ext);
 
 std::string toFileName(const std::string& displayName);
 std::string toDisplayName(const std::string& fileName);
 
-// File I/O functions
-// Is value type (primitive or enum)
-template<typename T>
-constexpr bool isValueType() {
-    return std::is_fundamental<T>::value || std::is_enum<T>::value;
-}
-
-// For values
-template<typename T>
-void readValue(std::fstream& fs, T& t) {
-    static_assert(isValueType<T>(),
-        "Read type must be primitive or enum");
-    if (fs.is_open()) {
-        char* a = new char[sizeof(T)];
-        fs.read(a, sizeof(T));
-        std::memcpy(&t, a, sizeof(T));
-        delete a;
-    }
-}
-
-template<typename T>
-void writeValue(std::fstream& fs, T& t) {
-    static_assert(isValueType<T>(),
-        "Write type must be primitive or enum");
-    if (fs.is_open()) {
-        char* a = new char[sizeof(T)];
-        std::memcpy(a, &t, sizeof(T));
-        fs.write(a, sizeof(T));
-        delete a;
-    }
-}
-
-// For objects
-void FILE_READ_FUNC(std::string);
-void FILE_WRITE_FUNC(std::string);
-
-void FILE_READ_FUNC(SDL_Point);
-void FILE_WRITE_FUNC(SDL_Point);
-
-template<typename T>
-typename std::enable_if_t<isValueType<T>(), void>
-FILE_READ_FUNC(std::vector<T>) {
-    size_t l;
-    READ_V(l);
-    t.resize(l);
-    for (T& elem : t) { READ_V(elem); }
-}
-template<typename T>
-typename std::enable_if_t<isValueType<T>(), void>
-FILE_WRITE_FUNC(std::vector<T>) {
-    size_t l = t.size();
-    WRITE_V(l);
-    for (const T& elem : t) { WRITE_V(elem); }
-}
-template<typename T>
-typename std::enable_if_t<!isValueType<T>(), void>
-FILE_READ_FUNC(std::vector<T>) {
-    size_t l;
-    READ_V(l);
-    t.resize(l);
-    for (T& elem : t) { READ_O(elem); }
-}
-template<typename T>
-typename std::enable_if_t<!isValueType<T>(), void>
-FILE_WRITE_FUNC(std::vector<T>) {
-    size_t l = t.size();
-    WRITE_V(l);
-    for (const T& elem : t) { WRITE_O(elem); }
-}
-
 // Point/vector functions
-double magnitude(SDL_Point p);
-double distance(SDL_Point p1, SDL_Point p2);
+double magnitude(const SDL_Point& p);
+double distance(const SDL_Point& p1, const SDL_Point& p2);
 
 // Helper classes
 class Timestep {

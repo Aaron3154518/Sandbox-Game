@@ -30,6 +30,9 @@ void PlayerSelector::loadFiles() {
 bool PlayerSelector::newItem() {
 	std::string fileName = toFileName(input.getInput());
 	if (fileName.empty()) { return false; }
+	if (std::find(files.begin(), files.end(), fileName) != files.end()) {
+		return false;
+	}
 	std::string fullFile = createFile(PLAYERS, fileName, PLAYER_EXT);
 	if (!isFile(fullFile)) {
 		std::ofstream file(fullFile);

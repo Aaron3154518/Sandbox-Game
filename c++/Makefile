@@ -12,7 +12,7 @@ SRC := src
 TARGET := $(BIN)/sandbox
 
 #SRCS := $(wildcard $(SRC)/*.$(CEXT) $(SRC)/**/*.$(CEXT))
-SRCS := Main Utils/Utils Utils/Rect Utils/AssetManager \
+SRCS := Main Utils/Utils Utils/Rect Utils/AssetManager Utils/FileIO \
 UIs/UI UIs/Game UIs/Selector UIs/PlayerSelector UIs/UniverseSelector \
 UIElements/YesNo UIElements/TextInput \
 World/World \
