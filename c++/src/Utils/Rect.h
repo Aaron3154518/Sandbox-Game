@@ -36,6 +36,7 @@ public:
     void setCenterX(double nCX) { x = (int)(nCX - w / 2); }
     void setCenterY(double nCY) { y = (int)(nCY - h / 2); }
     void setCenter(double nCX, double nCY);
+    void setCenter(const SDL_Point& pos);
     void resize(int nW, int nH, bool center);
     void resizeFactor(double factor, bool center);
 

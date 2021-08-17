@@ -19,7 +19,7 @@ void World::setFile(std::string fName) {
 		numBlocks = dim.x * dim.y;
 		spawn = { 5,5 };
 		newWorld();
-		blocks[0][5] = Block{ TileId::STONE };
+		blocks[0][5] = Block{ tile::Id::STONE };
 		saveWorld();
 	}
 	loadWorld();
@@ -162,7 +162,7 @@ double World::loadBlocks(double progress, int numRows) {
 		int col = 0;
 		while (col < dim.x) {
 			// Extract tile id and number of tiles
-			TileId val;
+			tile::Id val;
 			fr.read(val);
 			size_t cnt;
 			fr.read(cnt);
@@ -196,14 +196,14 @@ double World::loadBlocks(double progress, int numRows) {
 	// Write data to array
 	while (blocksLeft > 0) {
 		// Extract tile id and number of tiles
-		TileId val;
+		tile::Id val;
 		readFile(file, &val);
 		int num;
 		readFile(file, &num);
 		// TODO: Tile defaults to air if it doesn't exist
 		// Make sure we don't go over the row
 		if (col + num > dim.x) { num = dim.x - col; }
-		if (val != TileId::AIR) {
+		if (val != tile::Id::AIR) {
 			for (int i = 0; i < num; i++) {
 				blocks[row][col + i] = val;
 			}
@@ -332,7 +332,7 @@ double World::saveBlocks(double progress, int numRows) {
 	const int startRow = (int)(progress * dim.y);
 	for (int row = startRow; row < startRow + numRows && row < dim.y; row++) {
 		// Save the tile id
-		TileId val = blocks[row][0].id;
+		tile::Id val = blocks[row][0].id;
 		size_t cnt = 0;
 		// Iterate through this row
 		for (int col = 0; col < dim.x; col++) {
@@ -376,14 +376,67 @@ double World::saveMap(double progress) {
 	return 1.;
 }
 
-void World::placeBlock(int x, int y, TileId block) {}
+void World::placeBlock(int x, int y, tile::Id block) {}
 
 void World::destroyBlock(int x, int y) {}
 
-void World::removeBlock(int x, int y, TileId block) {}
+void World::removeBlock(int x, int y, tile::Id block) {}
 
 Rect World::getScreenRect(const SDL_Point& playerPos) {
-	return Rect();
+	int w = UI::width(), h = UI::height();
+	int worldW = dim.x * gameVals::BLOCK_W;
+	int worldH = dim.y * gameVals::BLOCK_W;
+	Rect r(0, 0, w, h);
+	if (worldW >= w) {
+		r.setCenterX(playerPos.x);
+		if (r.x < 0) { r.x = 0; }
+		else if (r.x2() > worldW) { r.setX2(worldW); }
+	} else {
+		r.x = (int)((worldW - w) / 2);
+	}
+	if (worldH >= h) {
+		r.setCenterY(playerPos.y);
+		if (r.y < 0) { r.y = 0; }
+		else if (r.y2() > worldH) { r.setY2(worldH); }
+	} else {
+		r.y = (int)((worldH - h) / 2);
+	}
+	return r;
+}
+
+void World::draw(const SDL_Point& playerPos) {
+	int worldW = dim.x * gameVals::BLOCK_W;
+	int worldH = dim.y * gameVals::BLOCK_W;
+	Rect screen = getScreenRect(playerPos);
+	Rect worldRect(std::abs(screen.x), std::abs(screen.y),
+		std::min(screen.w, worldW), std::min(screen.h, worldH));
+	int lbX = (int)(std::max(screen.x, 0) / gameVals::BLOCK_W);
+	int ubX = (int)std::ceil(std::min(screen.x2(), worldW) / gameVals::BLOCK_W);
+	int lbY = (int)(std::max(screen.y, 0) / gameVals::BLOCK_W);
+	int ubY = (int)std::ceil(std::min(screen.y2(), worldH) / gameVals::BLOCK_W);
+	Rect r(lbX * gameVals::BLOCK_W - screen.x, lbY * gameVals::BLOCK_W - screen.y,
+		gameVals::BLOCK_W, gameVals::BLOCK_W);
+	AssetManager& assets = UI::assets();
+	assets.rect(&worldRect, Tile::getTile(tile::Id::AIR)->getMapColor());
+	for (int row = lbY; row < ubY; row++) {
+		for (int col = lbX; col < ubX; col++) {
+			tile::Id id = blocks[row][col].id;
+			if (id != tile::Id::AIR) {
+				SDL_Texture* tex = Tile::getTile(id)->getImage({ col, row });
+				assets.drawTexture(tex, r);
+			}
+			r.x += gameVals::BLOCK_W;
+		}
+		r.x = lbX * gameVals::BLOCK_W - screen.x;
+		r.y += gameVals::BLOCK_W;
+	}
+	SDL_Texture* playerTex = assets.getAsset(
+		createFile(PLAYER_IMGS,"player_pig", ".png"));
+	r = Rect::getMinRect(playerTex, gameVals::BLOCK_W, gameVals::BLOCK_W * 2);
+	r.setCenter(playerPos - screen.topLeft());
+	assets.drawTexture(playerTex, r);
+	assets.thickRect(worldRect, 2, BLACK);
+	
 }
 
 void World::drawLight(const Rect& rect) {}

@@ -62,11 +62,8 @@ void YesNo::setRect(Rect rect) {
 	mTex = SDL_CreateTexture(UI::renderer(), SDL_PIXELFORMAT_RGBA8888,
 		SDL_TEXTUREACCESS_TARGET, mRect.w, mRect.h);
 	UI::setRenderTarget(mTex);
-	UI::setDrawColor(GRAY);
-	SDL_RenderFillRect(UI::renderer(), NULL);
-	UI::setDrawColor(BLACK);
-	UI::assets().thickRect(promptRect, 3);
-	UI::resetDrawColor();
+	UI::assets().rect(NULL, GRAY);
+	UI::assets().thickRect(promptRect, 3, BLACK);
 	UI::assets().drawTexture(YES_IMG, yesRect);
 	UI::assets().drawTexture(NO_IMG, noRect);
 	UI::resetRenderTarget();

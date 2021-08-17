@@ -2,31 +2,17 @@
 #define TILE_OBJECTS_H
 
 #include "Tile.h"
+#include "../ID/Tiles.h"
+#include "../ID/Items.h"
 
-class DragonEgg : public Tile {
-	NEW_TILE(DragonEgg)
-public:
-	void onBreak();
-};
+// @param Type - the type whose class is being declared
+// NEW_TILE(Type)
+// - make Tile a friend of Type
+// - declares a constructor Type()
+// - implements a special id for the type
 
-class Portal : public Tile {
-	NEW_TILE(Portal)
-public:
-	void summon();
-	void onPlace();
-	void tick(int x, int y, Timestep dt);
-};
+class Air : public Tile { NEW_TILE(Air) };
+class Dirt : public Tile { NEW_TILE(Dirt) };
+class Stone : public Tile { NEW_TILE(Stone) };
 
-/*NEW_TILE(DIMENSION_HOPPER, DimensionHopper,
-	void activate(std::pair<int, int> pos);
-class UI : public ActiveUI {
-public:
-	UI(std::pair<int, int>) : ActiveUI(nullptr, nullptr, pos) {}
-	void processEvents(events, mouse, keys);
-	void on_resize();
-
-private:
-	WorldSelector selector;
-};
-)*/
 #endif

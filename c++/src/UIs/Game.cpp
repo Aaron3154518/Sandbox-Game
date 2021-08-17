@@ -23,6 +23,19 @@ void Game::handleEvents(Event &e) {
         running = false;
         return;
     }
+    if (e.left.pressed) {
+        SDL_Point pxDim = world.getPixelDim();
+        SDL_Point c = { UI::width() / 2, UI::height() / 2 };
+        double mag = distance(c, e.mouse) / 2;
+        double dx = (double)(e.mouse.x - c.x) / mag;
+        double dy = (double)(e.mouse.y - c.y) / mag;
+        playerPos.x += dx;
+        playerPos.y += dy;
+        if (playerPos.x < 0) { playerPos.x = 0; }
+        if (playerPos.y < 0) { playerPos.y = 0; }
+        if (playerPos.x > pxDim.x) { playerPos.x = pxDim.x; }
+        if (playerPos.y > pxDim.y) { playerPos.y = pxDim.y; }
+    }
 }
 void Game::update() {
 #ifdef DEBUG_GAME
@@ -33,4 +46,5 @@ void Game::render() {
 #ifdef DEBUG_GAME
     std::cout << "Render" << std::endl;
 #endif
+    world.draw(playerPos);
 }

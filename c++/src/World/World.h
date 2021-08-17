@@ -14,6 +14,7 @@
 #include "../Utils/Utils.h"
 #include "../Utils/Rect.h"
 #include "../Utils/FileIO.h"
+#include "../Utils/AssetManager.h"
 
 class World {
 public:
@@ -35,17 +36,23 @@ public:
 	double saveWorld(double progress);
 
 	// Update world blocks
-	void placeBlock(int x, int y, TileId block);
+	void placeBlock(int x, int y, tile::Id block);
 	void destroyBlock(int x, int y);
 	// Update world block information
-	void addBlock(int x, int y, TileId block);
-	void removeBlock(int x, int y, TileId block);
+	void addBlock(int x, int y, tile::Id block);
+	void removeBlock(int x, int y, tile::Id block);
 
 	// Visual functions
 	Rect getScreenRect(const SDL_Point& playerPos);
+	void draw(const SDL_Point& playerPos);
 	void drawLight(const Rect& rect);
 
 	// Getters
+	SDL_Point getDim() const { return dim; }
+	SDL_Point getPixelDim() const {
+		return { dim.x * gameVals::BLOCK_W, dim.y * gameVals::BLOCK_W };
+	}
+
 	int surfaceH() const;
 	int underground() const;
 	SDL_Color skyColor() const;
@@ -59,7 +66,7 @@ public:
 	static const int SEC_PER_DAY, MS_PER_DAY, NOON, DAY, NIGHT;
 
 	struct Block {
-		TileId id = TileId::AIR;
+		tile::Id id = tile::Id::AIR;
 		uint8_t src = 0;
 		bool spawner = false, crafter = false;
 

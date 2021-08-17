@@ -67,6 +67,10 @@ void Rect::setCenter(double nCX, double nCY) {
     y = (int)(nCY - h / 2);
 }
 
+void Rect::setCenter(const SDL_Point& pos) {
+    setCenter(pos.x, pos.y);
+}
+
 void Rect::resize(int nW, int nH, bool center) {
 #ifdef DEBUG
     std::cout << "\033[92mResizing Rectangle\033[0m" << std::endl;
@@ -106,11 +110,11 @@ Rect Rect::getMinRect(int w, int h, int maxW, int maxH) {
     if (maxW <= 0 && maxH <= 0) {
         factor = 1;
     } else if (maxW <= 0) {
-        factor = maxH / h;
+        factor = (double)maxH / h;
     } else if (maxW <= 0) {
-        factor = maxW / w;
+        factor = (double)maxW / w;
     } else {
-        factor = std::min(maxW / w, maxH / h);
+        factor = std::min((double)maxW / w, (double)maxH / h);
     }
     return Rect(0, 0, (int)(w * factor), (int)(h * factor));
 }

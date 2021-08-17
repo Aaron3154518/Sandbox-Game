@@ -1,6 +1,6 @@
 #include "Selector.h"
 
-const SDL_Color Selector::BKGRND{ 128,128,128 };
+const SDL_Color Selector::BKGRND{ 128,128,128,255 };
 const SDL_Color Selector::SCROLL_BKGRND{ 0,0,128 };
 
 const std::string Selector::PLAY_IMG = createFile(IMAGES, "play", ".png");
@@ -143,6 +143,7 @@ void Selector::handleEvents(Event& e) {
 }
 
 void Selector::draw() {
+	UI::assets().rect(&mRect, BKGRND);
 	drawScroll();
 	if (input.active()) {
 		// Draw current text input
@@ -157,11 +158,7 @@ void Selector::draw() {
 }
 
 void Selector::drawScroll() {
-	UI::setDrawColor(BKGRND);
-	SDL_RenderFillRect(UI::renderer(), &mRect);
-	UI::setDrawColor(SCROLL_BKGRND);
-	SDL_RenderFillRect(UI::renderer(), &scrollRect);
-	UI::resetDrawColor();
+	UI::assets().rect(&scrollRect, SCROLL_BKGRND);
 	for (int i = (int)(scroll / itemH);
 		i <= (int)((scroll + scrollRect.h) / itemH); i++) {
 		SDL_Texture* tex = drawItem(i);
@@ -179,11 +176,7 @@ SDL_Texture* Selector::drawItem(int idx) {
 	SDL_Texture* tex = SDL_CreateTexture(UI::renderer(),
 		SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, itemW, itemH);
 	UI::setRenderTarget(tex);
-
-	UI::setDrawColor(BLACK);
-	SDL_RenderFillRect(UI::renderer(), NULL);
-	UI::resetDrawColor();
-
+	UI::assets().rect(NULL, BLACK);
 	UI::assets().drawTexture(PLAY_IMG, buttonPlay, NULL);
 	UI::assets().drawTexture(DELETE_IMG, buttonDelete, NULL);
 

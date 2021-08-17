@@ -28,6 +28,7 @@ public:
 
     void tick(Event &e);
 private:
+    SDL_Point playerPos = { 0,0 };
     World world;
 
     void handleEvents(Event& e);

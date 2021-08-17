@@ -315,13 +315,22 @@
         }
     }
 
-    void AssetManager::thickRect(const Rect& r, int thickness) const {
-        int half = (int)(thickness / 2);
-        for (int i = -half; i < half; i++) {
+    void AssetManager::rect(Rect* r, const SDL_Color& color) const {
+        UI::setDrawColor(color);
+        SDL_RenderFillRect(UI::renderer(), r);
+        UI::resetDrawColor();
+    }
+        
+    void AssetManager::thickRect(const Rect& r, int thickness, const SDL_Color& color) const {
+        UI::setDrawColor(color);
+        int lb = -(int)(thickness / 2);
+        int ub = (int)(((double)thickness / 2) + .5);
+        for (int i = lb; i < ub; i++) {
             Rect r2(r.x - i, r.y - i, r.w + 2 * i, r.h + 2 * i);
             if (r2.w <= 0 || r2.h <= 0) { continue; }
             SDL_RenderDrawRect(UI::renderer(), &r2);
         }
+        UI::resetDrawColor();
     }
 
     /*void AssetManager::drawProgressBar(Number amnt, Number cap, Rect& rect,

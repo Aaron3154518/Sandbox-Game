@@ -96,7 +96,8 @@
         void drawText(TextData& data, Rect* boundary) const;
         void drawTextWrapped(TextData& data, Rect* boundary, Uint32 bkgrnd = -1) const;
 
-        void thickRect(const Rect& r, int thickness) const;
+        void rect(Rect* r, const SDL_Color& color) const;
+        void thickRect(const Rect& r, int thickness, const SDL_Color& color) const;
 
         //void drawProgressBar(Number amnt, Number cap, Rect& rect, SDL_Color color, SDL_Color bkgrnd) const;
         //void drawProgressBarLog(Number amnt, Number cap, Rect& rect, SDL_Color color, SDL_Color bkgrnd) const;
