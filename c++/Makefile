@@ -15,7 +15,7 @@ TARGET := $(BIN)/sandbox
 SRCS := Main Utils/Utils Utils/Rect Utils/AssetManager Utils/FileIO \
 UIs/UI UIs/Game UIs/Selector UIs/PlayerSelector UIs/UniverseSelector \
 UIElements/YesNo UIElements/TextInput \
-World/World \
+World/World World/GameInterface \
 Objects/Tile Objects/TileObjects
 SRCS := $(patsubst %, $(SRC)/%.$(CEXT), $(SRCS))
 EXCLUDE := $(wildcard $(SRC)/*_unittest.$(CEXT) $(SRC)/**/*_unittest.$(CEXT))

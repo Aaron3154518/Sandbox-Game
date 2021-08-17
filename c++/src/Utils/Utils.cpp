@@ -166,6 +166,10 @@ void Event::update(SDL_Event& e) {
     }
 }
 
+bool Event::keyDown(SDL_Keycode key) const {
+    return down.find(key) != down.end();
+}
+
 bool Event::keyDown(SDL_Keycode key, Timestep& ts) const {
     auto it = down.find(key);
     if (it != down.end()) { ts = it->second; return true; }

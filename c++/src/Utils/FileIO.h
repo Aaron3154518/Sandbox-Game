@@ -87,6 +87,9 @@ class FileRead : public IO {
 public:
     FileRead() = default;
     ~FileRead() = default;
+    // Copying returns a new object
+    FileRead(const FileRead& other) : FileRead() {}
+    FileRead operator =(const FileRead& other) { return FileRead(); }
 
     bool open(std::string file);
     bool close();
@@ -107,6 +110,9 @@ class FileWrite : public IO {
 public:
     FileWrite() = default;
     ~FileWrite() { discard(); }
+    // Copying returns a new object
+    FileWrite(const FileWrite& other) : FileWrite() {}
+    FileWrite operator =(const FileWrite& other) { return FileWrite(); }
 
     bool open(std::string file);
     bool commit();

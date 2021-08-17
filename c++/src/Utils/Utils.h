@@ -96,6 +96,7 @@ struct Event {
     void update(Timestep ts);
     void update(SDL_Event& e);
 
+    bool keyDown(SDL_Keycode key) const;
     bool keyDown(SDL_Keycode key, Timestep& ts) const;
     bool keyPressed(SDL_Keycode key) const;
     bool keyReleased(SDL_Keycode key) const;

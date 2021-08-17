@@ -31,13 +31,12 @@ Selector::Selector(bool allowTextInput) :
 	input.setActive(allowTextInput);
 }
 
-void Selector::runUI() {
+void Selector::initUI() {
 	loadFiles();
 	resize(NULL);
-	UI::runUI();
 }
 
-void Selector::tick(Event& e) {
+void Selector::tickUI(Event& e) {
 	handleEvents(e);
 	draw();
 }

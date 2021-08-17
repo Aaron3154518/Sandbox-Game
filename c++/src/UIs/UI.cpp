@@ -13,8 +13,9 @@ std::deque<std::shared_ptr<UI>> UI::activeUIs;
 void UI::runUI() {
     std::cerr << "Running" << std::endl;
     if (textInput) { SDL_StartTextInput(); }
-    Event e;
     running = true;
+    initUI();
+    Event e;
     while (running) {
         Timestep dt(SDL_GetTicks() - gameTime);
         gameTime += dt.milliseconds();
@@ -25,7 +26,7 @@ void UI::runUI() {
         }
 
         SDL_RenderClear(mRenderer);
-        tick(e);
+        tickUI(e);
         SDL_RenderPresent(mRenderer);
 
         if (dt.milliseconds() < gameVals::FRAME_DELAY) {

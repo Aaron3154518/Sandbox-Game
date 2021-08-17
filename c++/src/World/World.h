@@ -17,23 +17,14 @@
 #include "../Utils/AssetManager.h"
 
 class World {
+	friend class Game;
 public:
 	World() = default;
 	~World();
+	World(const World& other) = delete;
+	World operator =(const World& other) = delete;
 
-	void setFile(std::string fName);
-	void newWorld();
 	void printInfo(bool printBlocks) const;
-
-	void tick(Timestep& dt);
-
-	// Loads world
-	void loadWorld();
-	double loadWorld(double progress);
-
-	// Saves world
-	void saveWorld();
-	double saveWorld(double progress);
 
 	// Update world blocks
 	void placeBlock(int x, int y, tile::Id block);
@@ -43,9 +34,7 @@ public:
 	void removeBlock(int x, int y, tile::Id block);
 
 	// Visual functions
-	Rect getScreenRect(const SDL_Point& playerPos);
-	void draw(const SDL_Point& playerPos);
-	void drawLight(const Rect& rect);
+	Rect getScreenRect(const SDL_Point& playerPos) const;
 
 	// Getters
 	SDL_Point getDim() const { return dim; }
@@ -56,7 +45,6 @@ public:
 	int surfaceH() const;
 	int underground() const;
 	SDL_Color skyColor() const;
-
 
 	enum WorldType : uint8_t {
 		world = 0,
@@ -75,10 +63,23 @@ public:
 		uint8_t ySrc() const { return (src >> 4) & 0x0F; }
 	};
 private:
+	void setFile(std::string fName);
+	void newWorld();
+
+	void tick(Timestep& dt);
+	void draw(const SDL_Point& playerPos);
+	void drawLight(const Rect& rect);
+
+	// Loads world
+	void loadWorld();
+	double loadWorld(double progress);
 	void loadInfo();
 	double loadBlocks(double progress, int numRows);
 	double drawWorld(double progress);
 
+	// Saves world
+	void saveWorld();
+	double saveWorld(double progress);
 	void saveInfo();
 	double saveBlocks(double progress, int numRows);
 	double saveMap(double progress);

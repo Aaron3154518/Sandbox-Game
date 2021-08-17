@@ -13,6 +13,7 @@ World::~World() {
 }
 
 void World::setFile(std::string fName) {
+	fr.close(); fw.discard();
 	fileName = fName;
 	if (!isFile(fileName)) {
 		dim = { 10,10 };
@@ -382,7 +383,7 @@ void World::destroyBlock(int x, int y) {}
 
 void World::removeBlock(int x, int y, tile::Id block) {}
 
-Rect World::getScreenRect(const SDL_Point& playerPos) {
+Rect World::getScreenRect(const SDL_Point& playerPos) const {
 	int w = UI::width(), h = UI::height();
 	int worldW = dim.x * gameVals::BLOCK_W;
 	int worldH = dim.y * gameVals::BLOCK_W;
@@ -414,6 +415,7 @@ void World::draw(const SDL_Point& playerPos) {
 	int ubX = (int)std::ceil(std::min(screen.x2(), worldW) / gameVals::BLOCK_W);
 	int lbY = (int)(std::max(screen.y, 0) / gameVals::BLOCK_W);
 	int ubY = (int)std::ceil(std::min(screen.y2(), worldH) / gameVals::BLOCK_W);
+	// Draw blocks
 	Rect r(lbX * gameVals::BLOCK_W - screen.x, lbY * gameVals::BLOCK_W - screen.y,
 		gameVals::BLOCK_W, gameVals::BLOCK_W);
 	AssetManager& assets = UI::assets();
@@ -430,13 +432,14 @@ void World::draw(const SDL_Point& playerPos) {
 		r.x = lbX * gameVals::BLOCK_W - screen.x;
 		r.y += gameVals::BLOCK_W;
 	}
+	// Draw border
+	assets.thickRect(worldRect, 2, BLACK);
+	// Draw player
 	SDL_Texture* playerTex = assets.getAsset(
 		createFile(PLAYER_IMGS,"player_pig", ".png"));
 	r = Rect::getMinRect(playerTex, gameVals::BLOCK_W, gameVals::BLOCK_W * 2);
 	r.setCenter(playerPos - screen.topLeft());
 	assets.drawTexture(playerTex, r);
-	assets.thickRect(worldRect, 2, BLACK);
-	
 }
 
 void World::drawLight(const Rect& rect) {}

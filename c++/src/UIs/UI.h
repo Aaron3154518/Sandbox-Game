@@ -23,7 +23,8 @@ public:
 
 	// Functions for running the UI
 	virtual void runUI();
-	virtual void tick(Event& e) { std::cerr << "Wrong Tick" << std::endl; }
+	virtual void initUI() {}
+	virtual void tickUI(Event& e) {}
 
 	static void resize(int nW, int nH) { w = nW; h = nH; }
 

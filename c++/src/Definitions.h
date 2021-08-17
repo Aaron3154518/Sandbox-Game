@@ -44,7 +44,7 @@ namespace gameVals {
 	constexpr auto LARGE_FONT = "largefont";
 
 	// Game constants
-	constexpr int MIN_W = 800, MIN_H = 600, BLOCK_W = 24;
+	constexpr int MIN_W = 800, MIN_H = 600, BLOCK_W = 32;
 	constexpr int MAP_W = (int)std::min(MIN_W / 4, MIN_H / 3);
 	constexpr int ITEM_W = (int)(BLOCK_W * 3 / 4);
 	constexpr int INV_W = (int)std::min(MIN_W / 20, MIN_H / 20);

@@ -19,17 +19,21 @@
 #include "../Utils/Rect.h"
 #include "../Utils/AssetManager.h"
 #include "../World/World.h"
+#include "../World/GameInterface.h"
 
 // Game class
 class Game : public UI {
 public:
-    Game(const std::string& player, const std::string& universe);
+    Game(const std::string& _player, const std::string& _universe);
     ~Game() = default;
 
-    void tick(Event &e);
+    void initUI();
+    void tickUI(Event &e);
 private:
+    static GameInterface& game;
+
+    std::string player, universe;
     SDL_Point playerPos = { 0,0 };
-    World world;
 
     void handleEvents(Event& e);
     void update();

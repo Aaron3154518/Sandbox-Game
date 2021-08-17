@@ -18,8 +18,8 @@ public:
 	Selector(bool allowTextInput);
 	~Selector() = default;
 
-	virtual void runUI();
-	virtual void tick(Event& e);
+	virtual void initUI();
+	virtual void tickUI(Event& e);
 
 	virtual void resize(Rect* rect = nullptr);
 
