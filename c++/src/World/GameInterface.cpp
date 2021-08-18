@@ -8,3 +8,7 @@ GameInterface& GameInterface::Get() {
 World& GameInterface::GetWorld() {
 	return Get().mWorld;
 }
+
+Player& GameInterface::GetPlayer() {
+	return Get().mPlayer;
+}

@@ -1,7 +1,6 @@
 #ifndef WORLD_SELECTOR_H
 #define WORLD_SELECTOR_H
 
-#include <dirent.h>
 #include <SDL.h>
 
 #include "../Definitions.h"

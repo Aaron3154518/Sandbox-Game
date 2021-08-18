@@ -18,7 +18,7 @@ tile::Id Tile::registerTile(TilePtr t, tile::Id id) {
 SDL_Texture* Tile::getImage(SDL_Point pos) const {
 	AssetManager& assets = UI::assets();
 	if (animIdx == -1) {
-		return assets.getAsset(ITEM_IMGS + img);
+		return assets.getAsset(gameVals::items() + img);
 	} else {
 		return NULL;
 	}

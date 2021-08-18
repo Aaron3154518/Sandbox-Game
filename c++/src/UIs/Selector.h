@@ -1,7 +1,6 @@
 #ifndef SELECTOR_H
 #define SELECTOR_H
 
-#include <dirent.h>
 #include <SDL.h>
 
 #include "../Definitions.h"
@@ -32,6 +31,7 @@ protected:
 	virtual SDL_Texture* drawItem(int idx);
 	bool toggleTextInput(bool val);
 
+	virtual void onNewItem();
 	virtual bool newItem() { return false; }
 	virtual bool deleteItem(int idx) { return false; }
 	virtual void selectItem(int idx) = 0;

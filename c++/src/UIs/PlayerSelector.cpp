@@ -9,37 +9,37 @@ PlayerSelector::PlayerSelector(std::string univ) : PlayerSelector() {
 
 void PlayerSelector::loadFiles() {
 	files.clear();
-	DIR* playerDir = opendir(PLAYERS);
-	struct dirent* en;
-	if (playerDir) {
-		while ((en = readdir(playerDir)) != NULL) {
-			std::string name = en->d_name;
-			if (isFile(createFile(PLAYERS, name, ""))) {
-				size_t idx = name.find_last_of(".");
-				if (idx != std::string::npos
-					&& validSaveFile(name.substr(0, idx))
-					&& name.substr(idx) == PLAYER_EXT) {
-					files.push_back(toDisplayName(name.substr(0, idx)));
-				}
+	for (const auto& file : getDirContents(gameVals::players().c_str())) {
+		if (isFile(gameVals::players() + file)) {
+			size_t idx = file.find_last_of(".");
+			if (idx != std::string::npos && validSaveFile(file.substr(0, idx))
+				&& file.substr(idx) == gameVals::playerExt()) {
+				files.push_back(toDisplayName(file.substr(0, idx)));
 			}
 		}
-		closedir(playerDir);
 	}
 }
 
 bool PlayerSelector::newItem() {
-	std::string fileName = toFileName(input.getInput());
+	std::string fileName = input.getInput();
 	if (fileName.empty()) { return false; }
 	if (std::find(files.begin(), files.end(), fileName) != files.end()) {
 		return false;
 	}
-	std::string fullFile = createFile(PLAYERS, fileName, PLAYER_EXT);
+	std::string fullFile = gameVals::playerFile(toFileName(fileName));
 	if (!isFile(fullFile)) {
-		std::ofstream file(fullFile);
-		file << "Wassup World" << std::endl;
-		file.close();
-		files.push_back(input.getInput());
-		input.clearInput();
+		FileWrite fw;
+		if (!fw.open(fullFile)) {
+			std::cerr << "Could not open player file" << std::endl;
+			return false;
+		}
+		std::string text = "Fuck Yeah";
+		fw.write(text);
+		if (!fw.commit()) {
+			std::cerr << "Failed to write to player file" << std::endl;
+			return false;
+		}
+		files.push_back(fileName);
 		return true;
 	}
 	return false;
@@ -48,7 +48,7 @@ bool PlayerSelector::newItem() {
 bool PlayerSelector::deleteItem(int idx) {
 	if (idx < 0 || idx >= files.size()) { return false; }
 	auto it = files.begin() + idx;
-	std::string fullFile = createFile(PLAYERS, toFileName(*it), PLAYER_EXT);
+	std::string fullFile = gameVals::playerFile(toFileName(*it));
 	if (isFile(fullFile)) {
 		std::remove(fullFile.c_str());
 		files.erase(it);
@@ -59,10 +59,11 @@ bool PlayerSelector::deleteItem(int idx) {
 
 void PlayerSelector::selectItem(int idx) {
 	if (idx < 0 || idx >= files.size()) { return; }
+	std::string file = toFileName(files[idx]);
 	if (universe.empty()) {
-		nextUIs.push_back(std::make_shared<UniverseSelector>(files[idx]));
+		nextUIs.push_back(std::make_shared<UniverseSelector>(file));
 	} else {
-		nextUIs.push_back(std::make_shared<Game>(files[idx], universe));
+		nextUIs.push_back(std::make_shared<Game>(file, universe));
 	}
 	running = false;
 }

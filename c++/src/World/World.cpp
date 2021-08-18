@@ -436,7 +436,7 @@ void World::draw(const SDL_Point& playerPos) {
 	assets.thickRect(worldRect, 2, BLACK);
 	// Draw player
 	SDL_Texture* playerTex = assets.getAsset(
-		createFile(PLAYER_IMGS,"player_pig", ".png"));
+		gameVals::entities() + "player_pig.png");
 	r = Rect::getMinRect(playerTex, gameVals::BLOCK_W, gameVals::BLOCK_W * 2);
 	r.setCenter(playerPos - screen.topLeft());
 	assets.drawTexture(playerTex, r);

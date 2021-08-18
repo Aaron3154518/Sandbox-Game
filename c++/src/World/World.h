@@ -21,8 +21,8 @@ class World {
 public:
 	World() = default;
 	~World();
-	World(const World& other) = delete;
-	World operator =(const World& other) = delete;
+	World(const World&) = delete;
+	World operator =(const World&) = delete;
 
 	void printInfo(bool printBlocks) const;
 

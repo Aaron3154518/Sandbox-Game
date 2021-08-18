@@ -9,28 +9,21 @@ UniverseSelector::UniverseSelector(std::string _player) : UniverseSelector() {
 
 void UniverseSelector::loadFiles() {
 	files.clear();
-	DIR* univDir = opendir(UNIVERSES);
-	struct dirent* en;
-	if (univDir) {
-		while ((en = readdir(univDir)) != NULL) {
-			std::string name = en->d_name;
-			if (isDir(createFile(UNIVERSES, name, "")) && validSaveFile(name)) {
-				files.push_back(toDisplayName(name));
-			}
+	for (const auto& file : getDirContents(gameVals::universes())) {
+		if (isDir(gameVals::univDir(file)) && validSaveFile(file)) {
+			files.push_back(toDisplayName(file));
 		}
-		closedir(univDir);
 	}
 }
 
 bool UniverseSelector::newItem() {
-	std::string fileName = toFileName(input.getInput());
+	std::string fileName = input.getInput();
 	if (fileName.empty()) { return false; }
 	if (std::find(files.begin(), files.end(), fileName) != files.end()) {
 		return false;
 	}
-	if (createUniverse(fileName)) {
-		files.push_back(input.getInput());
-		input.clearInput();
+	if (createUniverse(toFileName(fileName))) {
+		files.push_back(fileName);
 		return true;
 	}
 	return false;
@@ -48,29 +41,28 @@ bool UniverseSelector::deleteItem(int idx) {
 
 void UniverseSelector::selectItem(int idx) {
 	if (idx < 0 || idx >= files.size()) { return; }
+	std::string file = toFileName(files[idx]);
 	if (player.empty()) {
-		nextUIs.push_back(std::make_shared<UniverseSelector>(files[idx]));
+		nextUIs.push_back(std::make_shared<PlayerSelector>(file));
 	} else {
-		nextUIs.push_back(std::make_shared<Game>(player, files[idx]));
+		nextUIs.push_back(std::make_shared<Game>(player, file));
 	}
 	running = false;
 }
 
 bool UniverseSelector::createUniverse(std::string dirName) {
-	std::string fullDir = createFile(UNIVERSES, dirName, "/");
+	std::string fullDir = gameVals::univDir(dirName);
 	if (!isDir(fullDir)) {
 		// Create folder
 		mkdir(fullDir.c_str());
 		// Create info file
 		FileWrite fw;
-		if (!fw.open(createFile(fullDir, INFO_FILE, ""))) {
+		if (!fw.open(gameVals::univInfoFile(dirName))) {
 			std::cerr << "Could not open universe info file" << std::endl;
-			rmdir(fullDir.c_str());
 			return false;
 		}
 		if (!fw.commit()) {
 			std::cerr << "Failed to write to universe info file" << std::endl;
-			rmdir(fullDir.c_str());
 			return false;
 		}
 		return true;
@@ -79,24 +71,24 @@ bool UniverseSelector::createUniverse(std::string dirName) {
 }
 
 bool UniverseSelector::deleteUniverse(std::string dirName) {
-	std::string fullDir = createFile(UNIVERSES, dirName, "/");
+	std::string fullDir = gameVals::univDir(dirName);
 	DIR* univDir = opendir(fullDir.c_str());
 	struct dirent* en;
 	if (univDir) {
 		// Delete all .wld files
 		while ((en = readdir(univDir)) != NULL) {
 			std::string name = en->d_name;
-			std::string fullFile = createFile(fullDir, name, "");
+			std::string fullFile = fullDir + name;
 			if (isFile(fullFile)) {
 				size_t idx = name.find_last_of(".");
 				if (idx != std::string::npos
-					&& name.substr(idx) == WORLD_EXT) {
+					&& name.substr(idx) == gameVals::worldExt()) {
 					std::remove(fullFile.c_str());
 				}
 			}
 		}
 		// Delete info file
-		std::remove(createFile(fullDir, INFO_FILE, "").c_str());
+		std::remove(gameVals::univInfoFile(dirName).c_str());
 		closedir(univDir);
 		// TODO: Delete backups
 		if (rmdir(fullDir.c_str()) != 0) {

@@ -8,11 +8,11 @@ Game::Game(const std::string& _player, const std::string& _universe) :
     player(_player), universe(_universe) {}
 
 void Game::initUI() {
-    std::string infoFile = UNIVERSES + universe + "/" + INFO_FILE;
+    std::string infoFile = gameVals::univInfoFile(universe);
     FileRead fr;
     fr.open(infoFile);
     fr.close();
-    game.world().setFile(UNIVERSES + universe + "/world" + WORLD_EXT);
+    game.world().setFile(gameVals::worldFile(universe, "world"));
 }
 
 void Game::tickUI(Event& e) {

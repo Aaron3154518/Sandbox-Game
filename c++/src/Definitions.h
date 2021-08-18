@@ -2,39 +2,35 @@
 #define DEFINITIONS
 //#define DEBUG
 
-#include <map>
-#include <algorithm>
-
-// Frequently used types
-template <typename T>
-using Map2D = std::map<int, std::map<int, T>>;
-
-// Folders
-// Resources
-#define RES "res/"
-#define FONTS RES "fonts/"
-#define IMAGES RES "images/"
-#define ITEM_IMGS RES "items/"
-#define PROJ_IMGS RES "projectiles/"
-#define PLAYER_IMGS RES "player/"
-#define ENTITY_IMGS RES "enitites/"
-
-#define TIMES_FONT FONTS "times.ttf"
-
-// Saves
-#define SAVES "saves/"
-#define PLAYERS SAVES "players/"
-#define UNIVERSES SAVES "universes/"
-
-// File Extensions
-constexpr auto WORLD_EXT = ".wld";
-constexpr auto PLAYER_EXT = ".plr";
-constexpr auto TMP_EXT = ".tmp";
-
-// Special Files
-constexpr auto INFO_FILE = "info.bin";
+#include <string>
+#include <initializer_list>
 
 namespace gameVals {
+	std::string concat(std::initializer_list<std::string> strs);
+
+	const std::string& res();
+	const std::string& fonts();
+	const std::string& images();
+	const std::string& items();
+	const std::string& projectiles();
+	const std::string& entities();
+
+	const std::string& saves();
+	const std::string& players();
+	const std::string& universes();
+
+	const std::string& playerExt();
+	const std::string& worldExt();
+	const std::string& infoFile();
+
+	// File getters
+	const std::string& fontFile(); // Easy access to times new roman
+	std::string fontFile(const std::string& fName);
+	std::string playerFile(const std::string& pName);
+	std::string univDir(const std::string& uName);
+	std::string univInfoFile(const std::string& uName);
+	std::string worldFile(const std::string& uName, const std::string& wName);
+
 	// FPS info
 	constexpr int FPS = 60;
 	constexpr int FRAME_DELAY = 1000 / FPS;

@@ -3,9 +3,9 @@
 const SDL_Color Selector::BKGRND{ 128,128,128,255 };
 const SDL_Color Selector::SCROLL_BKGRND{ 0,0,128 };
 
-const std::string Selector::PLAY_IMG = createFile(IMAGES, "play", ".png");
-const std::string Selector::DELETE_IMG = createFile(IMAGES, "delete", ".png");
-const std::string Selector::ADD_IMG = createFile(IMAGES, "add", ".png");
+const std::string Selector::PLAY_IMG = gameVals::images() + "play.png";
+const std::string Selector::DELETE_IMG = gameVals::images() + "delete.png";
+const std::string Selector::ADD_IMG = gameVals::images() + "add.png";
 
 // Used to give selectors uniquely named fonts
 static int selectorCnt = 0;
@@ -76,7 +76,7 @@ void Selector::resize(Rect* rect) {
 	buttonPlay = Rect(itemW - half, 0, half, half);
 	buttonDelete = Rect(buttonPlay.x, buttonPlay.y2(), half, half);
 
-	UI::assets().loadFont(ITEM_FONT, TIMES_FONT, -1, half);
+	UI::assets().loadFont(ITEM_FONT, gameVals::fontFile(), -1, half);
 }
 
 void Selector::handleEvents(Event& e) {
@@ -123,20 +123,10 @@ void Selector::handleEvents(Event& e) {
 		}
 	} else if (input.active() &&
 		SDL_PointInRect(&e.mouse, &buttonNew) && e.clicked(e.left)) {
-		if (newItem()) {
-			maxScroll = std::max(0,
-				(int)files.size() * itemH - scrollRect.h);
-			scroll = maxScroll;
-		}
+		if (newItem()) { onNewItem(); }
 	}
 	if (input.active()) {
-		if (e.keyReleased(SDLK_RETURN)) {
-			if (newItem()) {
-				maxScroll = std::max(0,
-					(int)files.size() * itemH - scrollRect.h);
-				scroll = maxScroll;
-			}
-		}
+		if (e.keyReleased(SDLK_RETURN) && newItem()) { onNewItem(); }
 		input.handleEvents(e);
 	}
 }
@@ -185,6 +175,13 @@ SDL_Texture* Selector::drawItem(int idx) {
 
 	UI::resetRenderTarget();
 	return tex;
+}
+
+void Selector::onNewItem() {
+	maxScroll = std::max(0,
+		(int)files.size() * itemH - scrollRect.h);
+	scroll = maxScroll;
+	input.clearInput();
 }
 
 bool Selector::toggleTextInput(bool val) {

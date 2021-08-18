@@ -4,7 +4,6 @@
 #include <iostream>
 #include <sys/stat.h>
 
-#include <dirent.h>
 #include <SDL.h>
 
 #include "../Definitions.h"

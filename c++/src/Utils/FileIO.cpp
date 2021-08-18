@@ -1,5 +1,7 @@
 #include "FileIO.h"
 
+const std::string TMP_EXT = ".tmp";
+
 // IO
 void IO::DATA_READ(std::string) {
 	uint16_t l;
@@ -71,8 +73,7 @@ char* FileRead::getBytes(size_t n) {
 bool FileWrite::open(std::string file) {
 	discard();
 	fileName = file;
-	size_t pos = file.rfind('.');
-	tmpName = file.substr(0, pos) + TMP_EXT;
+	tmpName = file + TMP_EXT;
 	fs.open(tmpName, std::ios_base::binary);
 	if (!fs) {
 		std::cerr << "Write File Open Unsuccessful" << std::endl;

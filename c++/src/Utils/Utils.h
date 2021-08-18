@@ -14,6 +14,7 @@
 #include <fcntl.h>
 #include <sys/stat.h>
 
+#include <dirent.h>
 #include <SDL.h>
 
 #include "Rect.h"
@@ -32,13 +33,11 @@ std::string replaceInString(const std::string& source,
 
 // File functions
 bool isFile(const std::string& fileName);
-bool isDir(const std::string& dirName);
+bool isDir(std::string dirName);
+
+std::vector<std::string> getDirContents(const std::string& dirName);
 
 bool validSaveFile(const std::string& fileName);
-
-// TODO: This function sucks - split into specific file creators
-std::string createFile(const std::string& folder,
-    const std::string& file, const std::string& ext);
 
 std::string toFileName(const std::string& displayName);
 std::string toDisplayName(const std::string& fileName);

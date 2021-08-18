@@ -34,21 +34,36 @@ bool isFile(const std::string &fileName) {
         info.st_mode & S_IFREG;
 }
 
-bool isDir(const std::string& dirName) {
+bool isDir(std::string dirName) {
+    // Remove any trailing '/' as they interfere with stat()
+    size_t pos = dirName.size() - 1;
+    while (dirName[pos] == '/' && pos-- > 0) {}
+    dirName = dirName.substr(0, pos + 1);
+
     struct stat info;
     return stat(dirName.c_str(), &info) == 0 &&
         info.st_mode & S_IFDIR;
 }
 
+std::vector<std::string> getDirContents(const std::string& dirName) {
+    std::vector<std::string> results;
+    DIR* dir = opendir(dirName.c_str());
+    struct dirent* en;
+    if (dir) {
+        while ((en = readdir(dir)) != NULL) {
+            std::string name = en->d_name;
+            if (name != "." && name != "..") {
+                results.push_back(name);
+            }
+        }
+        closedir(dir);
+    }
+    return results;
+}
+
 bool validSaveFile(const std::string& fileName) {
     return std::find_if_not(fileName.begin(), fileName.end(),
         [](const char& ch) { return isalnum(ch) || ch == ' '; }) == fileName.end();
-}
-
-// Function to put files together
-std::string createFile(const std::string& folder,
-    const std::string& file, const std::string& ext) {
-    return folder + file + ext;
 }
 
 std::string toFileName(const std::string& displayName) {

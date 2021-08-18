@@ -5,7 +5,6 @@
 #include <sstream>
 #include <fstream>
 
-#include <dirent.h>
 #include <SDL.h>
 
 #include "../Definitions.h"

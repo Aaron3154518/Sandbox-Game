@@ -1,7 +1,7 @@
 #include "YesNo.h"
 
-const std::string YesNo::YES_IMG = createFile(IMAGES, "confirm", ".png");
-const std::string YesNo::NO_IMG = createFile(IMAGES, "cancel", ".png");
+const std::string YesNo::YES_IMG = gameVals::images() + "confirm.png";
+const std::string YesNo::NO_IMG = gameVals::images() + "cancel.png";
 
 YesNo::YesNo(std::string _prompt) : prompt(_prompt) {}
 
@@ -72,7 +72,7 @@ void YesNo::setRect(Rect rect) {
 	TextData td;
 	td.w = lineW;
 	td.text = prompt;
-	td.font = UI::assets().loadFont(TIMES_FONT, -1, (int)(lineH / 2));
+	td.font = UI::assets().loadFont(gameVals::fontFile(), -1, (int)(lineH / 2));
 	promptTex = UI::assets().renderTextWrapped(td, promptRectFull);
 	promptRect += mRect.topLeft();
 	promptRectFull += promptRect.topLeft();

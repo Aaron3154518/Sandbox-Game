@@ -2,13 +2,16 @@
 #define GAME_INTERFACE_H
 
 #include "World.h"
+#include "../Player/Player.h"
 
 class GameInterface {
 public:
 	static GameInterface& Get();
 	static World& GetWorld();
+	static Player& GetPlayer();
 
 	World& world() { return mWorld; }
+	Player& player() { return mPlayer; }
 
 private:
 	GameInterface() = default;
@@ -17,6 +20,7 @@ private:
 	GameInterface& operator =(const GameInterface& other) = delete;
 
 	World mWorld;
+	Player mPlayer;
 };
 
 #endif
