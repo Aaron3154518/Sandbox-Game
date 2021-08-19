@@ -111,7 +111,7 @@ Rect Rect::getMinRect(int w, int h, int maxW, int maxH) {
         factor = 1;
     } else if (maxW <= 0) {
         factor = (double)maxH / h;
-    } else if (maxW <= 0) {
+    } else if (maxH <= 0) {
         factor = (double)maxW / w;
     } else {
         factor = std::min((double)maxW / w, (double)maxH / h);
@@ -162,4 +162,8 @@ SDL_Point& operator -=(SDL_Point& lhs, const SDL_Point& rhs) {
 }
 SDL_Point operator -(SDL_Point lhs, const SDL_Point& rhs) {
     return lhs -= rhs;
+}
+std::ostream& operator <<(std::ostream& os, const SDL_Point& rhs) {
+    os << "(" << rhs.x << "," << rhs.y << ")";
+    return os;
 }

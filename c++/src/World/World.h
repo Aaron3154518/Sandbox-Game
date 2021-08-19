@@ -8,6 +8,7 @@
 #include <SDL.h>
 
 #include "../Definitions.h"
+#include "../GameObjects.h"
 //#include "Chunk.h"
 #include "../ID/Tiles.h"
 #include "../Objects/Tile.h"
@@ -21,6 +22,17 @@
 class World {
 	friend class Game;
 public:
+	struct Block {
+		tile::Id id = tile::Id::AIR;
+		uint8_t src = 0;
+		bool spawner = false, crafter = false;
+
+		void setSrc(uint8_t dx, uint8_t dy) { src = (dx & 0x0F) | ((dy << 4) & 0xF0); }
+		uint8_t dx() const { return src & 0x0F; }
+		uint8_t dy() const { return (src >> 4) & 0x0F; }
+	};
+	const static Block nullBlock;
+
 	World() = default;
 	~World();
 	World(const World&) = delete;
@@ -29,12 +41,14 @@ public:
 	void printInfo(bool printBlocks) const;
 
 	// Update world blocks
-	void placeBlock(int x, int y, tile::Id block);
-	void destroyBlock(int x, int y);
-	void addBlock(int x, int y, tile::Id block);
-	void removeBlock(int x, int y, tile::Id block);
+	bool placeBlock(SDL_Point loc, tile::Id tileId);
+	bool breakBlock(SDL_Point loc);
+	void addBlock(SDL_Point loc, tile::Id tileId);
+	void removeBlock(SDL_Point loc, tile::Id tileId);
 
 	// Functions involving the world blocks
+	void getBlockSrc(int& x, int& y) const;
+	SDL_Point getBlockSrc(SDL_Point loc) const;
 	bool checkCollisions(Point<double>& pos, const Point<double>& dim,
 		Point<double>& d) const;
 	bool touchingBlocks(const Point<double>& pos, const Point<double>& dim,
@@ -42,7 +56,9 @@ public:
 	bool anySolidBlocks(int x1, int x2, int y1, int y2) const;
 
 	// Visual functions
-	Rect getScreenRect(const SDL_Point& center) const;
+	SDL_Point getWorldMousePos(SDL_Point mouse, SDL_Point center,
+		bool blocks = false) const;
+	Rect getScreenRect(SDL_Point center) const;
 	int width() const { return dim.x * gameVals::BLOCK_W; }
 	int height() const { return dim.y * gameVals::BLOCK_W; }
 
@@ -51,7 +67,8 @@ public:
 	SDL_Point getPixelDim() const {
 		return { dim.x * gameVals::BLOCK_W, dim.y * gameVals::BLOCK_W };
 	}
-
+	const Block& getBlock(int x, int y) const;
+	const Block& getBlock(SDL_Point loc) const { return getBlock(loc.x, loc.y); }
 	int surfaceH() const;
 	int underground() const;
 	SDL_Color skyColor() const;
@@ -62,22 +79,12 @@ public:
 	};
 	// Constants
 	static const int SEC_PER_DAY, MS_PER_DAY, NOON, DAY, NIGHT;
-
-	struct Block {
-		tile::Id id = tile::Id::AIR;
-		uint8_t src = 0;
-		bool spawner = false, crafter = false;
-
-		void setSrc(uint8_t dx, uint8_t dy) { src = (dx & 0x0F) | ((dy << 4) & 0xF0); }
-		uint8_t xSrc() const { return src & 0x0F; }
-		uint8_t ySrc() const { return (src >> 4) & 0x0F; }
-	};
 private:
 	void setFile(std::string fName);
 	void newWorld();
 
 	void tick(Timestep& dt);
-	void draw(const SDL_Point& center);
+	void draw(SDL_Point center);
 	void drawLight(const Rect& rect);
 
 	// Loads world

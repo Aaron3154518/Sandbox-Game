@@ -89,6 +89,15 @@ bool eq(double f1, double f2, double err) {
     return abs(f1 - f2) <= err;
 }
 
+Rect toBlockRect(Rect r) {
+    int lbX = (int)(r.x / gameVals::BLOCK_W);
+    int lbY = (int)(r.y / gameVals::BLOCK_W);
+    int ubX = (int)std::ceil((double)r.x2() / gameVals::BLOCK_W);
+    int ubY = (int)std::ceil((double)r.y2() / gameVals::BLOCK_W);
+    // x range = [lbX, ubX], y range = [lbY, ubY]
+    return Rect(lbX, lbY, ubX - lbX, ubY - lbY);
+}
+
 // Event
 void Event::update(Timestep ts) {
     dt = ts;

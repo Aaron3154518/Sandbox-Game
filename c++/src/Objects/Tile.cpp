@@ -33,3 +33,15 @@ void Tile::addDrop(item::Id item, int minAmnt, int maxAmnt) {
 	drop.minAmnt = minAmnt;
 	drop.maxAmnt = maxAmnt < 0 ? minAmnt : maxAmnt;
 }
+
+bool Tile::onBreak(SDL_Point loc) {
+	return true;
+}
+
+bool Tile::onPlace(SDL_Point loc) {
+	return true;
+}
+
+bool Tile::hit(SDL_Point loc, int power) {
+	return true;
+}

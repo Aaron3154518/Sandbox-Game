@@ -13,6 +13,7 @@
 
 #include "../Definitions.h"
 #include "../Utils/Utils.h"
+#include "../Utils/Point.h"
 #include "../ID/Tiles.h"
 #include "../ID/Items.h"
 #include "../UIs/UI.h"
@@ -50,18 +51,19 @@ public:
 	void addDrop(item::Id item, int minAmnt = 1, int maxAmnt = -1);
 	//std::forward_list<ItemInfo> generateDrops() const;
 
-	void onBreak();
-	void onPlace();
+	bool onBreak(SDL_Point loc);
+	bool onPlace(SDL_Point loc);
 
-	bool canPlace() const;
+	bool canPlace(SDL_Point loc) const { return true; }
 	bool activated() const { return false; }
 
-	bool hit(int x, int y, int power);
+	bool hit(SDL_Point loc, int power);
 
 	// Getters/Setters
 	bool getTileData(TileData idx) const { return data[idx]; }
 	void setTileData(TileData idx, bool val) { data[idx] = val; }
 	SDL_Color getMapColor() const { return mapColor; }
+	Point<uint8_t> getDim() const { return dim; }
 
 	virtual int id() { return Tile::ID; }
 	static int Id() { return ID; }
@@ -77,7 +79,7 @@ protected:
 	static tile::Id registerTile(TilePtr t, tile::Id id);
 
 	// Dimensions
-	SDL_Point dim{ 1, 1 };
+	Point<uint8_t> dim{ 1, 1 };
 
 	// Image
 	std::string img = "";

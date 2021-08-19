@@ -30,8 +30,6 @@ public:
     void initUI();
     void tickUI(Event &e);
 private:
-    static GameObjects& game;
-
     std::string player, universe;
     SDL_Point playerPos = { 0,0 };
 

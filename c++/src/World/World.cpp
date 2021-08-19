@@ -1,11 +1,13 @@
 #include "World.h"
-#include "../GameObjects.h"
+#include "../Player/Player.h"
 
 const int World::SEC_PER_DAY = 60 * 24;
 const int World::MS_PER_DAY = SEC_PER_DAY * 1000;
 const int World::NOON = (int)(World::MS_PER_DAY / 2);
 const int World::DAY = (int)(World::MS_PER_DAY / 4);
 const int World::NIGHT = World::DAY * 3;
+
+const World::Block World::nullBlock;
 
 // World
 World::~World() {
@@ -17,6 +19,7 @@ void World::setFile(std::string fName) {
 	fr.close(); fw.discard();
 	fileName = fName;
 	if (!isFile(fileName)) {
+		time = 0;
 		dim = { 10,10 };
 		numBlocks = dim.x * dim.y;
 		spawn = { 5,5 };
@@ -57,7 +60,7 @@ void World::printInfo(bool printBlocks) const {
 }
 
 void World::tick(Timestep& dt) {
-	time = (time + dt.milliseconds()) % MS_PER_DAY;
+	time = (time + dt.milliseconds() * 100) % MS_PER_DAY;
 	// Run auto save
 	nextSave -= dt.seconds();
 	if (nextSave <= 0) {
@@ -379,17 +382,83 @@ double World::saveMap(double progress) {
 }
 
 // Update world blocks
-void World::placeBlock(int x, int y, tile::Id block) {}
+bool World::placeBlock(SDL_Point loc, tile::Id tileId) {
+	TilePtr tile = Tile::getTile(tileId);
+	// Calculate block rectangle
+	Point<uint8_t> tDim = tile->getDim();
+	if (loc.x < 0 || loc.y < 0 ||
+		loc.x + tDim.x > dim.x || loc.y + tDim.y > dim.y) {
+		return false;
+	}
+	Rect bRect(loc.x * gameVals::BLOCK_W, loc.y * gameVals::BLOCK_W,
+		tDim.x * gameVals::BLOCK_W, tDim.y * gameVals::BLOCK_W);
+	if (/*!handler.collidesWithEntity(bRect) && */tile->canPlace(loc)) {
+		for (uint8_t dy = 0; dy < tDim.y; dy++) {
+			for (uint8_t dx = 0; dx < tDim.x; dx++) {
+				int x = loc.x + dx, y = loc.y + dy;
+				blocks[y][x].id = tileId;
+				blocks[y][x].setSrc(dx, dy);
+			}
+		}
+		addBlock(loc, tileId);
+		// manager.blockChange(loc, tileId, true);
+		tile->onPlace(loc);
+		return true;
+	}
+	return false;
+}
 
-void World::destroyBlock(int x, int y) {}
+bool World::breakBlock(SDL_Point loc) {
+	if (loc.x < 0 || loc.y < 0 || loc.x >= dim.x || loc.y >= dim.y) {
+		return false;
+	}
+	loc = getBlockSrc(loc);
+	Block& b = blocks[loc.y][loc.x];
+	if (b.id != tile::Id::AIR) {
+		TilePtr tile = Tile::getTile(b.id);
+		if (tile->onBreak(loc)) {
+			// Destroy all parts
+			Point<uint8_t> tDim = tile->getDim();
+			if (loc.x + tDim.x > dim.x || loc.y + tDim.y > dim.y) {
+				return false;
+			}
+			for (uint8_t dy = 0; dy < tDim.y; dy++) {
+				for (uint8_t dx = 0; dx < tDim.x; dx++) {
+					int x = loc.x + dx, y = loc.y + dy;
+					blocks[y][x] = Block();
+				}
+			}
+			removeBlock(loc, b.id);
+			// manager.blockChange(loc, tileId, false);
+			// TODO: Drop items
+			return true;
+		}
+	}
+	return false;
+}
 
-void World::removeBlock(int x, int y, tile::Id block) {}
+void World::addBlock(SDL_Point loc, tile::Id tileId) {}
+
+void World::removeBlock(SDL_Point loc, tile::Id tileId) {}
 
 // Functions involving the world blocks
+void World::getBlockSrc(int& x, int& y) const {
+	if (x < 0 || y < 0 || x >= dim.x || y >= dim.y) { return; }
+	const Block& b = blocks[y][x];
+	int nX = x - b.dx(), nY = y - b.dy();
+	if (nX < 0 || nY < 0 || nX >= dim.x || nY >= dim.y) { return; }
+	x = nX; y = nY;
+}
+
+SDL_Point World::getBlockSrc(SDL_Point loc) const {
+	getBlockSrc(loc.x, loc.y);
+	return loc;
+}
+
 bool World::checkCollisions(Point<double>& pos, const Point<double>& dim,
 	Point<double>& d) const {
-	pos.x = fmin(fmax(pos.x + d.x, 0), width());
-	pos.y = fmin(fmax(pos.y + d.y, 0), height());
+	pos.x = fmin(fmax(pos.x + d.x, 0), width() - dim.x * gameVals::BLOCK_W);
+	pos.y = fmin(fmax(pos.y + d.y, 0), height() - dim.y * gameVals::BLOCK_W);
 	return false;
 }
 
@@ -432,7 +501,20 @@ bool World::anySolidBlocks(int x1, int x2, int y1, int y2) const {
 }
 
 // Visual functions
-Rect World::getScreenRect(const SDL_Point& center) const {
+SDL_Point World::getWorldMousePos(SDL_Point mouse, SDL_Point center,
+	bool blocks) const {
+	SDL_Point screenC = { (int)(UI::width() / 2), (int)(UI::height() / 2) };
+	SDL_Point worldC = getScreenRect(center).center();
+	SDL_Point result = { mouse.x - screenC.x + worldC.x,
+		mouse.y - screenC.y + worldC.y };
+	if (blocks) {
+		result.x /= gameVals::BLOCK_W;
+		result.y /= gameVals::BLOCK_W;
+	}
+	return result;
+}
+
+Rect World::getScreenRect(SDL_Point center) const {
 	int w = UI::width(), h = UI::height();
 	int worldW = width(), worldH = height();
 	Rect r(0, 0, w, h);
@@ -453,7 +535,11 @@ Rect World::getScreenRect(const SDL_Point& center) const {
 	return r;
 }
 
-void World::draw(const SDL_Point& center) {
+void World::draw(SDL_Point center) {
+	AssetManager& assets = UI::assets();
+	// Draw sky
+	assets.rect(NULL, skyColor());
+
 	int worldW = width(), worldH = height();
 	Rect screen = getScreenRect(center);
 	Rect worldRect(std::abs(screen.x), std::abs(screen.y),
@@ -465,7 +551,6 @@ void World::draw(const SDL_Point& center) {
 	// Draw blocks
 	Rect r(lbX * gameVals::BLOCK_W - screen.x, lbY * gameVals::BLOCK_W - screen.y,
 		gameVals::BLOCK_W, gameVals::BLOCK_W);
-	AssetManager& assets = UI::assets();
 	assets.rect(&worldRect, Tile::getTile(tile::Id::AIR)->getMapColor());
 	for (int row = lbY; row < ubY; row++) {
 		for (int col = lbX; col < ubX; col++) {
@@ -492,8 +577,14 @@ void World::draw(const SDL_Point& center) {
 void World::drawLight(const Rect& rect) {}
 
 // Getters/Setters
+const World::Block& World::getBlock(int x, int y) const {
+	if (x < 0 || y < 0 || x >= dim.x || y >= dim.y) { return nullBlock; }
+	return blocks[y][x];
+}
+
 int World::surfaceH() const { return (int)(dim.y / 2); }
 int World::underground() const { return (int)(dim.y * 2 / 3); }
 SDL_Color World::skyColor() const {
-	return SDL_Color{ 0,0,(uint8_t)(255 * (1 - std::pow((time - NOON) / NOON, 2))) };
+	return SDL_Color{ 0,0,(uint8_t)
+		(255 * (1 - std::abs(((double)time - NOON) / NOON)))};
 }

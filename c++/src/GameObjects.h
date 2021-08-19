@@ -1,9 +1,17 @@
 #ifndef GAME_OBJECTS_H
 #define GAME_OBJECTS_H
+// TODO: Change back to include each file in header
 
-#include "World/World.h"
-#include "Player/Player.h"
+// Forward Declarations
+class World;
+class Player;
 
+namespace GameObjects {
+	World& world();
+	Player& player();
+}
+
+/*
 class GameObjects {
 public:
 	static GameObjects& Get();
@@ -21,6 +29,6 @@ private:
 
 	World mWorld;
 	Player mPlayer;
-};
+};*/
 
 #endif

@@ -46,7 +46,7 @@ public:
     static Rect getMinRect(int w, int h, int maxW, int maxH);
 
     operator bool() { return w != 0 && h != 0; }
-    friend std::ostream& operator <<(std::ostream&, const Rect& rhs);
+    friend std::ostream& operator <<(std::ostream& os, const Rect& rhs);
     friend Rect& operator +=(Rect& lhs, const SDL_Point& rhs);
     friend Rect operator +(Rect lhs, const SDL_Point& rhs);
     friend Rect& operator -=(Rect& lhs, const SDL_Point& rhs);
@@ -61,5 +61,6 @@ SDL_Point& operator +=(SDL_Point& lhs, const SDL_Point& rhs);
 SDL_Point operator +(SDL_Point lhs, const SDL_Point& rhs);
 SDL_Point& operator -=(SDL_Point& lhs, const SDL_Point& rhs);
 SDL_Point operator -(SDL_Point lhs, const SDL_Point& rhs);
+std::ostream& operator <<(std::ostream& os, const SDL_Point& rhs);
 
 #endif /* Rect */

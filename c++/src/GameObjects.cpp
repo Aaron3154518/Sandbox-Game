@@ -1,6 +1,20 @@
 #include "GameObjects.h"
+#include "Player/Player.h"
+#include "World/World.h"
 
-GameObjects& GameObjects::Get() {
+namespace GameObjects {
+	World& world() {
+		static World WORLD;
+		return WORLD;
+	}
+
+	Player& player() {
+		static Player PLAYER;
+		return PLAYER;
+	}
+}
+
+/*GameObjects& GameObjects::Get() {
 	static GameObjects gameInterface;
 	return gameInterface;
 }
@@ -11,4 +25,4 @@ World& GameObjects::GetWorld() {
 
 Player& GameObjects::GetPlayer() {
 	return Get().mPlayer;
-}
+}*/

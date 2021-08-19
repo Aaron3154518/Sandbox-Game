@@ -1,10 +1,10 @@
 #include "Player.h"
-#include "../GameObjects.h"
+#include "../World/World.h"
 
 Player::Player() {
 	// Setup rectangles
 	SDL_Texture* tex = UI::assets().getAsset(fullImgFile());
-	mRect = Rect::getMinRect(tex, gameVals::BLOCK_W * 3 / 2, -1);
+	mRect = Rect::getMinRect(tex, (int)(gameVals::BLOCK_W * 3 / 2), 0);
 	dim = { (double)mRect.w / gameVals::BLOCK_W,
 		(double)mRect.h / gameVals::BLOCK_W };
 	spriteRect = Rect::getMinRect(tex, gameVals::SPRITE_W, gameVals::SPRITE_W);
@@ -71,20 +71,20 @@ void Player::tick(Event& e) {
 			*/
 		}
 
-		/*// Check for using an item
-		if (useTime <= 0 &&
-			(!activeUI || !SDL_PointInRect(&e.mouse, &actievUI.rect))) {
+		// Check for using an item
+		if (useTime <= 0) {// &&
+			//(!activeUI || !SDL_PointInRect(&e.mouse, &actievUI.rect))) {
 			if (e.left.clicked) {
-				leftClick();
+				leftClick(e.mouse);
 			} else {
 				firstSwing = true;
 				if (e.right.clicked) {
-					rightClick();
+					rightClick(e.mouse);
 				} else {
-					inventory.holdingR = 0;
+					//inventory.holdingR = 0;
 				}
 			}
-		}*/
+		}
 
 		// If using an item, let it deal with use time
 		if (itemUsed != item::Id::numItems) {
@@ -137,7 +137,7 @@ void Player::move(Timestep dt) {
 
 	Point<double> prevD = d, prevP = pos;
 	// Check for collisions and set new position
-	bool didHit = GameObjects::GetWorld().checkCollisions(pos, dim, d);
+	bool didHit = GameObjects::world().checkCollisions(pos, dim, d);
 	setPos(pos);
 
 	// Get actual change in position
@@ -151,7 +151,7 @@ void Player::move(Timestep dt) {
 		// Didn't move, get collision based on accelleration
 		} else if (d[_d] == 0 && prevD[_d] == 0 && a[_d] != 0) {
 			std::cerr << "Here" << std::endl;
-			if (GameObjects::GetWorld().touchingBlocks(
+			if (GameObjects::world().touchingBlocks(
 				pos, dim, _d == Dim::x, a[_d] < 0)) {
 				collided[_d] = a[_d] < 0 ? CollideType::topLeft :
 					CollideType::botRight;
@@ -178,7 +178,7 @@ void Player::move(Timestep dt) {
 }
 
 void Player::draw() {
-	Rect r = GameObjects::GetWorld().getScreenRect(mRect.center());
+	Rect r = GameObjects::world().getScreenRect(mRect.center());
 	AssetManager& assets = UI::assets();
 
 	Rect shiftRect = mRect - r.topLeft();
@@ -189,6 +189,72 @@ void Player::draw() {
 
 void Player::drawUI() {
 
+}
+
+void Player::leftClick(SDL_Point mouse) {
+	/*if (!inventory.leftClick(mouse)) {
+		ItemInfo item = inventory.getCurrentItem();
+		if (item.isItem()) {
+			ItemPtr itemPtr = Item::getItem(item.itemId);
+			usedLeft = GameObjects::world().getWorldMousePos(mouse, mRect.center(), pos).x
+				< mRect.cX();
+			if (itemPtr->leftClick && (firstSwing || itemPtr->autoUse)) {
+				firstSwing = false;
+				// Use item
+				itemPtr->onLeftClick();
+				itemUsed = item.itemId;
+				useTime = itemPtr->useTime;
+			}
+		} else {
+			breakBlock(GameObjects::world().getWorldMousePos(mouse, mRect.center(), pos, true));
+			useTime = 500;
+		}
+	}*/
+	breakBlock(GameObjects::world().getWorldMousePos(
+		mouse, mRect.center(), true));
+}
+
+void Player::rightClick(SDL_Point mouse) {
+	placeBlock(GameObjects::world().getWorldMousePos(
+		mouse, mRect.center(), true), tile::Id::DIRT);
+}
+
+bool Player::placeBlock(SDL_Point loc, tile::Id tileId) {
+	// Check if we can place the block
+	SDL_Point pxLoc = { loc.x * gameVals::BLOCK_W, loc.y * gameVals::BLOCK_W };	if (SDL_PointInRect(&pxLoc, &placementRange) &&
+		!pointInPlayerBlock(pxLoc)) {
+		return GameObjects::world().placeBlock(loc, tileId);
+	}
+	return false;
+}
+
+bool Player::breakBlock(SDL_Point loc) {
+	World& world = GameObjects::world();
+	// Make sure we aren't hitting air
+	loc = world.getBlockSrc(loc);
+	const World::Block& block = world.getBlock(loc);
+	if (block.id == tile::Id::AIR) { return false; }
+	TilePtr tile = Tile::getTile(block.id);
+	// Make sure this block doesn't have an open UI
+	//if (activeUI && activeUI.blockPos == loc) { return false; }
+	// Make sure this block is in range and check if we destroyed it
+	int power = 1; // stats.getStat("power");
+	Point<uint8_t> tDim = tile->getDim();
+	Rect bRect(loc.x * gameVals::BLOCK_W, loc.y * gameVals::BLOCK_W,
+		tDim.x * gameVals::BLOCK_W, tDim.y * gameVals::BLOCK_W);
+	SDL_Point bCenter = bRect.center();
+	if (SDL_PointInRect(&bCenter, &placementRange) &&
+		tile->hit(loc, power)) {
+		return world.breakBlock(loc);
+	}
+	return false;
+}
+
+bool Player::pointInPlayerBlock(SDL_Point pxPos) {
+	pxPos.x /= gameVals::BLOCK_W;
+	pxPos.y /= gameVals::BLOCK_W;
+	Rect r = toBlockRect(mRect);
+	return SDL_PointInRect(&pxPos, &r);
 }
 
 void Player::setPos(const Point<double>& newPos) {

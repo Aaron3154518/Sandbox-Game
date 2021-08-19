@@ -1,8 +1,8 @@
 #include "Game.h"
+#include "../World/World.h"
+#include "../Player/Player.h"
 
 //#define DEBUG_GAME
-
-GameObjects& Game::game = GameObjects::Get();
 
 Game::Game(const std::string& _player, const std::string& _universe) :
     player(_player), universe(_universe) {}
@@ -12,7 +12,7 @@ void Game::initUI() {
     FileRead fr;
     fr.open(infoFile);
     fr.close();
-    game.world().setFile(gameVals::worldFile(universe, "world"));
+    GameObjects::world().setFile(gameVals::worldFile(universe, "world"));
 }
 
 void Game::tickUI(Event& e) {
@@ -28,8 +28,8 @@ void Game::handleEvents(Event& e) {
         running = false;
         return;
     }
-    game.world().tick(e.dt);
-    game.player().tick(e);
+    GameObjects::world().tick(e.dt);
+    GameObjects::player().tick(e);
 }
 void Game::update() {
 #ifdef DEBUG_GAME
@@ -40,6 +40,6 @@ void Game::render() {
 #ifdef DEBUG_GAME
     std::cout << "Render" << std::endl;
 #endif
-    game.world().draw(game.player().getCPos());
-    game.player().draw();
+    GameObjects::world().draw(GameObjects::player().getCPos());
+    GameObjects::player().draw();
 }

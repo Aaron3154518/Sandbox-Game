@@ -4,10 +4,12 @@
 #include <SDL.h>
 
 #include "../Definitions.h"
+#include "../GameObjects.h"
 #include "../UIs/UI.h"
 #include "../Utils/Rect.h"
 #include "../Utils/Point.h"
 #include "../Utils/AssetManager.h"
+#include "../ID/Tiles.h"
 #include "../ID/Items.h"
 
 class Player {
@@ -31,6 +33,14 @@ private:
 	void move(Timestep dt);
 	void draw();
 	void drawUI();
+
+	void leftClick(SDL_Point mouse);
+	void rightClick(SDL_Point mouse);
+
+	bool placeBlock(SDL_Point loc, tile::Id tileId);
+	bool breakBlock(SDL_Point loc);
+
+	bool pointInPlayerBlock(SDL_Point pxPos);
 
 	void respawn();
 
