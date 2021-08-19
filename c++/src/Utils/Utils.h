@@ -17,6 +17,7 @@
 #include <dirent.h>
 #include <SDL.h>
 
+#include "../Definitions.h"
 #include "Rect.h"
 
 // TODO: fix
@@ -45,6 +46,9 @@ std::string toDisplayName(const std::string& fileName);
 // Point/vector functions
 double magnitude(const SDL_Point& p);
 double distance(const SDL_Point& p1, const SDL_Point& p2);
+
+bool eq(float f1, float f2, float err = gameVals::FLOAT_ERR);
+bool eq(double f1, double f2, double err = gameVals::DOUBLE_ERR);
 
 // Helper classes
 class Timestep {

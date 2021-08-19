@@ -19,7 +19,7 @@
 #include "../Utils/Rect.h"
 #include "../Utils/AssetManager.h"
 #include "../World/World.h"
-#include "../World/GameInterface.h"
+#include "../GameObjects.h"
 
 // Game class
 class Game : public UI {
@@ -30,7 +30,7 @@ public:
     void initUI();
     void tickUI(Event &e);
 private:
-    static GameInterface& game;
+    static GameObjects& game;
 
     std::string player, universe;
     SDL_Point playerPos = { 0,0 };

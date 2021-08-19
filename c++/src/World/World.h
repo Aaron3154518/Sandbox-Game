@@ -3,6 +3,7 @@
 
 #include <vector>
 #include <fstream>
+#include <cmath>
 
 #include <SDL.h>
 
@@ -13,6 +14,7 @@
 #include "../Objects/TileObjects.h"
 #include "../Utils/Utils.h"
 #include "../Utils/Rect.h"
+#include "../Utils/Point.h"
 #include "../Utils/FileIO.h"
 #include "../Utils/AssetManager.h"
 
@@ -29,12 +31,20 @@ public:
 	// Update world blocks
 	void placeBlock(int x, int y, tile::Id block);
 	void destroyBlock(int x, int y);
-	// Update world block information
 	void addBlock(int x, int y, tile::Id block);
 	void removeBlock(int x, int y, tile::Id block);
 
+	// Functions involving the world blocks
+	bool checkCollisions(Point<double>& pos, const Point<double>& dim,
+		Point<double>& d) const;
+	bool touchingBlocks(const Point<double>& pos, const Point<double>& dim,
+		bool x, bool topLeft) const;
+	bool anySolidBlocks(int x1, int x2, int y1, int y2) const;
+
 	// Visual functions
-	Rect getScreenRect(const SDL_Point& playerPos) const;
+	Rect getScreenRect(const SDL_Point& center) const;
+	int width() const { return dim.x * gameVals::BLOCK_W; }
+	int height() const { return dim.y * gameVals::BLOCK_W; }
 
 	// Getters
 	SDL_Point getDim() const { return dim; }
@@ -67,7 +77,7 @@ private:
 	void newWorld();
 
 	void tick(Timestep& dt);
-	void draw(const SDL_Point& playerPos);
+	void draw(const SDL_Point& center);
 	void drawLight(const Rect& rect);
 
 	// Loads world

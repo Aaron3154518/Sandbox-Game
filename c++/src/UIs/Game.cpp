@@ -2,7 +2,7 @@
 
 //#define DEBUG_GAME
 
-GameInterface& Game::game = GameInterface::Get();
+GameObjects& Game::game = GameObjects::Get();
 
 Game::Game(const std::string& _player, const std::string& _universe) :
     player(_player), universe(_universe) {}
@@ -28,16 +28,8 @@ void Game::handleEvents(Event& e) {
         running = false;
         return;
     }
-    auto dt = e.dt.milliseconds() / 5;
-    if (e.keyDown(SDLK_a)) { playerPos.x -= dt; }
-    if (e.keyDown(SDLK_d)) { playerPos.x += dt; }
-    if (e.keyDown(SDLK_w)) { playerPos.y -= dt; }
-    if (e.keyDown(SDLK_s)) { playerPos.y += dt; }
-    SDL_Point pxDim = game.world().getPixelDim();
-    if (playerPos.x < 0) { playerPos.x = 0; }
-    if (playerPos.y < 0) { playerPos.y = 0; }
-    if (playerPos.x > pxDim.x) { playerPos.x = pxDim.x; }
-    if (playerPos.y > pxDim.y) { playerPos.y = pxDim.y; }
+    game.world().tick(e.dt);
+    game.player().tick(e);
 }
 void Game::update() {
 #ifdef DEBUG_GAME
@@ -48,5 +40,6 @@ void Game::render() {
 #ifdef DEBUG_GAME
     std::cout << "Render" << std::endl;
 #endif
-    game.world().draw(playerPos);
+    game.world().draw(game.player().getCPos());
+    game.player().draw();
 }

@@ -23,24 +23,24 @@ constexpr auto TILE_FILE = "res/tiles.txt";
 class Tile;
 typedef std::shared_ptr<Tile> TilePtr;
 
-enum TileData {
-	has_data = 0,	// Tile stores data
-	clickable,		// Tile is interactable
-	has_ui,			// Tile brings up a ui when clicked
-	on_surface,		// Must be placed on a surface
-	crafting,		// Player can craft at this item
-	updates,		// Block updates every tick
-	light,			// Emits light
-	barrier,		// Obstructs player movement
-	spawner,		// Tile spawns enemies
-
-	numData
-};
-
 class Tile {
 public:
 	Tile() = default;
 	~Tile() = default;
+
+	enum TileData {
+		has_data = 0,	// Tile stores data
+		clickable,		// Tile is interactable
+		has_ui,			// Tile brings up a ui when clicked
+		on_surface,		// Must be placed on a surface
+		crafting,		// Player can craft at this item
+		updates,		// Block updates every tick
+		light,			// Emits light
+		barrier,		// Obstructs player movement
+		spawner,		// Tile spawns enemies
+
+		numData
+	};
 
 	void tick(int x, int y, Timestep dt);
 

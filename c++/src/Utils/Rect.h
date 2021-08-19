@@ -33,6 +33,8 @@ public:
     void setPos(int nX, int nY);
     void setX2(double nX2) { x = (int)(nX2 - w); }
     void setY2(double nY2) { y = (int)(nY2 - h); }
+    void setTopLeft(SDL_Point tl) { setPos(tl.x, tl.y); }
+    void setBottomRight(SDL_Point br) { setX2(br.x); setY2(br.y); }
     void setCenterX(double nCX) { x = (int)(nCX - w / 2); }
     void setCenterY(double nCY) { y = (int)(nCY - h / 2); }
     void setCenter(double nCX, double nCY);

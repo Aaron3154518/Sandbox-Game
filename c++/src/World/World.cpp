@@ -1,4 +1,5 @@
 #include "World.h"
+#include "../GameObjects.h"
 
 const int World::SEC_PER_DAY = 60 * 24;
 const int World::MS_PER_DAY = SEC_PER_DAY * 1000;
@@ -193,7 +194,7 @@ double World::loadBlocks(double progress, int numRows) {
 	/*// Get current row, column, and blocks left to load
 	int currentBlock = (int)(progress * numBlocks + .5 / numBlocks);
 	int col = currentBlock % dim.x, row = (int)(currentBlock / dim.x);
-	int blocksLeft = (int)std::ceil(numBlocks / 100);
+	int blocksLeft = (int)ceil(numBlocks / 100);
 	// Write data to array
 	while (blocksLeft > 0) {
 		// Extract tile id and number of tiles
@@ -377,26 +378,73 @@ double World::saveMap(double progress) {
 	return 1.;
 }
 
+// Update world blocks
 void World::placeBlock(int x, int y, tile::Id block) {}
 
 void World::destroyBlock(int x, int y) {}
 
 void World::removeBlock(int x, int y, tile::Id block) {}
 
-Rect World::getScreenRect(const SDL_Point& playerPos) const {
+// Functions involving the world blocks
+bool World::checkCollisions(Point<double>& pos, const Point<double>& dim,
+	Point<double>& d) const {
+	pos.x = fmin(fmax(pos.x + d.x, 0), width());
+	pos.y = fmin(fmax(pos.y + d.y, 0), height());
+	return false;
+}
+
+bool World::touchingBlocks(const Point<double>& pos, const Point<double>& dim,
+	bool x, bool topLeft) const {
+	float p1, p2, d1, d2;
+	if (x) { p1 = pos.x; p2 = pos.y; d1 = dim.x; d2 = dim.y;  }
+	else { p1 = pos.y; p2 = pos.x; d1 = dim.y; d2 = dim.x; }
+	float l1 = d1 * gameVals::BLOCK_W, l2 = d2 * gameVals::BLOCK_W;
+	// Check if we are actually touching a new block
+	if ((int)fabsf(p1 + (topLeft ? 0 : l1)) % gameVals::BLOCK_W == 0) {
+		// Get the next x block
+		int next = (int)(topLeft ? (p1 / gameVals::BLOCK_W) - 1 :
+			ceilf((p1 + l1) / gameVals::BLOCK_W));
+		// Check if we are going to the world edge
+		if (topLeft ? next < 0 : next >= d1) { return true; }
+		// Otherwise check if there is a solid block
+		else {
+			Point<int> range{(int)(p2 / gameVals::BLOCK_W),
+				(int)ceilf((p2 + l2) / gameVals::BLOCK_W)};
+			return x ? anySolidBlocks(next, next + 1, range.x, range.y) :
+				anySolidBlocks(range.x, range.y, next, next + 1);
+		}
+	}
+	return false;
+}
+
+bool World::anySolidBlocks(int x1, int x2, int y1, int y2) const {
+	if (x1 < 0) { x1 = 0; }
+	if (y1 < 0) { y1 = 0; }
+	if (x2 >= dim.x) { x2 = dim.x - 1; }
+	if (y2 >= dim.y) { y2 = dim.y - 1; }
+	for (; y1 < y2; y1++) {
+		for (; x1 < x2; x1++) {
+			TilePtr tile = Tile::getTile(blocks[y1][x1].id);
+			if (tile->getTileData(Tile::TileData::barrier)) { return true; }
+		}
+	}
+	return false;
+}
+
+// Visual functions
+Rect World::getScreenRect(const SDL_Point& center) const {
 	int w = UI::width(), h = UI::height();
-	int worldW = dim.x * gameVals::BLOCK_W;
-	int worldH = dim.y * gameVals::BLOCK_W;
+	int worldW = width(), worldH = height();
 	Rect r(0, 0, w, h);
 	if (worldW >= w) {
-		r.setCenterX(playerPos.x);
+		r.setCenterX(center.x);
 		if (r.x < 0) { r.x = 0; }
 		else if (r.x2() > worldW) { r.setX2(worldW); }
 	} else {
 		r.x = (int)((worldW - w) / 2);
 	}
 	if (worldH >= h) {
-		r.setCenterY(playerPos.y);
+		r.setCenterY(center.y);
 		if (r.y < 0) { r.y = 0; }
 		else if (r.y2() > worldH) { r.setY2(worldH); }
 	} else {
@@ -405,16 +453,15 @@ Rect World::getScreenRect(const SDL_Point& playerPos) const {
 	return r;
 }
 
-void World::draw(const SDL_Point& playerPos) {
-	int worldW = dim.x * gameVals::BLOCK_W;
-	int worldH = dim.y * gameVals::BLOCK_W;
-	Rect screen = getScreenRect(playerPos);
+void World::draw(const SDL_Point& center) {
+	int worldW = width(), worldH = height();
+	Rect screen = getScreenRect(center);
 	Rect worldRect(std::abs(screen.x), std::abs(screen.y),
 		std::min(screen.w, worldW), std::min(screen.h, worldH));
 	int lbX = (int)(std::max(screen.x, 0) / gameVals::BLOCK_W);
-	int ubX = (int)std::ceil(std::min(screen.x2(), worldW) / gameVals::BLOCK_W);
+	int ubX = (int)ceil(std::min(screen.x2(), worldW) / gameVals::BLOCK_W);
 	int lbY = (int)(std::max(screen.y, 0) / gameVals::BLOCK_W);
-	int ubY = (int)std::ceil(std::min(screen.y2(), worldH) / gameVals::BLOCK_W);
+	int ubY = (int)ceil(std::min(screen.y2(), worldH) / gameVals::BLOCK_W);
 	// Draw blocks
 	Rect r(lbX * gameVals::BLOCK_W - screen.x, lbY * gameVals::BLOCK_W - screen.y,
 		gameVals::BLOCK_W, gameVals::BLOCK_W);
@@ -438,12 +485,13 @@ void World::draw(const SDL_Point& playerPos) {
 	SDL_Texture* playerTex = assets.getAsset(
 		gameVals::entities() + "player_pig.png");
 	r = Rect::getMinRect(playerTex, gameVals::BLOCK_W, gameVals::BLOCK_W * 2);
-	r.setCenter(playerPos - screen.topLeft());
+	r.setCenter(center - screen.topLeft());
 	assets.drawTexture(playerTex, r);
 }
 
 void World::drawLight(const Rect& rect) {}
 
+// Getters/Setters
 int World::surfaceH() const { return (int)(dim.y / 2); }
 int World::underground() const { return (int)(dim.y * 2 / 3); }
 SDL_Color World::skyColor() const {

@@ -82,6 +82,13 @@ double distance(const SDL_Point& p1, const SDL_Point& p2) {
     return magnitude(p1 - p2);
 }
 
+bool eq(float f1, float f2, float err) {
+    return abs(f1 - f2) <= err;
+}
+bool eq(double f1, double f2, double err) {
+    return abs(f1 - f2) <= err;
+}
+
 // Event
 void Event::update(Timestep ts) {
     dt = ts;
