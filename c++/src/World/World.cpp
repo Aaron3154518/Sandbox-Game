@@ -538,7 +538,7 @@ Rect World::getScreenRect(SDL_Point center) const {
 void World::draw(SDL_Point center) {
 	AssetManager& assets = UI::assets();
 	// Draw sky
-	assets.rect(NULL, skyColor());
+//	assets.rect(NULL, skyColor());
 
 	int worldW = width(), worldH = height();
 	Rect screen = getScreenRect(center);
@@ -549,9 +549,9 @@ void World::draw(SDL_Point center) {
 	int lbY = (int)(std::max(screen.y, 0) / gameVals::BLOCK_W);
 	int ubY = (int)ceil(std::min(screen.y2(), worldH) / gameVals::BLOCK_W);
 	// Draw blocks
+	assets.rect(&worldRect, skyColor());
 	Rect r(lbX * gameVals::BLOCK_W - screen.x, lbY * gameVals::BLOCK_W - screen.y,
 		gameVals::BLOCK_W, gameVals::BLOCK_W);
-	assets.rect(&worldRect, Tile::getTile(tile::Id::AIR)->getMapColor());
 	for (int row = lbY; row < ubY; row++) {
 		for (int col = lbX; col < ubX; col++) {
 			tile::Id id = blocks[row][col].id;
