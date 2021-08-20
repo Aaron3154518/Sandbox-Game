@@ -53,11 +53,11 @@ void mkDir(const char* name) {
 #endif
 }
 
-void rmDir(const char* name) {
+int rmDir(const char* name) {
 #ifdef __linux__
-    rmdir(name);
+    return rmdir(name);
 #else
-    _rmdir(name);
+    return _rmdir(name);
 #endif
 }
 
