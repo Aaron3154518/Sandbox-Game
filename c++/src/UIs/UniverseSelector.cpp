@@ -54,7 +54,7 @@ bool UniverseSelector::createUniverse(std::string dirName) {
 	std::string fullDir = gameVals::univDir(dirName);
 	if (!isDir(fullDir)) {
 		// Create folder
-		mkdir(fullDir.c_str());
+		mkDir(fullDir.c_str());
 		// Create info file
 		FileWrite fw;
 		if (!fw.open(gameVals::univInfoFile(dirName))) {
@@ -91,7 +91,7 @@ bool UniverseSelector::deleteUniverse(std::string dirName) {
 		std::remove(gameVals::univInfoFile(dirName).c_str());
 		closedir(univDir);
 		// TODO: Delete backups
-		if (rmdir(fullDir.c_str()) != 0) {
+		if (_rmdir(fullDir.c_str()) != 0) {
 			std::cerr << "This universe foldler has been modified. "
 				<< "Cannot delete" << std::endl;
 			return false;

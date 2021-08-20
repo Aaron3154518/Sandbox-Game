@@ -12,6 +12,7 @@
 #include <cmath>
 #include <algorithm>
 #include <fcntl.h>
+#include <unistd.h>
 #include <sys/stat.h>
 
 #include <dirent.h>
@@ -35,6 +36,8 @@ std::string replaceInString(const std::string& source,
 // File functions
 bool isFile(const std::string& fileName);
 bool isDir(std::string dirName);
+
+void mkDir(const char* name);
 
 std::vector<std::string> getDirContents(const std::string& dirName);
 

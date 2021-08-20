@@ -45,6 +45,14 @@ bool isDir(std::string dirName) {
         info.st_mode & S_IFDIR;
 }
 
+void mkDir(const char* name) {
+#ifdef __linux__
+    mkdir(name, S_IRWXU);
+#else
+    _mkdir(name);
+#endif
+}
+
 std::vector<std::string> getDirContents(const std::string& dirName) {
     std::vector<std::string> results;
     DIR* dir = opendir(dirName.c_str());

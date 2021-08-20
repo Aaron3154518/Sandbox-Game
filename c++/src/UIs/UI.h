@@ -16,7 +16,7 @@ class Event;
 class AssetManager;
 
 class UI {
-	friend int ::main(int argc, char* argv[]);
+	friend int main(int argc, char* argv[]);
 public:
 	UI() = default;
 	~UI() = default;
