@@ -4,7 +4,6 @@
 #include <SDL.h>
 
 #include "../Definitions.h"
-#include "../GameObjects.h"
 #include "../UIs/UI.h"
 #include "../Utils/Rect.h"
 #include "../Utils/Point.h"
@@ -28,10 +27,14 @@ public:
 	Point<double> getPos() const { return pos; }
 	void setPos(const Point<double>& newP);
 
-private:
+	bool pointInPlayerBlock(SDL_Point pxPos) const;
+
+protected:
 	void tick(Event& e);
-	void move(Timestep dt);
 	void draw();
+
+private:
+	void move(Timestep dt);
 	void drawUI();
 
 	void leftClick(SDL_Point mouse);
@@ -39,8 +42,6 @@ private:
 
 	bool placeBlock(SDL_Point loc, tile::Id tileId);
 	bool breakBlock(SDL_Point loc);
-
-	bool pointInPlayerBlock(SDL_Point pxPos);
 
 	void respawn();
 
@@ -93,6 +94,13 @@ private:
 	bool mapOpen = false;
 
 	std::string fileName;
+};
+
+class PlayerAccess : public Player {
+	friend class Game;
+public:
+	PlayerAccess() = default;
+	~PlayerAccess() = default;
 };
 
 #endif

@@ -18,7 +18,6 @@
 #include "../Utils/Utils.h"
 #include "../Utils/Rect.h"
 #include "../Utils/AssetManager.h"
-#include "../World/World.h"
 #include "../GameObjects.h"
 
 // Game class

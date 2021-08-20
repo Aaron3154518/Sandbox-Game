@@ -1,13 +1,8 @@
 #include "World.h"
-#include "../Player/Player.h"
+#include "../GameObjects.h"
 
-const int World::SEC_PER_DAY = 60 * 24;
-const int World::MS_PER_DAY = SEC_PER_DAY * 1000;
-const int World::NOON = (int)(World::MS_PER_DAY / 2);
-const int World::DAY = (int)(World::MS_PER_DAY / 4);
-const int World::NIGHT = World::DAY * 3;
-
-const World::Block World::nullBlock;
+// For testing write during save
+//int cntr = 600;
 
 // World
 World::~World() {
@@ -32,8 +27,8 @@ void World::setFile(std::string fName) {
 }
 
 void World::newWorld() {
-	blockData.clear();
 	blocks.clear();
+	blockChanges.clear();
 	// Allocate blocks
 	std::vector<Block> row(dim.x);
 	blocks.resize(dim.y, row);
@@ -62,12 +57,12 @@ void World::printInfo(bool printBlocks) const {
 void World::tick(Timestep& dt) {
 	time = (time + dt.milliseconds() * 100) % MS_PER_DAY;
 	// Run auto save
-	nextSave -= dt.seconds();
-	if (nextSave <= 0) {
+	if (!saving()) { nextSave -= dt.seconds(); }
+	if (saving()) {
 		saveProgress = saveWorld(saveProgress);
 		if (saveProgress >= 1) {
 			saveProgress = 0.;
-			nextSave = 30.;
+			nextSave = SAVE_DELAY;
 			// Player.write();
 		}
 	}
@@ -77,6 +72,8 @@ void World::tick(Timestep& dt) {
 	//manager.tick();
 }
 
+// File saving/loading
+// These should use blocks[][] directly
 void World::loadWorld() {
 	std::cerr << "Loading World" << std::endl;
 	if (fw.isOpen()) {
@@ -282,6 +279,8 @@ void World::saveWorld() {
 	if (!fw.commit()) {
 		std::cerr << "World::saveWorld(): File Close Error" << std::endl;
 	}
+	applyBlockChanges();
+	std::cerr << "Successfully Saved" << std::endl;
 }
 
 double World::saveWorld(double progress) {
@@ -308,6 +307,8 @@ double World::saveWorld(double progress) {
 		if (!fw.commit()) {
 			std::cerr << "World::saveWorld(): File Close Error" << std::endl;
 		}
+		applyBlockChanges();
+		std::cerr << "Successfully Saved" << std::endl;
 	}
 	return progress;
 }
@@ -331,14 +332,19 @@ double World::saveBlocks(double progress, int numRows) {
 		std::cerr << "World::saveBlocks(): File not open" << std::endl;
 		return 1.;
 	}
+	// For testing write during save
+	//if (progress >= .5 && cntr-- > 0) { return progress; }
 	// If no data, return early to avoid divide by zero
 	if (dim.x <= 0 || dim.y <= 0) { return 1.; }
 	// Get current row, column, and blocks left to save
-	const int startRow = (int)(progress * dim.y);
-	for (int row = startRow; row < startRow + numRows && row < dim.y; row++) {
+	const int startRow = toInt(progress * dim.y);
+	tile::Id val;
+	size_t cnt;
+	int row;
+	for (row = startRow; row < startRow + numRows && row < dim.y; row++) {
 		// Save the tile id
-		tile::Id val = blocks[row][0].id;
-		size_t cnt = 0;
+		val = blocks[row][0].id;
+		cnt = 0;
 		// Iterate through this row
 		for (int col = 0; col < dim.x; col++) {
 			// If the block changes, save id and count
@@ -369,7 +375,7 @@ double World::saveBlocks(double progress, int numRows) {
 		f_obj.write(len(bytes_).to_bytes(2, byteorder))
 			f_obj.write(bytes_)*/
 	}
-	return (double)(startRow + numRows) / dim.y;
+	return (double)row / dim.y;
 }
 
 double World::saveMap(double progress) {
@@ -381,65 +387,14 @@ double World::saveMap(double progress) {
 	return 1.;
 }
 
-// Update world blocks
-bool World::placeBlock(SDL_Point loc, tile::Id tileId) {
-	TilePtr tile = Tile::getTile(tileId);
-	// Calculate block rectangle
-	Point<uint8_t> tDim = tile->getDim();
-	if (loc.x < 0 || loc.y < 0 ||
-		loc.x + tDim.x > dim.x || loc.y + tDim.y > dim.y) {
-		return false;
+void World::applyBlockChanges() {
+	// Update blocks array
+	for (auto& pair : blockChanges) {
+		SDL_Point loc = pair.first;
+		blocks[loc.y][loc.x] = pair.second;
 	}
-	Rect bRect(loc.x * gameVals::BLOCK_W, loc.y * gameVals::BLOCK_W,
-		tDim.x * gameVals::BLOCK_W, tDim.y * gameVals::BLOCK_W);
-	if (/*!handler.collidesWithEntity(bRect) && */tile->canPlace(loc)) {
-		for (uint8_t dy = 0; dy < tDim.y; dy++) {
-			for (uint8_t dx = 0; dx < tDim.x; dx++) {
-				int x = loc.x + dx, y = loc.y + dy;
-				blocks[y][x].id = tileId;
-				blocks[y][x].setSrc(dx, dy);
-			}
-		}
-		addBlock(loc, tileId);
-		// manager.blockChange(loc, tileId, true);
-		tile->onPlace(loc);
-		return true;
-	}
-	return false;
+	blockChanges.clear();
 }
-
-bool World::breakBlock(SDL_Point loc) {
-	if (loc.x < 0 || loc.y < 0 || loc.x >= dim.x || loc.y >= dim.y) {
-		return false;
-	}
-	loc = getBlockSrc(loc);
-	Block& b = blocks[loc.y][loc.x];
-	if (b.id != tile::Id::AIR) {
-		TilePtr tile = Tile::getTile(b.id);
-		if (tile->onBreak(loc)) {
-			// Destroy all parts
-			Point<uint8_t> tDim = tile->getDim();
-			if (loc.x + tDim.x > dim.x || loc.y + tDim.y > dim.y) {
-				return false;
-			}
-			for (uint8_t dy = 0; dy < tDim.y; dy++) {
-				for (uint8_t dx = 0; dx < tDim.x; dx++) {
-					int x = loc.x + dx, y = loc.y + dy;
-					blocks[y][x] = Block();
-				}
-			}
-			removeBlock(loc, b.id);
-			// manager.blockChange(loc, tileId, false);
-			// TODO: Drop items
-			return true;
-		}
-	}
-	return false;
-}
-
-void World::addBlock(SDL_Point loc, tile::Id tileId) {}
-
-void World::removeBlock(SDL_Point loc, tile::Id tileId) {}
 
 // Functions involving the world blocks
 void World::getBlockSrc(int& x, int& y) const {
@@ -500,6 +455,17 @@ bool World::anySolidBlocks(int x1, int x2, int y1, int y2) const {
 	return false;
 }
 
+bool World::isInWorld(SDL_Point loc) const {
+	return loc.x >= 0 && loc.x < dim.x&& loc.y >= 0 && loc.y < dim.y;
+}
+
+int World::surfaceH() const { return (int)(dim.y / 2); }
+int World::underground() const { return (int)(dim.y * 2 / 3); }
+SDL_Color World::skyColor() const {
+	return SDL_Color{ 0,0,(uint8_t)
+		(255 * (1 - std::abs(((double)time - NOON) / NOON))) };
+}
+
 // Visual functions
 SDL_Point World::getWorldMousePos(SDL_Point mouse, SDL_Point center,
 	bool blocks) const {
@@ -535,10 +501,118 @@ Rect World::getScreenRect(SDL_Point center) const {
 	return r;
 }
 
-void World::draw(SDL_Point center) {
+// Static functions
+const Block& World::airBlock() {
+	const static Block AIR_BLOCK;
+	return AIR_BLOCK;
+}
+
+Block World::createBlock(tile::Id tileId, uint8_t dx, uint8_t dy) {
+	Block b;
+	b.id = tileId;
+	b.setSrc(dx, dy);
+	initializeBlock(b);
+	return b;
+}
+
+void World::initializeBlock(Block& b) {
+	b.data.reset();
+	TilePtr tile = Tile::getTile(b.id);
+	b.spawner = tile->getTileData(Tile::TileData::spawner);
+	b.crafter = tile->getTileData(Tile::TileData::crafting);
+}
+
+// Getters/Setters
+const Block& World::getBlock(int x, int y) const {
+	return getBlock(SDL_Point{ x,y });
+}
+const Block& World::getBlock(SDL_Point loc) const {
+	if (!isInWorld(loc)) { return airBlock(); }
+	if (saving()) {
+		auto it = blockChanges.find(loc);
+		if (it != blockChanges.end()) { return it->second; }
+	}
+	return blocks[loc.y][loc.x];
+}
+void World::setBlock(int x, int y, const Block& b) {
+	setBlock(SDL_Point{ x,y }, b);
+}
+void World::setBlock(SDL_Point loc, const Block& b) {
+	if (isInWorld(loc)) {
+		if (saving()) { blockChanges[loc] = b; }
+		else { blocks[loc.y][loc.x] = b; }
+	}
+}
+void World::setBlockData(int x, int y, ByteArray& data) {
+	setBlockData(SDL_Point{ x,y }, data);
+}
+void World::setBlockData(SDL_Point loc, ByteArray& data) {
+	if (isInWorld(loc)) {
+		if (saving()) {
+			Block b = getBlock(loc);
+			b.data = data;
+			blockChanges[loc] = b;
+		} else { blocks[loc.y][loc.x].data = data; }
+	}
+}
+
+// WorldAccess
+// Update world blocks
+bool WorldAccess::placeBlock(SDL_Point loc, tile::Id tileId) {
+	TilePtr tile = Tile::getTile(tileId);
+	// Calculate block rectangle
+	Point<uint8_t> tDim = tile->getDim();
+	SDL_Point dim = getDim();
+	if (loc.x < 0 || loc.y < 0 ||
+		loc.x + tDim.x > dim.x || loc.y + tDim.y > dim.y) {
+		return false;
+	}
+	Rect bRect(loc.x * gameVals::BLOCK_W, loc.y * gameVals::BLOCK_W,
+		tDim.x * gameVals::BLOCK_W, tDim.y * gameVals::BLOCK_W);
+	if (/*!handler.collidesWithEntity(bRect) && */tile->canPlace(loc)) {
+		for (uint8_t dy = 0; dy < tDim.y; dy++) {
+			for (uint8_t dx = 0; dx < tDim.x; dx++) {
+				int x = loc.x + dx, y = loc.y + dy;
+				Block b = createBlock(tileId, dx, dy);
+				setBlock(loc, b);
+			}
+		}
+		// manager.blockChange(loc, tileId, true);
+		tile->onPlace(loc);
+		return true;
+	}
+	return false;
+}
+
+bool WorldAccess::breakBlock(SDL_Point loc) {
+	if (!isInWorld(loc)) { return false; }
+	loc = getBlockSrc(loc);
+	Block b = getBlock(loc);
+	if (b.id != tile::Id::AIR) {
+		TilePtr tile = Tile::getTile(b.id);
+		if (tile->onBreak(loc)) {
+			// Destroy all parts
+			Point<uint8_t> tDim = tile->getDim();
+			SDL_Point dim = getDim();
+			if (loc.x + tDim.x > dim.x || loc.y + tDim.y > dim.y) {
+				return false;
+			}
+			for (uint8_t dy = 0; dy < tDim.y; dy++) {
+				for (uint8_t dx = 0; dx < tDim.x; dx++) {
+					int x = loc.x + dx, y = loc.y + dy;
+					setBlock(x, y, airBlock());
+				}
+			}
+			// manager.blockChange(loc, tileId, false);
+			// TODO: Drop items
+			return true;
+		}
+	}
+	return false;
+}
+
+void WorldAccess::draw(SDL_Point center) {
 	AssetManager& assets = UI::assets();
-	// Draw sky
-//	assets.rect(NULL, skyColor());
 
 	int worldW = width(), worldH = height();
 	Rect screen = getScreenRect(center);
@@ -554,7 +628,7 @@ void World::draw(SDL_Point center) {
 		gameVals::BLOCK_W, gameVals::BLOCK_W);
 	for (int row = lbY; row < ubY; row++) {
 		for (int col = lbX; col < ubX; col++) {
-			tile::Id id = blocks[row][col].id;
+			tile::Id id = getBlock(col, row).id;
 			if (id != tile::Id::AIR) {
 				SDL_Texture* tex = Tile::getTile(id)->getImage({ col, row });
 				assets.drawTexture(tex, r);
@@ -574,17 +648,4 @@ void World::draw(SDL_Point center) {
 	assets.drawTexture(playerTex, r);
 }
 
-void World::drawLight(const Rect& rect) {}
-
-// Getters/Setters
-const World::Block& World::getBlock(int x, int y) const {
-	if (x < 0 || y < 0 || x >= dim.x || y >= dim.y) { return nullBlock; }
-	return blocks[y][x];
-}
-
-int World::surfaceH() const { return (int)(dim.y / 2); }
-int World::underground() const { return (int)(dim.y * 2 / 3); }
-SDL_Color World::skyColor() const {
-	return SDL_Color{ 0,0,(uint8_t)
-		(255 * (1 - std::abs(((double)time - NOON) / NOON)))};
-}
+void WorldAccess::drawLight(const Rect& rect) {}

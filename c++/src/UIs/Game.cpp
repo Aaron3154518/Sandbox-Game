@@ -1,6 +1,4 @@
 #include "Game.h"
-#include "../World/World.h"
-#include "../Player/Player.h"
 
 //#define DEBUG_GAME
 
@@ -25,6 +23,8 @@ void Game::handleEvents(Event& e) {
     std::cout << "Events" << std::endl;
 #endif
     if (e.quit) {
+        // TODO: Exit button
+        GameObjects::world().saveWorld();
         running = false;
         return;
     }

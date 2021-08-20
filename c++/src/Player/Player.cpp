@@ -1,5 +1,5 @@
 #include "Player.h"
-#include "../World/World.h"
+#include "../GameObjects.h"
 
 Player::Player() {
 	// Setup rectangles
@@ -229,11 +229,10 @@ bool Player::placeBlock(SDL_Point loc, tile::Id tileId) {
 }
 
 bool Player::breakBlock(SDL_Point loc) {
-	World& world = GameObjects::world();
+	WorldAccess& world = GameObjects::world();
 	// Make sure we aren't hitting air
 	loc = world.getBlockSrc(loc);
-	const World::Block& block = world.getBlock(loc);
-	if (block.id == tile::Id::AIR) { return false; }
+	const Block& block = world.getBlock(loc);	if (block.id == tile::Id::AIR) { return false; }
 	TilePtr tile = Tile::getTile(block.id);
 	// Make sure this block doesn't have an open UI
 	//if (activeUI && activeUI.blockPos == loc) { return false; }
@@ -250,18 +249,18 @@ bool Player::breakBlock(SDL_Point loc) {
 	return false;
 }
 
-bool Player::pointInPlayerBlock(SDL_Point pxPos) {
-	pxPos.x /= gameVals::BLOCK_W;
-	pxPos.y /= gameVals::BLOCK_W;
-	Rect r = toBlockRect(mRect);
-	return SDL_PointInRect(&pxPos, &r);
-}
-
 void Player::setPos(const Point<double>& newPos) {
 	pos = newPos;
 	mRect.setTopLeft(SDL_Point{ (int)pos.x, (int)pos.y });
 	collectionRange.setCenter(mRect.center());
 	placementRange.setCenter(mRect.center());
+}
+
+bool Player::pointInPlayerBlock(SDL_Point pxPos) const {
+	pxPos.x /= gameVals::BLOCK_W;
+	pxPos.y /= gameVals::BLOCK_W;
+	Rect r = toBlockRect(mRect);
+	return SDL_PointInRect(&pxPos, &r);
 }
 
 void Player::hit(int damage, int centerX, int kbPower) {

@@ -49,6 +49,7 @@ double distance(const SDL_Point& p1, const SDL_Point& p2);
 
 bool eq(float f1, float f2, float err = gameVals::FLOAT_ERR);
 bool eq(double f1, double f2, double err = gameVals::DOUBLE_ERR);
+int toInt(double d, double err = gameVals::DOUBLE_ERR);
 
 Rect toBlockRect(Rect r);
 

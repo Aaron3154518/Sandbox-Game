@@ -1,28 +1,12 @@
 #include "GameObjects.h"
-#include "Player/Player.h"
-#include "World/World.h"
 
 namespace GameObjects {
-	World& world() {
-		static World WORLD;
+	WorldAccess& world() {
+		static WorldAccess WORLD;
 		return WORLD;
 	}
-
-	Player& player() {
-		static Player PLAYER;
+	PlayerAccess& player() {
+		static PlayerAccess PLAYER;
 		return PLAYER;
 	}
 }
-
-/*GameObjects& GameObjects::Get() {
-	static GameObjects gameInterface;
-	return gameInterface;
-}
-
-World& GameObjects::GetWorld() {
-	return Get().mWorld;
-}
-
-Player& GameObjects::GetPlayer() {
-	return Get().mPlayer;
-}*/

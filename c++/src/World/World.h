@@ -1,6 +1,7 @@
 #ifndef WORLD_H
 #define WORLD_H
 
+#include <iomanip>
 #include <vector>
 #include <fstream>
 #include <cmath>
@@ -8,7 +9,6 @@
 #include <SDL.h>
 
 #include "../Definitions.h"
-#include "../GameObjects.h"
 //#include "Chunk.h"
 #include "../ID/Tiles.h"
 #include "../Objects/Tile.h"
@@ -19,32 +19,28 @@
 #include "../Utils/FileIO.h"
 #include "../Utils/AssetManager.h"
 
+struct Block {
+	tile::Id id = tile::Id::AIR;
+	uint8_t src = 0;
+	bool spawner = false, crafter = false;
+	ByteArray data;
+
+	void setSrc(uint8_t dx, uint8_t dy) { src = (dx & 0x0F) | ((dy << 4) & 0xF0); }
+	uint8_t dx() const { return src & 0x0F; }
+	uint8_t dy() const { return (src >> 4) & 0x0F; }
+};
+
 class World {
-	friend class Game;
 public:
-	struct Block {
-		tile::Id id = tile::Id::AIR;
-		uint8_t src = 0;
-		bool spawner = false, crafter = false;
-
-		void setSrc(uint8_t dx, uint8_t dy) { src = (dx & 0x0F) | ((dy << 4) & 0xF0); }
-		uint8_t dx() const { return src & 0x0F; }
-		uint8_t dy() const { return (src >> 4) & 0x0F; }
-	};
-	const static Block nullBlock;
-
 	World() = default;
 	~World();
-	World(const World&) = delete;
-	World operator =(const World&) = delete;
 
 	void printInfo(bool printBlocks) const;
 
-	// Update world blocks
-	bool placeBlock(SDL_Point loc, tile::Id tileId);
-	bool breakBlock(SDL_Point loc);
-	void addBlock(SDL_Point loc, tile::Id tileId);
-	void removeBlock(SDL_Point loc, tile::Id tileId);
+	// Visual functions
+	SDL_Point getWorldMousePos(SDL_Point mouse, SDL_Point center,
+		bool blocks = false) const;
+	Rect getScreenRect(SDL_Point center) const;
 
 	// Functions involving the world blocks
 	void getBlockSrc(int& x, int& y) const;
@@ -55,38 +51,60 @@ public:
 		bool x, bool topLeft) const;
 	bool anySolidBlocks(int x1, int x2, int y1, int y2) const;
 
-	// Visual functions
-	SDL_Point getWorldMousePos(SDL_Point mouse, SDL_Point center,
-		bool blocks = false) const;
-	Rect getScreenRect(SDL_Point center) const;
-	int width() const { return dim.x * gameVals::BLOCK_W; }
-	int height() const { return dim.y * gameVals::BLOCK_W; }
+	bool isInWorld(SDL_Point loc) const;
+
+	int surfaceH() const;
+	int underground() const;
+	SDL_Color skyColor() const;
 
 	// Getters
 	SDL_Point getDim() const { return dim; }
 	SDL_Point getPixelDim() const {
 		return { dim.x * gameVals::BLOCK_W, dim.y * gameVals::BLOCK_W };
 	}
+	int width() const { return dim.x * gameVals::BLOCK_W; }
+	int height() const { return dim.y * gameVals::BLOCK_W; }
+
 	const Block& getBlock(int x, int y) const;
-	const Block& getBlock(SDL_Point loc) const { return getBlock(loc.x, loc.y); }
-	int surfaceH() const;
-	int underground() const;
-	SDL_Color skyColor() const;
+	const Block& getBlock(SDL_Point loc) const;
+	void setBlockData(int x, int y, ByteArray& data);
+	void setBlockData(SDL_Point loc, ByteArray& data);
+
+	bool saving() const { return nextSave <= 0; }
 
 	enum WorldType : uint8_t {
 		world = 0,
 		idle
 	};
+	// Static functions
+	static const Block& airBlock();
+	static Block createBlock(tile::Id tileId, uint8_t dx = 0, uint8_t dy = 0);
+	static void initializeBlock(Block& b);
 	// Constants
-	static const int SEC_PER_DAY, MS_PER_DAY, NOON, DAY, NIGHT;
-private:
+	static constexpr int SEC_PER_DAY = 60 * 24;
+	static constexpr int MS_PER_DAY = SEC_PER_DAY * 1000;
+	static constexpr int NOON = (int)(MS_PER_DAY / 2);
+	static constexpr int DAY = (int)(MS_PER_DAY / 4);
+	static constexpr int NIGHT = DAY * 3;
+
+	struct cmpPos {
+		bool operator()(const SDL_Point& p1, const SDL_Point& p2) const {
+			return (p1.y < p2.y) || (p1.y == p2.y && p1.x < p2.x);
+		}
+	};
+
+protected:
+	void tick(Timestep& dt);
+
 	void setFile(std::string fName);
 	void newWorld();
 
-	void tick(Timestep& dt);
-	void draw(SDL_Point center);
-	void drawLight(const Rect& rect);
+	void setBlock(int x, int y, const Block& b);
+	void setBlock(SDL_Point loc, const Block& b);
 
+	void saveWorld();
+
+private:
 	// Loads world
 	void loadWorld();
 	double loadWorld(double progress);
@@ -95,11 +113,12 @@ private:
 	double drawWorld(double progress);
 
 	// Saves world
-	void saveWorld();
 	double saveWorld(double progress);
 	void saveInfo();
 	double saveBlocks(double progress, int numRows);
 	double saveMap(double progress);
+
+	void applyBlockChanges();
 
 	// World type
 	WorldType type = WorldType::world;
@@ -113,27 +132,36 @@ private:
 
 	// World time
 	uint32_t time = 0;
+
 	// 2D array of blocks
 	std::vector<std::vector<Block>> blocks;
-	// Map <x, y> -> data
-	std::map<SDL_Point, ByteArray> blockData;
+	// Temporary data which stores world changes during saving
+	std::map<SDL_Point, Block, cmpPos> blockChanges;
 
-	// map
-	// light
+	// Auto save variables
+	static constexpr int SAVE_DELAY = 10;
+	double nextSave = SAVE_DELAY;
+	double saveProgress = 0.;
 
 	// File variables
 	std::string fileName;
 	FileRead fr;
 	FileWrite fw;
+};
 
-	// Temporary data which stores world changes during saving
-	std::list<std::pair<SDL_Point, Block>> blockChanges;
-	std::map<SDL_Point, ByteArray> dataChanges;
-	// Auto save variables
-	double nextSave = 30.;
-	double saveProgress = 0.;
-	// Chunks
-	//	ChunkManager manager;
+class WorldAccess : public World {
+	friend class Game;
+public:
+	WorldAccess() = default;
+	~WorldAccess() = default;
+
+	// Update world blocks
+	bool placeBlock(SDL_Point loc, tile::Id tileId);
+	bool breakBlock(SDL_Point loc);
+
+private:
+	void draw(SDL_Point center);
+	void drawLight(const Rect& rect);
 };
 
 #endif

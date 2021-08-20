@@ -88,6 +88,8 @@ bool eq(float f1, float f2, float err) {
 bool eq(double f1, double f2, double err) {
     return abs(f1 - f2) <= err;
 }
+int toInt(double d, double err) { return (int)(d + err); }
+
 
 Rect toBlockRect(Rect r) {
     int lbX = (int)(r.x / gameVals::BLOCK_W);

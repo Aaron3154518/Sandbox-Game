@@ -150,46 +150,38 @@ FileWrite& FileWrite::operator <<(ByteArray& b) {
 ByteArray::~ByteArray() { clear(); }
 
 void ByteArray::clear() {
-	for (char* arr : bytes) { delete[] arr; }
 	bytes.clear();
-	lens.clear();
 	pos = 0;
 }
 
 bool ByteArray::empty() const {
-	return bytes.empty() || lens.empty();
+	return bytes.empty();
 }
 
 void ByteArray::readBytes(char* ch, size_t n) {
-	if (pos < bytes.size() && pos < lens.size() &&
-		lens[pos] == n) {
-		memcpy(ch, bytes[pos], lens[pos]);
+	if (pos < bytes.size() && bytes[pos].len == n) {
+		memcpy(ch, bytes[pos].data, bytes[pos].len);
 		++pos;
 	}
 }
 
 void ByteArray::writeBytes(const char* ch, size_t n) {
-	lens.push_back(n);
-	bytes.push_back(new char(lens.back()));
-	memcpy(bytes.back(), ch, lens.back());
+	bytes.push_back(Data{ new char(n), n });
+	memcpy(bytes.back().data, ch, bytes.back().len);
 }
 
-void ByteArray::readFile(std::ifstream& fs, uint16_t n) {
+void ByteArray::readFile(std::ifstream& fs, size_t n) {
 	if (fs.is_open()) {
-		lens.push_back(n);
-		bytes.push_back(new char(lens.back()));
-		fs.read(bytes.back(), lens.back());
+		bytes.push_back(Data{ new char(n), n });
+		fs.read(bytes.back().data, bytes.back().len);
 	}
 }
 
 void ByteArray::writeFile(std::ofstream& fs) const {
 	if (fs.is_open()) {
-		// Bigger vector or iterative write?
-		auto it1 = lens.begin();
-		auto it2 = bytes.begin();
-		while (it1 != lens.end() && it2 != bytes.end()) {
-			fs.write(*it2, *it1);
-			++it1; ++it2;
+		// Bigger vector or iterative write? <- what?
+		for (auto it = bytes.begin(); it != bytes.end(); it++) {
+			fs.write(it->data, it->len);
 		}
 	}
 }

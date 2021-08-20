@@ -136,19 +136,25 @@ public:
     ~ByteArray();
 
     void clear();
+    void reset() { pos = 0; }
     bool empty() const;
 
     void readBytes(char* ch, size_t n);
     void writeBytes(const char* ch, size_t n);
 
     // File -> ByteArray
-    void readFile(std::ifstream& fs, uint16_t n);
+    void readFile(std::ifstream& fs, size_t n);
     // ByteArray -> File
     void writeFile(std::ofstream& fs) const;
 
 private:
-    std::vector<char*> bytes;
-    std::vector<size_t> lens;
+    struct Data {
+    public:
+        ~Data() { delete[] data; }
+        char* data;
+        size_t len;
+    };
+    std::vector<Data> bytes;
     size_t pos = 0;
 };
 
