@@ -53,6 +53,14 @@ void mkDir(const char* name) {
 #endif
 }
 
+void rmDir(const char* name) {
+#ifdef __linux__
+    rmdir(name);
+#else
+    _rmdir(name);
+#endif
+}
+
 std::vector<std::string> getDirContents(const std::string& dirName) {
     std::vector<std::string> results;
     DIR* dir = opendir(dirName.c_str());

@@ -38,6 +38,7 @@ bool isFile(const std::string& fileName);
 bool isDir(std::string dirName);
 
 void mkDir(const char* name);
+void rmDir(const char* name);
 
 std::vector<std::string> getDirContents(const std::string& dirName);
 

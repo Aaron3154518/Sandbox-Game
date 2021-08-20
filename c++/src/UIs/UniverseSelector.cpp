@@ -91,7 +91,7 @@ bool UniverseSelector::deleteUniverse(std::string dirName) {
 		std::remove(gameVals::univInfoFile(dirName).c_str());
 		closedir(univDir);
 		// TODO: Delete backups
-		if (_rmdir(fullDir.c_str()) != 0) {
+		if (rmDir(fullDir.c_str()) != 0) {
 			std::cerr << "This universe foldler has been modified. "
 				<< "Cannot delete" << std::endl;
 			return false;
