@@ -37,6 +37,7 @@ all: $(TARGET)
 
 $(TARGET): $(OBJS)
 	@echo Building $@
+	@mkdir -p $(@D)
 	$(CXX) $(CXXFLAGS) $(OBJS) -o $(TARGET) $(INCLUDE_PATHS) $(LIBRARY_PATHS) $(LINKER_FLAGS)
 
 -include $(DEPS)

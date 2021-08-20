@@ -1,12 +1,3 @@
-.idea/
-*__pycache__/
-saves/
-words.dic
-test.py
-lines.py
-noise.py
-save.py
-save2.py
-icon.png
-readme
-.vs
+.vs/
+cpp.hint
+python/

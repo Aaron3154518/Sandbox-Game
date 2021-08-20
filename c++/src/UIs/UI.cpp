@@ -37,6 +37,12 @@ void UI::runUI() {
 }
 
 void UI::init() {
+    // Create any necessary directories
+    std::vector<std::string> dirs = { "saves/", "saves/players/", "saves/universes/" };
+    for (auto& dir : dirs) {
+        if (!isDir(dir)) { mkDir(dir.c_str()); }
+    }
+
     // Initialize main SDL module
     int flags = SDL_WINDOW_RESIZABLE;
     if (SDL_Init(SDL_INIT_EVERYTHING) == 0) {

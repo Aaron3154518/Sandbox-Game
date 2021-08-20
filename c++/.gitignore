@@ -1,3 +1,5 @@
-obj/*
-bin/*
+bin
+obj
+saves
 test.*
+out.txt
