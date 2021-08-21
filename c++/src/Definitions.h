@@ -31,6 +31,7 @@ namespace gameVals {
 	std::string univInfoFile(const std::string& uName);
 	std::string worldFile(const std::string& uName, const std::string& wName);
 
+	// TODO: Turn into functions for static init fiasco
 	// FPS info
 	constexpr int FPS = 60;
 	constexpr int FRAME_DELAY = 1000 / FPS;

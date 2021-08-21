@@ -70,6 +70,16 @@ void World::tick(Timestep& dt) {
 
 	// Update chunks
 	//manager.tick();
+
+	// Update dropped items
+	PlayerAccess& player = GameObjects::player();
+	for (auto it = droppedItems.begin(); it != droppedItems.end(); it++) {
+		it->move(dt);
+		if (!it->pickUpImmune() && player.pickUp(*it)) {
+			it = droppedItems.erase(it);
+			if (it == droppedItems.end()) { break; }
+		}
+	}
 }
 
 // File saving/loading
@@ -410,10 +420,11 @@ SDL_Point World::getBlockSrc(SDL_Point loc) const {
 	return loc;
 }
 
-bool World::checkCollisions(Point<double>& pos, const Point<double>& dim,
+bool World::checkCollisions(Point<double>& pos, Point<double> dim,
 	Point<double>& d) const {
-	pos.x = fmin(fmax(pos.x + d.x, 0), width() - dim.x * gameVals::BLOCK_W);
-	pos.y = fmin(fmax(pos.y + d.y, 0), height() - dim.y * gameVals::BLOCK_W);
+	dim.x *= gameVals::BLOCK_W; dim.y *= gameVals::BLOCK_W;
+	pos.x += d.x; pos.y += d.y;
+	forceInWorld(pos, dim);
 	return false;
 }
 
@@ -455,6 +466,20 @@ bool World::anySolidBlocks(int x1, int x2, int y1, int y2) const {
 	return false;
 }
 
+void World::forceInWorld(Point<double>& p, Point<double> _dim) const {
+	if (p.x < 0) { p.x = 0.; }
+	if (p.y < 0) { p.y = 0.; }
+	SDL_Point bDim = { dim.x * gameVals::BLOCK_W, dim.y * gameVals::BLOCK_W };
+	if (p.x > bDim.x - _dim.x) { p.x = bDim.x - _dim.x; }
+	if (p.y > bDim.y - _dim.y) { p.y = bDim.y - _dim.y; }
+}
+void World::forceInWorld(SDL_Point& p, Point<double> _dim) const {
+	if (p.x < 0) { p.x = 0; }
+	if (p.y < 0) { p.y = 0; }
+	if (p.x > dim.x - _dim.x) { p.x = dim.x - _dim.x; }
+	if (p.y > dim.y - _dim.y) { p.y = dim.y - _dim.y; }
+}
+
 bool World::isInWorld(SDL_Point loc) const {
 	return loc.x >= 0 && loc.x < dim.x&& loc.y >= 0 && loc.y < dim.y;
 }
@@ -473,11 +498,7 @@ SDL_Point World::getWorldMousePos(SDL_Point mouse, SDL_Point center,
 	SDL_Point worldC = getScreenRect(center).center();
 	SDL_Point result = { mouse.x - screenC.x + worldC.x,
 		mouse.y - screenC.y + worldC.y };
-	if (blocks) {
-		result.x /= gameVals::BLOCK_W;
-		result.y /= gameVals::BLOCK_W;
-	}
-	return result;
+	return blocks ? getBlockPos(result) : result;
 }
 
 Rect World::getScreenRect(SDL_Point center) const {
@@ -556,6 +577,24 @@ void World::setBlockData(SDL_Point loc, ByteArray& data) {
 	}
 }
 
+void World::dropItem(const DroppedItem& drop, DroppedItem::DropDir dir) {
+	dropItem(drop, dir, GameObjects::player().getCPosf());
+}
+void World::dropItem(const DroppedItem& drop, DroppedItem::DropDir dir,
+	Point<double> pos) {
+	droppedItems.push_back(drop);
+	droppedItems.back().drop(pos, dir);
+}
+
+void World::drawDroppedItems(const Rect& worldRect) const {
+	SDL_Point tl = worldRect.topLeft();
+	AssetManager& assets = UI::assets();
+	for (const DroppedItem& drop : droppedItems) {
+		Rect r = drop.getRect() + tl;
+		assets.drawTexture(drop.getInfo().getImage(), r);
+	}
+}
+
 // WorldAccess
 // Update world blocks
 bool WorldAccess::placeBlock(SDL_Point loc, tile::Id tileId) {
@@ -616,6 +655,7 @@ void WorldAccess::draw(SDL_Point center) {
 
 	int worldW = width(), worldH = height();
 	Rect screen = getScreenRect(center);
+	// Where on the screen to draw the world
 	Rect worldRect(std::abs(screen.x), std::abs(screen.y),
 		std::min(screen.w, worldW), std::min(screen.h, worldH));
 	int lbX = (int)(std::max(screen.x, 0) / gameVals::BLOCK_W);
@@ -638,6 +678,8 @@ void WorldAccess::draw(SDL_Point center) {
 		r.x = lbX * gameVals::BLOCK_W - screen.x;
 		r.y += gameVals::BLOCK_W;
 	}
+	// Draw dropped items
+	drawDroppedItems(worldRect);
 	// Draw border
 	assets.thickRect(worldRect, 2, BLACK);
 	// Draw player

@@ -151,13 +151,18 @@ ByteArray::~ByteArray() { clear(); }
 
 void ByteArray::clear() {
 	bytes.clear();
-	pos = 0;
+	reset();
 }
 
 bool ByteArray::empty() const {
 	return bytes.empty();
 }
 
+size_t ByteArray::size() const {
+	size_t sum = 0;
+	for (const Data& data : bytes) { sum += data.len; }
+	return sum;
+}
 void ByteArray::readBytes(char* ch, size_t n) {
 	if (pos < bytes.size() && bytes[pos].len == n) {
 		memcpy(ch, bytes[pos].data, bytes[pos].len);
@@ -170,6 +175,42 @@ void ByteArray::writeBytes(const char* ch, size_t n) {
 	memcpy(bytes.back().data, ch, bytes.back().len);
 }
 
+void ByteArray::read(IO& io) {
+	clear();
+	size_t len;
+	io.read(len);
+	//memcpy(&len, ch, sizeof(size_t));
+	//ch += sizeof(size_t);
+	bytes.resize(len);
+	for (Data& data : bytes) {
+		io.read(data.len);
+		//memcpy(&data.len, ch, sizeof(size_t));
+		//ch += sizeof(size_t);
+		data.data = new char[data.len];
+		io.readBytes(data.data, data.len);
+		//memcpy(data.data, ch, data.len);
+		//ch += data.len;
+	}
+}
+
+void ByteArray::write(IO& io) const {
+	size_t s = size();
+	io.write(s);
+	//n = s + sizeof(size_t) * bytes.size() + sizeof(size_t);
+	//char* result = new char[n];
+	//char* pos = result;
+	//memcpy(pos, &s, sizeof(size_t));
+	//pos += sizeof(size_t);
+	for (const Data& data : bytes) {
+		io.write(data.len);
+		//memcpy(pos, &data.len, sizeof(size_t));
+		//pos += sizeof(size_t);
+		io.writeBytes(data.data, data.len);
+		//memcpy(pos, data.data, data.len);
+		//pos += data.len;
+	}
+}
+ 
 void ByteArray::readFile(std::ifstream& fs, size_t n) {
 	if (fs.is_open()) {
 		bytes.push_back(Data{ new char(n), n });
@@ -184,4 +225,15 @@ void ByteArray::writeFile(std::ofstream& fs) const {
 			fs.write(it->data, it->len);
 		}
 	}
+}
+
+bool ByteArray::operator ==(const ByteArray& other) const {
+	if (bytes.size() != other.bytes.size()) { return false; }
+	auto it1 = bytes.begin(), it2 = other.bytes.begin();
+	while (it1 != bytes.end() && it2 != other.bytes.end()) {
+		if (it1->len != it2->len) { return false; }
+		if (!memcmp(it1->data, it2->data, it1->len)) { return false; }
+		++it1; ++it2;
+	}
+	return true;
 }

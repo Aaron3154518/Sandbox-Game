@@ -40,7 +40,7 @@ public:
     template<typename T>
     ENABLE_IF_VAL(T) DATA_WRITE(T);
 
-    // For object types
+    // For non-custom object types
     void DATA_READ(std::string);
     void DATA_WRITE(std::string);
     void DATA_READ(SDL_Point);
@@ -49,8 +49,9 @@ public:
     void DATA_READ(std::vector<T>);
     template<typename T>
     void DATA_WRITE(std::vector<T>);
+    // For custom object types, just define read/write(IO& io) in the class
+    // and pass the desired IO object
 
-protected:
     virtual void readBytes(char* ch, size_t n) {}
     virtual void writeBytes(const char* ch, size_t n) {}
 };
@@ -137,15 +138,20 @@ public:
 
     void clear();
     void reset() { pos = 0; }
+    size_t size() const;
     bool empty() const;
 
     void readBytes(char* ch, size_t n);
     void writeBytes(const char* ch, size_t n);
+    void read(IO& io);
+    void write(IO& io) const;
 
     // File -> ByteArray
     void readFile(std::ifstream& fs, size_t n);
     // ByteArray -> File
     void writeFile(std::ofstream& fs) const;
+
+    bool operator ==(const ByteArray& other) const;
 
 private:
     struct Data {

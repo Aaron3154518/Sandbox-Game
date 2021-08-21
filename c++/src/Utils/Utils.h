@@ -55,7 +55,12 @@ bool eq(float f1, float f2, float err = gameVals::FLOAT_ERR);
 bool eq(double f1, double f2, double err = gameVals::DOUBLE_ERR);
 int toInt(double d, double err = gameVals::DOUBLE_ERR);
 
+SDL_Point getBlockPos(const SDL_Point& p);
+SDL_Point getPixelPos(const SDL_Point& p);
+
 Rect toBlockRect(Rect r);
+
+bool rectsOverlap(Rect r1, Rect r2);
 
 // Helper classes
 class Timestep {

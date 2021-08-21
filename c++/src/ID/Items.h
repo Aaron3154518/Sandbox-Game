@@ -54,6 +54,9 @@ namespace item {
 
 		numItems
 	};
+
+	// TODO: operator bool(const Id& id) { return id != Id::numItems; }
+	//bool toBool(const Id& id) { return id != Id::numItems; }
 }
 
 #endif

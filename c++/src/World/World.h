@@ -13,6 +13,7 @@
 #include "../ID/Tiles.h"
 #include "../Objects/Tile.h"
 #include "../Objects/TileObjects.h"
+#include "../Objects/DroppedItem.h"
 #include "../Utils/Utils.h"
 #include "../Utils/Rect.h"
 #include "../Utils/Point.h"
@@ -45,12 +46,16 @@ public:
 	// Functions involving the world blocks
 	void getBlockSrc(int& x, int& y) const;
 	SDL_Point getBlockSrc(SDL_Point loc) const;
-	bool checkCollisions(Point<double>& pos, const Point<double>& dim,
+	bool checkCollisions(Point<double>& pos, Point<double> dim,
 		Point<double>& d) const;
 	bool touchingBlocks(const Point<double>& pos, const Point<double>& dim,
 		bool x, bool topLeft) const;
 	bool anySolidBlocks(int x1, int x2, int y1, int y2) const;
 
+	// Units are pixels
+	void forceInWorld(Point<double>& p, Point<double> _dim) const;
+	// Units are blocks
+	void forceInWorld(SDL_Point& p, Point<double> _dim) const;
 	bool isInWorld(SDL_Point loc) const;
 
 	int surfaceH() const;
@@ -69,6 +74,11 @@ public:
 	const Block& getBlock(SDL_Point loc) const;
 	void setBlockData(int x, int y, ByteArray& data);
 	void setBlockData(SDL_Point loc, ByteArray& data);
+
+	void dropItem(const DroppedItem& drop, DroppedItem::DropDir dir);
+	void dropItem(const DroppedItem& drop, DroppedItem::DropDir dir,
+		Point<double> pos);
+
 
 	bool saving() const { return nextSave <= 0; }
 
@@ -104,6 +114,8 @@ protected:
 
 	void saveWorld();
 
+	void drawDroppedItems(const Rect& worldRect) const;
+
 private:
 	// Loads world
 	void loadWorld();
@@ -137,6 +149,8 @@ private:
 	std::vector<std::vector<Block>> blocks;
 	// Temporary data which stores world changes during saving
 	std::map<SDL_Point, Block, cmpPos> blockChanges;
+
+	std::list<DroppedItem> droppedItems;
 
 	// Auto save variables
 	static constexpr int SAVE_DELAY = 10;

@@ -1,8 +1,6 @@
 #ifndef ITEM_H
 #define ITEM_H
 
-#define ITEM_FILE "res/items.txt"
-
 #include <iostream>
 #include <utility>
 #include <forward_list>
@@ -12,49 +10,36 @@
 
 #include <SDL.h>
 
+// Including Tile.h is an include loop
+#include "../Definitions.h"
+#include "../ID/Items.h"
+#include "../ID/Tiles.h"
+#include "../UIs/UI.h"
 #include "../Utils/Utils.h"
 #include "../Utils/Rect.h"
-#include "ObjectIds.h"
-#include "ObjectParser.h"
+#include "../Utils/FileIO.h"
+#include "../Utils/AssetManager.h"
 
-namespace object {
-	const std::map<std::string, std::type_index> ItemObjects;
-	std::type_index getItemType(std::string name);
-	Item* getItem(ItemId id);
+// TODO: fix
+struct Animation;
+struct Recipe;
+struct Polygon;
 
-	// TODO: fix
-	struct ItemInfo;
-	struct Animation;
-	struct Recipe;
+class Item;
+typedef std::shared_ptr<Item> ItemPtr;
 
-	struct ItemInfo {
-		ItemId itemId = ItemId::AIR, amnt = 0;
-		std::string data = "";
-
-		bool isItem() { return amnt > 0; }
-		int max_stack() { return getItem(itemId).maxStack; }
-
-		int num_bytes() { return 4; } // TODO: data
-		std::string write();
-
-		void copy(const ItemInfo& other);
-		ItemInfo copy() { return ItemInfo{ itemId, amnt, data }; }
-
-		void print();
-		void newItem();
-
-		bool sameAs(const ItemInfo& other);
-		bool operator==(const ItemInfo& other);
-	};
-
-	ItemInfo loadInfo(std::string data);
+class Item {
+	friend class ItemInfo;
+public:
+	Item() = default;
+	~Item() = default;
 
 	enum ItemData {
-		has_data = 0,	// Item stores data
+		hasData = 0,	// Item stores data
 		consumable,		// Is consumable (will decrease item amount)
-		has_ui,			// Tile brings up a ui when clicked
-		auto_use,		// Will automatically start using again
-		is_weapon,		// Can attack an enemy
+		hasUi,			// Item brings up a ui when clicked
+		autoUse,		// Will automatically start using again
+		isWeapon,		// Can attack an enemy
 		swing,			// Should swing when used
 		placer,			// Places a block on use
 		breaker,		// Breaks a block on use
@@ -64,61 +49,100 @@ namespace object {
 		numData
 	};
 
-	static Loader<Item, ItemId> ItemLoader(ItemId::numItems,
-		LoaderInfo{ Item_FILE, "Item", ItemNames, ItemObjects });
+	virtual void useAnim(double timeUsed, void* arm, bool left,
+		std::pair<int, int> playerCenter, Rect& rect);
 
-	class Item {
-		friend class ItemInfo;
-	public:
-		Item() : Item(ItemId::AIR) {}
-		Item(ItemId _id) : id(_id) {}
-		~Item() = default;
+	SDL_Texture* getImage() const;
+	virtual SDL_Texture* getImage(ByteArray data) const { return getImage(); }
+	virtual ByteArray newItemData() const { return ByteArray(); }
 
-		void useAnim(double timeUsed, void* arm, bool left,
-			std::pair<int, int> playerCenter, Rect &rect)
+	virtual void onLeftClick() {}
+	virtual void onRightClick() {}
 
-		std::string newItem();
+	virtual void tick();
 
-		void onLeftClick() {}
-		void onRightClick() {}
+	virtual std::string getDescription() { return ""; }
+	virtual std::string getFullDescription();
 
-		void tick();
+	SDL_Texture* drawDescription();
 
-		std::string getDescription() { return ""; }
-		std::string getFullDescription();
+	// Getters/Setters
+	typedef std::initializer_list<ItemData> DataKeys;
+	bool getItemData(ItemData idx) const { return data[idx]; }
+	std::map<ItemData, bool> getItemData(const DataKeys& keys) const;
+	void setItemData(ItemData idx, bool val) { data[idx] = val; }
+	void setItemData(const DataKeys& keys, bool val);
 
-		SDL_Texture* drawDescription();
+	virtual int id() { return Item::ID; }
+	static int Id() { return ID; }
+	static ItemPtr getItem(item::Id id);
 
-	private:
-		// Item index
-		ItemId id = ItemId::AIR;
-		// Item name
-		std::string name = "";
-		// Image
-		std::string image = "";
+protected:
+	static item::Id registerItem(ItemPtr t, item::Id id);
 
-		// Max stack
-		int maxStack = 999;
+	// Item name
+	std::string name = "";
+	// Image
+	std::string img = "";
 
-		// Use time (seconds)
-		double useTime = .3;
-		// Animation index (if animation)
-		int animIdx = -1;
+	// Max stack
+	size_t maxStack = 999;
 
-		// Magic value of item for sacrificing
-		int magicVal = 0;
+	// Use time (seconds)
+	double useTime = .3;
+	// Animation index (if animation)
+	int animIdx = -1;
 
-		// Information booleans
-		bool data[ItemData::numData] = { false };
+	// Magic value of item for sacrificing
+	int magicVal = 0;
 
-		// TODO: placeable class
-		TileId blockId = TileId::AIR;
+	// Information booleans
+	bool data[ItemData::numData] = { false };
 
-		// Attack box, if applicable
-		Polygon polygon;
-	};
+	// TODO: placeable class
+	tile::Id blockId = tile::Id::numTiles;
 
-	static Loader<Item, ItemId> itemLoader(ItemId::numItems,
-		LoaderInfo{ ITEM_FILE, "Item", itemNames, itemObjects });
-}
+	// Attack box, if applicable
+	//Polygon polygon;
+
+private:
+	const static item::Id ID = item::Id::numItems;
+	static std::vector<ItemPtr>& getItems();
+};
+
+struct ItemInfo {
+	ItemInfo() = default;
+	ItemInfo(item::Id id, size_t amnt);
+	~ItemInfo() = default;
+
+	item::Id itemId = item::Id::numItems;
+	size_t amnt = 0;
+	ByteArray data;
+
+	bool isItem() const { return amnt > 0; }
+	int max_stack() const { return Item::getItem(itemId)->maxStack; }
+	SDL_Texture* getImage() const { return Item::getItem(itemId)->getImage(data); }
+
+	void read(IO& io);
+	void write(IO& io) const;
+
+	void print();
+
+	bool sameAs(const ItemInfo& other) const;
+};
+
+#define NEW_ITEM(TYPE) \
+private: \
+friend class Item; \
+TYPE(); \
+const static item::Id ID; \
+public: \
+int id() { return TYPE::ID; } \
+static int Id() { return ID; }
+
+#define ADD_ITEM(TYPE, ITEM_ID) \
+const item::Id TYPE::ID = \
+	Item::registerItem(std::shared_ptr<TYPE>(new TYPE()), item::Id::ITEM_ID); \
+TYPE::TYPE()
+
 #endif

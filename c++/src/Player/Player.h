@@ -10,6 +10,7 @@
 #include "../Utils/AssetManager.h"
 #include "../ID/Tiles.h"
 #include "../ID/Items.h"
+#include "../Objects/DroppedItem.h"
 
 class Player {
 	friend class Game;
@@ -19,15 +20,18 @@ public:
 	Player(const Player&) = delete;
 	Player& operator =(const Player&) = delete;
 
+	bool pickUp(DroppedItem& drop);
+
 	void hit(int damage, int centerX, int kbPower);
 
 	// Getters/Setters
 	std::string fullImgFile() const;
 	SDL_Point getCPos() const { return mRect.center(); }
+	Point<double> getCPosf() const { return Point<double>{mRect.cX(), mRect.cY()}; }
 	Point<double> getPos() const { return pos; }
 	void setPos(const Point<double>& newP);
 
-	bool pointInPlayerBlock(SDL_Point pxPos) const;
+	bool pointInPlayerBlock(SDL_Point blockPos) const;
 
 protected:
 	void tick(Event& e);
@@ -72,7 +76,9 @@ private:
 	Point<double> dim;
 
 	// Ranges
-	Rect collectionRange;
+	static const double PICKUP_DX, PICKUP_DY;
+	Rect pickUpRange;
+	static const double PLACE_DX, PLACE_DY;
 	Rect placementRange;
 
 	// Physics variables

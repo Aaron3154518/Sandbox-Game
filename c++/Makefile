@@ -18,7 +18,8 @@ UIs/UI UIs/Game UIs/Selector UIs/PlayerSelector UIs/UniverseSelector \
 UIElements/YesNo UIElements/TextInput \
 World/World \
 Player/Player \
-Objects/Tile Objects/TileObjects
+Objects/Tile Objects/TileObjects Objects/Item Objects/ItemObjects \
+Objects/DroppedItem
 SRCS := $(patsubst %, $(SRC)/%.$(CEXT), $(SRCS))
 EXCLUDE := $(wildcard $(SRC)/*_unittest.$(CEXT) $(SRC)/**/*_unittest.$(CEXT))
 SRCS := $(filter-out $(EXCLUDE), $(SRCS))

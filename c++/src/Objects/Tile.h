@@ -12,14 +12,14 @@
 #include <SDL.h>
 
 #include "../Definitions.h"
+#include "Item.h"
+#include "DroppedItem.h"
 #include "../Utils/Utils.h"
 #include "../Utils/Point.h"
 #include "../ID/Tiles.h"
 #include "../ID/Items.h"
 #include "../UIs/UI.h"
 #include "../Utils/AssetManager.h"
-
-constexpr auto TILE_FILE = "res/tiles.txt";
 
 class Tile;
 typedef std::shared_ptr<Tile> TilePtr;
@@ -30,10 +30,10 @@ public:
 	~Tile() = default;
 
 	enum TileData {
-		has_data = 0,	// Tile stores data
+		hasData = 0,	// Tile stores data
 		clickable,		// Tile is interactable
-		has_ui,			// Tile brings up a ui when clicked
-		on_surface,		// Must be placed on a surface
+		hasUi,			// Tile brings up a ui when clicked
+		onSurface,		// Must be placed on a surface
 		crafting,		// Player can craft at this item
 		updates,		// Block updates every tick
 		light,			// Emits light
@@ -43,25 +43,28 @@ public:
 		numData
 	};
 
-	void tick(int x, int y, Timestep dt);
+	virtual void tick(int x, int y, Timestep dt);
 
-	SDL_Texture* getImage(SDL_Point pos) const;
-	void setAnimation(Animation& anim);
+	virtual SDL_Texture* getImage(SDL_Point pos) const;
+	virtual void setAnimation(Animation& anim);
 
-	void addDrop(item::Id item, int minAmnt = 1, int maxAmnt = -1);
-	//std::forward_list<ItemInfo> generateDrops() const;
+	virtual void addDrop(item::Id item, int minAmnt = 1, int maxAmnt = -1);
+	std::forward_list<ItemInfo> generateDrops() const;
 
-	bool onBreak(SDL_Point loc);
-	bool onPlace(SDL_Point loc);
+	virtual bool onBreak(SDL_Point loc);
+	virtual bool onPlace(SDL_Point loc);
 
-	bool canPlace(SDL_Point loc) const { return true; }
-	bool activated() const { return false; }
+	virtual bool canPlace(SDL_Point loc) const { return true; }
+	virtual bool activated() const { return false; }
 
-	bool hit(SDL_Point loc, int power);
+	virtual bool hit(SDL_Point loc, int power);
 
 	// Getters/Setters
+	typedef std::initializer_list<TileData> DataKeys;
 	bool getTileData(TileData idx) const { return data[idx]; }
+	std::map<TileData, bool> getTileData(const DataKeys& keys) const;
 	void setTileData(TileData idx, bool val) { data[idx] = val; }
+	void setTileData(const DataKeys& keys, bool val);
 	SDL_Color getMapColor() const { return mapColor; }
 	Point<uint8_t> getDim() const { return dim; }
 

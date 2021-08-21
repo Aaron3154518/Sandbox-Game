@@ -1,6 +1,11 @@
 #include "Player.h"
 #include "../GameObjects.h"
 
+#define DEBUG_RANGES
+
+const double Player::PICKUP_DX = 1.5, Player::PICKUP_DY = 1.5;
+const double Player::PLACE_DX = 2.5, Player::PLACE_DY = 2;
+
 Player::Player() {
 	// Setup rectangles
 	SDL_Texture* tex = UI::assets().getAsset(fullImgFile());
@@ -9,13 +14,13 @@ Player::Player() {
 		(double)mRect.h / gameVals::BLOCK_W };
 	spriteRect = Rect::getMinRect(tex, gameVals::SPRITE_W, gameVals::SPRITE_W);
 	armRect = Rect(0, 0, (int)(mRect.w / 4), (int)(mRect.h / 3));
-	collectionRange = Rect(0, 0, 6 * gameVals::BLOCK_W, 6 * gameVals::BLOCK_W);
-	placementRange = Rect(0, 0, 7 * gameVals::BLOCK_W, 7 * gameVals::BLOCK_W);
+	setPos(Point<double>{0, 0});
 
 	// Set gravity
 	a.y = 10;
 }
 
+// Update functions
 void Player::tick(Event& e) {
 	// If we are dead, update respawn counter
 	if (respawnCtr > 0) {
@@ -100,9 +105,12 @@ void Player::tick(Event& e) {
 		if (canMove) {
 			// acc = stats.getStat("acceleration");
 			double acc = 3;
+			a.x = 0;
+			if (e.keyDown(SDLK_a)) { a.x -= acc; }
+			if (e.keyDown(SDLK_d)) { a.x += acc; }
 			// If both keys are pressed, don't change acceleration
-			if (e.keyDown(SDLK_a) && !e.keyDown(SDLK_d)) { a.x = -acc; }
-			if (e.keyDown(SDLK_d) && !e.keyDown(SDLK_a)) { a.x = acc; }
+			//if (e.keyDown(SDLK_a) && !e.keyDown(SDLK_d)) { a.x = -acc; }
+			//if (e.keyDown(SDLK_d) && !e.keyDown(SDLK_a)) { a.x = acc; }
 			// Check for jump
 			if (e.keyDown(SDLK_SPACE) && collided.y == CollideType::botRight) {
 				v.y = -6;// -stats.getStat("jump_speed");
@@ -119,6 +127,12 @@ void Player::move(Timestep dt) {
 	if (ms == 0) { return; }
 	double sec = dt.seconds();
 
+	// Add drag force
+	if (v.x != 0 && a.x * v.x <= 0) {
+		double newA = -4 * v.x;
+		if (fabsf(newA) > fabsf(a.x)) { a.x = newA; }
+	}
+
 	// Get displacement
 	Point<double> d;
 	for (Dim _d : getDimList()) {
@@ -131,9 +145,6 @@ void Player::move(Timestep dt) {
 			v[_d] = std::copysignf(maxV, v[_d]);
 		}
 	}
-
-	// Add drag force
-	if (v.x != 0) { a.x = -4 * v.x; }
 
 	Point<double> prevD = d, prevP = pos;
 	// Check for collisions and set new position
@@ -179,10 +190,15 @@ void Player::move(Timestep dt) {
 
 void Player::draw() {
 	Rect r = GameObjects::world().getScreenRect(mRect.center());
+	SDL_Point shift = r.topLeft();
 	AssetManager& assets = UI::assets();
 
-	Rect shiftRect = mRect - r.topLeft();
-	assets.drawTexture(fullImgFile(), shiftRect);
+	assets.drawTexture(fullImgFile(), mRect - shift);
+
+#ifdef DEBUG_RANGES
+	assets.thickRect(pickUpRange - shift, 1, GREEN);
+	assets.thickRect(placementRange - shift, 1, RED);
+#endif
 
 	drawUI();
 }
@@ -191,6 +207,7 @@ void Player::drawUI() {
 
 }
 
+// Event functions
 void Player::leftClick(SDL_Point mouse) {
 	/*if (!inventory.leftClick(mouse)) {
 		ItemInfo item = inventory.getCurrentItem();
@@ -210,22 +227,23 @@ void Player::leftClick(SDL_Point mouse) {
 			useTime = 500;
 		}
 	}*/
-	breakBlock(GameObjects::world().getWorldMousePos(
-		mouse, mRect.center(), true));
+	SDL_Point worldMouse = GameObjects::world().getWorldMousePos(mouse, mRect.center(), false);
+	SDL_Point loc = getBlockPos(worldMouse);
+	if (SDL_PointInRect(&worldMouse, &placementRange)) { breakBlock(loc); }
 }
 
 void Player::rightClick(SDL_Point mouse) {
-	placeBlock(GameObjects::world().getWorldMousePos(
-		mouse, mRect.center(), true), tile::Id::DIRT);
+	// TODO: fixeme (not mouse, use getWorldMousePos())
+	SDL_Point worldMouse = GameObjects::world().getWorldMousePos(mouse, mRect.center(), false);
+	SDL_Point loc = getBlockPos(worldMouse);
+	if (SDL_PointInRect(&worldMouse, &placementRange) && !pointInPlayerBlock(loc)) {
+		placeBlock(loc, tile::Id::DIRT);
+	}
 }
 
 bool Player::placeBlock(SDL_Point loc, tile::Id tileId) {
 	// Check if we can place the block
-	SDL_Point pxLoc = { loc.x * gameVals::BLOCK_W, loc.y * gameVals::BLOCK_W };	if (SDL_PointInRect(&pxLoc, &placementRange) &&
-		!pointInPlayerBlock(pxLoc)) {
-		return GameObjects::world().placeBlock(loc, tileId);
-	}
-	return false;
+	return GameObjects::world().placeBlock(loc, tileId);
 }
 
 bool Player::breakBlock(SDL_Point loc) {
@@ -238,29 +256,43 @@ bool Player::breakBlock(SDL_Point loc) {
 	//if (activeUI && activeUI.blockPos == loc) { return false; }
 	// Make sure this block is in range and check if we destroyed it
 	int power = 1; // stats.getStat("power");
-	Point<uint8_t> tDim = tile->getDim();
-	Rect bRect(loc.x * gameVals::BLOCK_W, loc.y * gameVals::BLOCK_W,
-		tDim.x * gameVals::BLOCK_W, tDim.y * gameVals::BLOCK_W);
-	SDL_Point bCenter = bRect.center();
-	if (SDL_PointInRect(&bCenter, &placementRange) &&
-		tile->hit(loc, power)) {
+	if (tile->hit(loc, power)) {
 		return world.breakBlock(loc);
 	}
 	return false;
 }
 
+// Inventory stuff
+bool Player::pickUp(DroppedItem& drop) {
+	drop.setPulled(false);
+	if (rectsOverlap(drop.getRect(), pickUpRange)) {
+		// TODO: Get inventory space
+		std::vector<int> space = { 0 };
+		if (!space.empty()) {
+			drop.attract(Point<double>{mRect.cX(), mRect.cY()});
+			if (distance(mRect.center(), drop.getRect().center()) <= 1) {
+				return true; // Inventory.pickUpItem(drop.getInfo(), space);
+			}
+		}
+	}
+	return false;
+}
+
+// Other functions
 void Player::setPos(const Point<double>& newPos) {
 	pos = newPos;
 	mRect.setTopLeft(SDL_Point{ (int)pos.x, (int)pos.y });
-	collectionRange.setCenter(mRect.center());
+	pickUpRange.w = mRect.w + 2 * PICKUP_DX * gameVals::BLOCK_W;
+	pickUpRange.h = mRect.h + 2 * PICKUP_DY * gameVals::BLOCK_W;
+	pickUpRange.setCenter(mRect.center());
+	placementRange.w = mRect.w + 2 * PLACE_DX * gameVals::BLOCK_W;
+	placementRange.h = mRect.h + 2 * PLACE_DY * gameVals::BLOCK_W;
 	placementRange.setCenter(mRect.center());
 }
 
-bool Player::pointInPlayerBlock(SDL_Point pxPos) const {
-	pxPos.x /= gameVals::BLOCK_W;
-	pxPos.y /= gameVals::BLOCK_W;
+bool Player::pointInPlayerBlock(SDL_Point blockPos) const {
 	Rect r = toBlockRect(mRect);
-	return SDL_PointInRect(&pxPos, &r);
+	return SDL_PointInRect(&blockPos, &r);
 }
 
 void Player::hit(int damage, int centerX, int kbPower) {

@@ -38,6 +38,9 @@ namespace tile {
 
 		numTiles
 	};
+
+	// TODO: operator bool(const Id& id) { return id != Id::numTiles; }
+	//bool toBool(const Id& id) { return id != Id::numTiles; }
 }
 
 #endif

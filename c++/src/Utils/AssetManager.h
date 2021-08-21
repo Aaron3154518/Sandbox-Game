@@ -1,6 +1,8 @@
 #ifndef ASSET_MANAGER_H
 #define ASSET_MANAGER_H
 
+//TODO: fix long lines
+
 //#define RENDER_DEBUG
 
 #include <sstream>
@@ -91,8 +93,8 @@
 
         SDL_Texture* renderText(TextData& data, Rect& rect) const;
         SDL_Texture* renderTextWrapped(TextData& data, Rect& rect, Uint32 bkgrnd = -1) const;
-        void drawTexture(SDL_Texture* tex, Rect& destRect, Rect* boundary = NULL) const;
-        void drawTexture(std::string fileName, Rect& destRect, Rect* boundary = NULL) { drawTexture(getAsset(fileName), destRect, boundary); }
+        void drawTexture(SDL_Texture* tex, const Rect& destRect, Rect* boundary = NULL) const;
+        void drawTexture(std::string fileName, const Rect& destRect, Rect* boundary = NULL);
         void drawText(TextData& data, Rect* boundary) const;
         void drawTextWrapped(TextData& data, Rect* boundary, Uint32 bkgrnd = -1) const;
 

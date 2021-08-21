@@ -232,7 +232,7 @@
         return tex;
     }
 
-    void AssetManager::drawTexture(SDL_Texture* tex, Rect& destRect, Rect* boundary) const {
+    void AssetManager::drawTexture(SDL_Texture* tex, const Rect& destRect, Rect* boundary) const {
         if (tex == NULL) {
             std::cout << "Invalid Texture" << std::endl;
             return;
@@ -295,6 +295,10 @@
         }
 
         SDL_RenderCopy(UI::renderer(), tex, &texRect, &drawRect);
+    }
+
+    void AssetManager::drawTexture(std::string fileName, const Rect& destRect, Rect* boundary) {
+        drawTexture(getAsset(fileName), destRect, boundary);
     }
 
     void AssetManager::drawText(TextData& data, Rect* boundary) const {
