@@ -104,15 +104,20 @@
         Font createFont(std::string fileName, int w, int h) const;
 
         Texture renderText(TextData& data, Rect& rect) const;
-        Texture renderTextWrapped(TextData& data, Rect& rect, Uint32 bkgrnd = -1) const;
-        void drawTexture(SDL_Texture* tex, const Rect& destRect, Rect* boundary = NULL) const;
-        void drawTexture(std::string fileName, const Rect& destRect, Rect* boundary = NULL);
+        Texture renderTextWrapped(TextData& data, Rect& rect,
+            Uint32 bkgrnd = -1) const;
+        void drawTexture(SDL_Texture* tex, const Rect& destRect,
+            Rect* boundary = NULL) const;
+        void drawTexture(std::string fileName, const Rect& destRect,
+            Rect* boundary = NULL);
         void drawText(TextData& data, Rect* boundary) const;
-        void drawTextWrapped(TextData& data, Rect* boundary, Uint32 bkgrnd = -1) const;
+        void drawTextWrapped(TextData& data, Rect* boundary,
+            Uint32 bkgrnd = -1) const;
 
         enum BorderType : uint8_t { outside = 0, middle, inside };
         void rect(Rect* r, const SDL_Color& color) const;
-        void thickRect(Rect r, int thickness, BorderType border, const SDL_Color& color) const;
+        void thickRect(Rect r, int thickness, BorderType border,
+            const SDL_Color& color) const;
 
         //void drawProgressBar(Number amnt, Number cap, Rect& rect, SDL_Color color, SDL_Color bkgrnd) const;
         //void drawProgressBarLog(Number amnt, Number cap, Rect& rect, SDL_Color color, SDL_Color bkgrnd) const;

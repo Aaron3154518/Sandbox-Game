@@ -97,7 +97,8 @@ SharedTexture AssetManager::loadAsset(std::string fileName) {
             return NULL;
         }
         SDL_Surface* tmpSurface = IMG_Load(fileName.c_str());
-        SharedTexture tex = makeSharedTexture(SDL_CreateTextureFromSurface(UI::renderer(), tmpSurface));
+        SharedTexture tex = makeSharedTexture(
+            SDL_CreateTextureFromSurface(UI::renderer(), tmpSurface));
         SDL_FreeSurface(tmpSurface);
         if (tex) {
             assets[fileName] = tex;
@@ -108,7 +109,8 @@ SharedTexture AssetManager::loadAsset(std::string fileName) {
         return tex;
     }
 
-SharedFont AssetManager::loadFont(std::string id, std::string fileName, int maxW, int maxH) {
+SharedFont AssetManager::loadFont(std::string id, std::string fileName,
+    int maxW, int maxH) {
         SharedFont font = createFont(fileName, maxW, maxH);
         if (font) {
             fonts[id] = font;
@@ -130,7 +132,8 @@ SharedFont AssetManager::getFont(std::string id) const {
     return it == fonts.end() ? makeSharedFont() : it->second;
 }
 
-SharedFont AssetManager::getFont(std::string id, std::string fileName, int maxW, int maxH) {
+SharedFont AssetManager::getFont(std::string id, std::string fileName,
+    int maxW, int maxH) {
     auto it = fonts.find(id);
     return it == fonts.end() ? loadFont(id, fileName, maxW, maxH) : it->second;
 }
@@ -145,7 +148,7 @@ Texture AssetManager::createTexture(int w, int h) const {
         SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, w, h));
 }
 
-Font AssetManager::createFont(std::string fileName, int maxW, int maxH)const {
+Font AssetManager::createFont(std::string fileName, int maxW, int maxH) const {
     int minSize = 1, maxSize = 10;
     int w, h;
     getFontSize(fileName, 1, &w, &h);
@@ -185,8 +188,10 @@ Texture AssetManager::renderText(TextData& data, Rect& rect) const {
             std::cout << "Could not load font" << std::endl;
             return makeTexture();
         }
-        SDL_Surface* surface = TTF_RenderText_Blended(font.get(), data.text.c_str(), data.color);
-        Texture tex = makeTexture(SDL_CreateTextureFromSurface(UI::renderer(), surface));
+        SDL_Surface* surface = TTF_RenderText_Blended(font.get(),
+            data.text.c_str(), data.color);
+        Texture tex = makeTexture(
+            SDL_CreateTextureFromSurface(UI::renderer(), surface));
         SDL_FreeSurface(surface);
         if (tex) {
             rect = Rect::getMinRect(tex.get(), data.w, data.h);
@@ -195,7 +200,8 @@ Texture AssetManager::renderText(TextData& data, Rect& rect) const {
         return tex;
     }
 
-Texture AssetManager::renderTextWrapped(TextData& data, Rect& rect, Uint32 bkgrnd) const {
+Texture AssetManager::renderTextWrapped(TextData& data, Rect& rect,
+    Uint32 bkgrnd) const {
         SharedFont font = getFont(data);
         if (!font) {
             std::cerr << "Could not load font" << std::endl;
@@ -252,12 +258,14 @@ Texture AssetManager::renderTextWrapped(TextData& data, Rect& rect, Uint32 bkgrn
         TTF_SizeText(font.get(), "|", NULL, &lineH);
         rect = Rect(0, 0, maxW, (int)(lineH * lines.size()));
         data.setRectPos(rect);
-        SDL_Surface* surf = SDL_CreateRGBSurface(0, rect.w, rect.h, 32, rmask, gmask, bmask, amask);
+        SDL_Surface* surf = SDL_CreateRGBSurface(0, rect.w, rect.h, 32,
+            rmask, gmask, bmask, amask);
         if (bkgrnd != -1) { SDL_FillRect(surf, NULL, bkgrnd); }
         int x = maxW / 2, y = lineH / 2;
         for (std::string line : lines) {
             if (line == "") { y += lineH; continue; }
-            SDL_Surface* lineSurf = TTF_RenderText_Blended(font.get(), line.c_str(), data.color);
+            SDL_Surface* lineSurf = TTF_RenderText_Blended(font.get(),
+                line.c_str(), data.color);
             if (lineSurf != nullptr) {
                 Rect lineRect = Rect(0, 0, lineSurf->w, lineSurf->h);
                 lineRect.setCenter(x, y);
@@ -265,17 +273,20 @@ Texture AssetManager::renderTextWrapped(TextData& data, Rect& rect, Uint32 bkgrn
                 SDL_FreeSurface(lineSurf);
             }
             else {
-                std::cout << "line '" << line << "' produced a null surface" << std::endl;
+                std::cout << "line '" << line << "' produced a null surface"
+                    << std::endl;
             }
             y += lineH;
         }
         lines.clear();
-        Texture tex = makeTexture(SDL_CreateTextureFromSurface(UI::renderer(), surf));
+        Texture tex = makeTexture(
+            SDL_CreateTextureFromSurface(UI::renderer(), surf));
         SDL_FreeSurface(surf);
         return tex;
     }
 
-void AssetManager::drawTexture(SDL_Texture* tex, const Rect& destRect, Rect* boundary) const {
+void AssetManager::drawTexture(SDL_Texture* tex, const Rect& destRect,
+    Rect* boundary) const {
         if (!tex) {
             std::cout << "Invalid Texture" << std::endl;
             return;
@@ -294,14 +305,6 @@ void AssetManager::drawTexture(SDL_Texture* tex, const Rect& destRect, Rect* bou
             }
         }
 
-        /*Rect drawRect;
-        if (SDL_IntersectRect(&destRect, boundary, &drawRect) == SDL_FALSE) {
-#ifdef RENDER_DEBUG
-            std::cout << "Rect " << destRect << " was out side the boundary " << *boundary << std::endl;
-#endif
-            return;
-        }*/
-
         double leftFrac = fmax(boundary->x - destRect.x, 0) / destRect.w;
         double topFrac = fmax(boundary->y - destRect.y, 0) / destRect.h;
         double rightFrac = fmax(destRect.x2() - boundary->x2(), 0) / destRect.w;
@@ -309,13 +312,16 @@ void AssetManager::drawTexture(SDL_Texture* tex, const Rect& destRect, Rect* bou
         // Make sure the rect is actually in the boundary
         if (leftFrac + rightFrac >= 1 || topFrac + botFrac >= 1) {
 #ifdef RENDER_DEBUG
-            std::cout << "Rect " << destRect << " was out side the boundary " << *boundary << std::endl;
+            std::cout << "Rect " << destRect << " was out side the boundary " <<
+                *boundary << std::endl;
 #endif
             return;
         }
 
-        Rect drawRect = Rect(destRect.x + (int)(destRect.w * leftFrac), destRect.y + (int)(destRect.h * topFrac),
-            (int)(destRect.w * (1 - leftFrac - rightFrac)), (int)(destRect.h * (1 - topFrac - botFrac)));
+        Rect drawRect = Rect(destRect.x + (int)(destRect.w * leftFrac),
+            destRect.y + (int)(destRect.h * topFrac),
+            (int)(destRect.w * (1 - leftFrac - rightFrac)),
+            (int)(destRect.h * (1 - topFrac - botFrac)));
         int w, h;
         if (SDL_QueryTexture(tex, NULL, NULL, &w, &h) != 0) {
             std::cout << "Unable to query texture size: "
@@ -323,16 +329,13 @@ void AssetManager::drawTexture(SDL_Texture* tex, const Rect& destRect, Rect* bou
             return;
         }
         Rect texRect = Rect((int)(w * leftFrac), (int)(h * topFrac),
-            (int)(w * (1 - leftFrac - rightFrac)), (int)(h * (1 - topFrac - botFrac)));
-/*        double wFac = (double)w / destRect.w;
-        double hFac = (double)h / destRect.h;
-        Rect texRect((int)((drawRect.x - destRect.x) * wFac),
-            (int)((drawRect.y - destRect.y) * hFac),
-            (int)(w * drawRect.w / destRect.w), (int)(h * drawRect.h / destRect.h));*/
+            (int)(w * (1 - leftFrac - rightFrac)),
+            (int)(h * (1 - topFrac - botFrac)));
         // Make sure at least one pixel will be drawn
         if (texRect.w == 0 || texRect.h == 0) {
 #ifdef RENDER_DEBUG
-            std::cout << "Can't draw from " << texRect << " to " << drawRect << std::endl;
+            std::cout << "Can't draw from " << texRect << " to " << drawRect
+                << std::endl;
 #endif
             return;
         }
@@ -340,7 +343,8 @@ void AssetManager::drawTexture(SDL_Texture* tex, const Rect& destRect, Rect* bou
         SDL_RenderCopy(UI::renderer(), tex, &texRect, &drawRect);
     }
 
-void AssetManager::drawTexture(std::string fileName, const Rect& destRect, Rect* boundary) {
+void AssetManager::drawTexture(std::string fileName, const Rect& destRect,
+    Rect* boundary) {
     drawTexture(getAsset(fileName).get(), destRect, boundary);
 }
 
@@ -350,7 +354,8 @@ void AssetManager::drawText(TextData& data, Rect* boundary) const {
         if (tex) { drawTexture(tex.get(), r, boundary); }
     }
 
-void AssetManager::drawTextWrapped(TextData& data, Rect* boundary, Uint32 bkgrnd) const {
+void AssetManager::drawTextWrapped(TextData& data, Rect* boundary,
+    Uint32 bkgrnd) const {
         Rect r;
         SharedTexture tex = renderTextWrapped(data, r, bkgrnd);
         if (tex) { drawTexture(tex.get(), r, boundary); }
@@ -362,7 +367,8 @@ void AssetManager::rect(Rect* r, const SDL_Color& color) const {
         UI::resetDrawColor();
     }
         
-void AssetManager::thickRect(Rect r, int thickness, AssetManager::BorderType border, const SDL_Color& color) const {
+void AssetManager::thickRect(Rect r, int thickness,
+    AssetManager::BorderType border, const SDL_Color& color) const {
         UI::setDrawColor(color);
         int lb, ub;
         switch (border) {
