@@ -51,12 +51,9 @@ std::string toDisplayName(const std::string& fileName);
 double magnitude(const SDL_Point& p);
 double distance(const SDL_Point& p1, const SDL_Point& p2);
 
-bool eq(float f1, float f2, float err = gameVals::FLOAT_ERR);
-bool eq(double f1, double f2, double err = gameVals::DOUBLE_ERR);
-int toInt(double d, double err = gameVals::DOUBLE_ERR);
-
-SDL_Point getBlockPos(const SDL_Point& p);
-SDL_Point getPixelPos(const SDL_Point& p);
+bool eq(float f1, float f2, float err = gameVals::FLOAT_ERR());
+bool eq(double f1, double f2, double err = gameVals::DOUBLE_ERR());
+int toInt(double d, double err = gameVals::DOUBLE_ERR());
 
 Rect toBlockRect(Rect r);
 
@@ -107,7 +104,6 @@ struct Event {
 
     EventButton left, middle, right;
 
-    void updateMouse(int x, int y);
     void update(Timestep ts);
     void update(SDL_Event& e);
 

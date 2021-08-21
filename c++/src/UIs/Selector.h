@@ -28,7 +28,7 @@ public:
 
 	Rect getRect() { return mRect; }
 protected:
-	virtual SDL_Texture* drawItem(int idx);
+	virtual Texture drawItem(int idx);
 	bool toggleTextInput(bool val);
 
 	virtual void onNewItem();
@@ -54,8 +54,8 @@ protected:
 	static const SDL_Color BKGRND;
 	static const SDL_Color SCROLL_BKGRND;
 	// Dimensions
-	int itemW = (int)(gameVals::MIN_W / 2);
-	int itemH = (int)(gameVals::MIN_W / 10);
+	int itemW = (int)(gameVals::MIN_W()/ 2);
+	int itemH = (int)(gameVals::MIN_W() / 10);
 	int scrollAmnt = (int)(itemH / 3);
 	// Font resources
 	const std::string ITEM_FONT;

@@ -45,7 +45,7 @@ public:
 
 	virtual void tick(int x, int y, Timestep dt);
 
-	virtual SDL_Texture* getImage(SDL_Point pos) const;
+	virtual SharedTexture getImage(SDL_Point pos) const;
 	virtual void setAnimation(Animation& anim);
 
 	virtual void addDrop(item::Id item, int minAmnt = 1, int maxAmnt = -1);
@@ -71,6 +71,7 @@ public:
 	virtual int id() { return Tile::ID; }
 	static int Id() { return ID; }
 	static TilePtr getTile(tile::Id id);
+	static bool isCrafter(tile::Id id);
 
 protected:
 	struct TileDrop {

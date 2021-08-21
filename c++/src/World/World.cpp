@@ -424,7 +424,7 @@ SDL_Point World::getBlockSrc(SDL_Point loc) const {
 
 bool World::checkCollisions(Point<double>& pos, Point<double> dim,
 	Point<double>& d) const {
-	dim.x *= gameVals::BLOCK_W; dim.y *= gameVals::BLOCK_W;
+	dim.x *= gameVals::BLOCK_W(); dim.y *= gameVals::BLOCK_W();
 	pos.x += d.x; pos.y += d.y;
 	forceInWorld(pos, dim);
 	return false;
@@ -435,18 +435,18 @@ bool World::touchingBlocks(const Point<double>& pos, const Point<double>& dim,
 	float p1, p2, d1, d2;
 	if (x) { p1 = pos.x; p2 = pos.y; d1 = dim.x; d2 = dim.y;  }
 	else { p1 = pos.y; p2 = pos.x; d1 = dim.y; d2 = dim.x; }
-	float l1 = d1 * gameVals::BLOCK_W, l2 = d2 * gameVals::BLOCK_W;
+	float l1 = d1 * gameVals::BLOCK_W(), l2 = d2 * gameVals::BLOCK_W();
 	// Check if we are actually touching a new block
-	if ((int)fabsf(p1 + (topLeft ? 0 : l1)) % gameVals::BLOCK_W == 0) {
+	if ((int)fabsf(p1 + (topLeft ? 0 : l1)) % gameVals::BLOCK_W() == 0) {
 		// Get the next x block
-		int next = (int)(topLeft ? (p1 / gameVals::BLOCK_W) - 1 :
-			ceilf((p1 + l1) / gameVals::BLOCK_W));
+		int next = (int)(topLeft ? (p1 / gameVals::BLOCK_W()) - 1 :
+			ceilf((p1 + l1) / gameVals::BLOCK_W()));
 		// Check if we are going to the world edge
 		if (topLeft ? next < 0 : next >= d1) { return true; }
 		// Otherwise check if there is a solid block
 		else {
-			Point<int> range{(int)(p2 / gameVals::BLOCK_W),
-				(int)ceilf((p2 + l2) / gameVals::BLOCK_W)};
+			Point<int> range{(int)(p2 / gameVals::BLOCK_W()),
+				(int)ceilf((p2 + l2) / gameVals::BLOCK_W())};
 			return x ? anySolidBlocks(next, next + 1, range.x, range.y) :
 				anySolidBlocks(range.x, range.y, next, next + 1);
 		}
@@ -471,7 +471,7 @@ bool World::anySolidBlocks(int x1, int x2, int y1, int y2) const {
 void World::forceInWorld(Point<double>& p, Point<double> _dim) const {
 	if (p.x < 0) { p.x = 0.; }
 	if (p.y < 0) { p.y = 0.; }
-	SDL_Point bDim = { dim.x * gameVals::BLOCK_W, dim.y * gameVals::BLOCK_W };
+	SDL_Point bDim = { dim.x * gameVals::BLOCK_W(), dim.y * gameVals::BLOCK_W() };
 	if (p.x > bDim.x - _dim.x) { p.x = bDim.x - _dim.x; }
 	if (p.y > bDim.y - _dim.y) { p.y = bDim.y - _dim.y; }
 }
@@ -500,7 +500,7 @@ SDL_Point World::getWorldMousePos(SDL_Point mouse, SDL_Point center,
 	SDL_Point worldC = getScreenRect(center).center();
 	SDL_Point result = { mouse.x - screenC.x + worldC.x,
 		mouse.y - screenC.y + worldC.y };
-	return blocks ? getBlockPos(result) : result;
+	return blocks ? result /= gameVals::BLOCK_W() : result;
 }
 
 Rect World::getScreenRect(SDL_Point center) const {
@@ -508,14 +508,14 @@ Rect World::getScreenRect(SDL_Point center) const {
 	int worldW = width(), worldH = height();
 	Rect r(0, 0, w, h);
 	if (worldW >= w) {
-		r.setCenterX(center.x);
+		r.setCX(center.x);
 		if (r.x < 0) { r.x = 0; }
 		else if (r.x2() > worldW) { r.setX2(worldW); }
 	} else {
 		r.x = (int)((worldW - w) / 2);
 	}
 	if (worldH >= h) {
-		r.setCenterY(center.y);
+		r.setCY(center.y);
 		if (r.y < 0) { r.y = 0; }
 		else if (r.y2() > worldH) { r.setY2(worldH); }
 	} else {
@@ -534,15 +534,8 @@ Block World::createBlock(tile::Id tileId, uint8_t dx, uint8_t dy) {
 	Block b;
 	b.id = tileId;
 	b.setSrc(dx, dy);
-	initializeBlock(b);
-	return b;
-}
-
-void World::initializeBlock(Block& b) {
 	b.data.reset();
-	TilePtr tile = Tile::getTile(b.id);
-	b.spawner = tile->getTileData(Tile::TileData::spawner);
-	b.crafter = tile->getTileData(Tile::TileData::crafting);
+	return b;
 }
 
 // Getters/Setters
@@ -593,7 +586,7 @@ void World::drawDroppedItems(const Rect& worldRect) const {
 	AssetManager& assets = UI::assets();
 	for (const DroppedItem& drop : droppedItems) {
 		Rect r = drop.getRect() + tl;
-		assets.drawTexture(drop.getInfo().getImage(), r);
+		assets.drawTexture(drop.getInfo().getImage().get(), r);
 	}
 }
 
@@ -608,8 +601,8 @@ bool WorldAccess::placeBlock(SDL_Point loc, tile::Id tileId) {
 		loc.x + tDim.x > dim.x || loc.y + tDim.y > dim.y) {
 		return false;
 	}
-	Rect bRect(loc.x * gameVals::BLOCK_W, loc.y * gameVals::BLOCK_W,
-		tDim.x * gameVals::BLOCK_W, tDim.y * gameVals::BLOCK_W);
+	Rect bRect(loc.x * gameVals::BLOCK_W(), loc.y * gameVals::BLOCK_W(),
+		tDim.x * gameVals::BLOCK_W(), tDim.y * gameVals::BLOCK_W());
 	if (/*!handler.collidesWithEntity(bRect) && */tile->canPlace(loc)) {
 		for (uint8_t dy = 0; dy < tDim.y; dy++) {
 			for (uint8_t dx = 0; dx < tDim.x; dx++) {
@@ -660,36 +653,36 @@ void WorldAccess::draw(SDL_Point center) {
 	// Where on the screen to draw the world
 	Rect worldRect(std::abs(screen.x), std::abs(screen.y),
 		std::min(screen.w, worldW), std::min(screen.h, worldH));
-	int lbX = (int)(std::max(screen.x, 0) / gameVals::BLOCK_W);
-	int ubX = (int)ceil(std::min(screen.x2(), worldW) / gameVals::BLOCK_W);
-	int lbY = (int)(std::max(screen.y, 0) / gameVals::BLOCK_W);
-	int ubY = (int)ceil(std::min(screen.y2(), worldH) / gameVals::BLOCK_W);
+	int lbX = (int)(std::max(screen.x, 0) / gameVals::BLOCK_W());
+	int ubX = (int)ceil(std::min(screen.x2(), worldW) / gameVals::BLOCK_W());
+	int lbY = (int)(std::max(screen.y, 0) / gameVals::BLOCK_W());
+	int ubY = (int)ceil(std::min(screen.y2(), worldH) / gameVals::BLOCK_W());
 	// Draw blocks
 	assets.rect(&worldRect, skyColor());
-	Rect r(lbX * gameVals::BLOCK_W - screen.x, lbY * gameVals::BLOCK_W - screen.y,
-		gameVals::BLOCK_W, gameVals::BLOCK_W);
+	Rect r(lbX * gameVals::BLOCK_W() - screen.x, lbY * gameVals::BLOCK_W() - screen.y,
+		gameVals::BLOCK_W(), gameVals::BLOCK_W());
 	for (int row = lbY; row < ubY; row++) {
 		for (int col = lbX; col < ubX; col++) {
 			tile::Id id = getBlock(col, row).id;
 			if (id != tile::Id::AIR) {
-				SDL_Texture* tex = Tile::getTile(id)->getImage({ col, row });
-				assets.drawTexture(tex, r);
+				SharedTexture tex = Tile::getTile(id)->getImage({ col, row });
+				assets.drawTexture(tex.get(), r);
 			}
-			r.x += gameVals::BLOCK_W;
+			r.x += gameVals::BLOCK_W();
 		}
-		r.x = lbX * gameVals::BLOCK_W - screen.x;
-		r.y += gameVals::BLOCK_W;
+		r.x = lbX * gameVals::BLOCK_W() - screen.x;
+		r.y += gameVals::BLOCK_W();
 	}
 	// Draw dropped items
 	drawDroppedItems(worldRect);
 	// Draw border
-	assets.thickRect(worldRect, 2, BLACK);
+	assets.thickRect(worldRect, 2, AssetManager::BorderType::inside, BLACK);
 	// Draw player
-	SDL_Texture* playerTex = assets.getAsset(
+	SharedTexture playerTex = assets.getAsset(
 		gameVals::entities() + "player_pig.png");
-	r = Rect::getMinRect(playerTex, gameVals::BLOCK_W, gameVals::BLOCK_W * 2);
+	r = Rect::getMinRect(playerTex.get(), gameVals::BLOCK_W(), gameVals::BLOCK_W() * 2);
 	r.setCenter(center - screen.topLeft());
-	assets.drawTexture(playerTex, r);
+	assets.drawTexture(playerTex.get(), r);
 }
 
 void WorldAccess::drawLight(const Rect& rect) {}

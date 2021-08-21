@@ -6,8 +6,6 @@
 #include <SDL.h>
 #include <SDL_image.h>
 
-#include "../Definitions.h"
-
 //namespace utils {
 class Rect : public SDL_Rect {
 public:
@@ -35,8 +33,8 @@ public:
     void setY2(double nY2) { y = (int)(nY2 - h); }
     void setTopLeft(SDL_Point tl) { setPos(tl.x, tl.y); }
     void setBottomRight(SDL_Point br) { setX2(br.x); setY2(br.y); }
-    void setCenterX(double nCX) { x = (int)(nCX - w / 2); }
-    void setCenterY(double nCY) { y = (int)(nCY - h / 2); }
+    void setCX(double nCX) { x = (int)(nCX - w / 2); }
+    void setCY(double nCY) { y = (int)(nCY - h / 2); }
     void setCenter(double nCX, double nCY);
     void setCenter(const SDL_Point& pos);
     void resize(int nW, int nH, bool center);
@@ -61,6 +59,10 @@ SDL_Point& operator +=(SDL_Point& lhs, const SDL_Point& rhs);
 SDL_Point operator +(SDL_Point lhs, const SDL_Point& rhs);
 SDL_Point& operator -=(SDL_Point& lhs, const SDL_Point& rhs);
 SDL_Point operator -(SDL_Point lhs, const SDL_Point& rhs);
+SDL_Point& operator *=(SDL_Point& lhs, const double& rhs);
+SDL_Point operator *(SDL_Point lhs, const double& rhs);
+SDL_Point& operator /=(SDL_Point& lhs, const double& rhs);
+SDL_Point operator /(SDL_Point lhs, const double& rhs);
 std::ostream& operator <<(std::ostream& os, const SDL_Point& rhs);
 
 #endif /* Rect */

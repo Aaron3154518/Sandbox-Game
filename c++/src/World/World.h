@@ -23,7 +23,6 @@
 struct Block {
 	tile::Id id = tile::Id::AIR;
 	uint8_t src = 0;
-	bool spawner = false, crafter = false;
 	ByteArray data;
 
 	void setSrc(uint8_t dx, uint8_t dy) { src = (dx & 0x0F) | ((dy << 4) & 0xF0); }
@@ -65,10 +64,10 @@ public:
 	// Getters
 	SDL_Point getDim() const { return dim; }
 	SDL_Point getPixelDim() const {
-		return { dim.x * gameVals::BLOCK_W, dim.y * gameVals::BLOCK_W };
+		return { dim.x * gameVals::BLOCK_W(), dim.y * gameVals::BLOCK_W() };
 	}
-	int width() const { return dim.x * gameVals::BLOCK_W; }
-	int height() const { return dim.y * gameVals::BLOCK_W; }
+	int width() const { return dim.x * gameVals::BLOCK_W(); }
+	int height() const { return dim.y * gameVals::BLOCK_W(); }
 
 	const Block& getBlock(int x, int y) const;
 	const Block& getBlock(SDL_Point loc) const;
@@ -89,7 +88,6 @@ public:
 	// Static functions
 	static const Block& airBlock();
 	static Block createBlock(tile::Id tileId, uint8_t dx = 0, uint8_t dy = 0);
-	static void initializeBlock(Block& b);
 	// Constants
 	static constexpr int SEC_PER_DAY = 60 * 24;
 	static constexpr int MS_PER_DAY = SEC_PER_DAY * 1000;

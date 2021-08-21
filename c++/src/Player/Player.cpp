@@ -8,20 +8,25 @@ const double Player::PLACE_DX = 2.5, Player::PLACE_DY = 2;
 
 Player::Player() {
 	// Setup rectangles
-	SDL_Texture* tex = UI::assets().getAsset(fullImgFile());
-	mRect = Rect::getMinRect(tex, (int)(gameVals::BLOCK_W * 3 / 2), 0);
-	dim = { (double)mRect.w / gameVals::BLOCK_W,
-		(double)mRect.h / gameVals::BLOCK_W };
-	spriteRect = Rect::getMinRect(tex, gameVals::SPRITE_W, gameVals::SPRITE_W);
+	SharedTexture tex = UI::assets().getAsset(fullImgFile());
+	mRect = Rect::getMinRect(tex.get(), (int)(gameVals::BLOCK_W() * 3 / 2), 0);
+	dim = { (double)mRect.w / gameVals::BLOCK_W(),
+		(double)mRect.h / gameVals::BLOCK_W() };
+	spriteRect = Rect::getMinRect(tex.get(), gameVals::SPRITE_W(), gameVals::SPRITE_W());
 	armRect = Rect(0, 0, (int)(mRect.w / 4), (int)(mRect.h / 3));
 	setPos(Point<double>{0, 0});
 
 	// Set gravity
 	a.y = 10;
+
+	// Setup inventory
+	inventory = Inventory(SDL_Point{ 10,5 });
+	inventory.setPos(SDL_Point{ 0,0 });
 }
 
 // Update functions
 void Player::tick(Event& e) {
+	if (e.resize) { inventory.drawInventory(); }
 	// If we are dead, update respawn counter
 	if (respawnCtr > 0) {
 		respawnCtr -= e.dt.milliseconds();
@@ -55,12 +60,17 @@ void Player::tick(Event& e) {
 				SDL_PointInRect(&pos, &activeUI.rect)) {
 				// dragging = true
 			}*/
-		} /* else if (e.keyPressed(SDLK_ESCAPE) && activeUI && activeUI != craftingUI) {
-			activeUI.onExit();
-			resetActiveUI();
-		}*/ else if (e.keyReleased(SDLK_m)) {
+		} else if (e.keyPressed(SDLK_ESCAPE)) {
+			/* if (activeUI && activeUI != craftingUI) {
+				activeUI.onExit();
+				resetActiveUI();
+			   } else {
+			}*/
+			invOpen = !invOpen;
+			// }
+		} else if (e.keyReleased(SDLK_m)) {
 			mapOpen = true;
-			// map.setCenter(mRect.cX() / gameVals::BLOCK_W, mRect.cY() / gameVals::BLOCK_W);
+			// map.setCenter(mRect.cX() / gameVals::BLOCK_W(), mRect.cY() / gameVals::BLOCK_W());
 			// map.zoom = 1;
 		}
 
@@ -137,7 +147,7 @@ void Player::move(Timestep dt) {
 	Point<double> d;
 	for (Dim _d : getDimList()) {
 		// Calculate displacement
-		d[_d] = gameVals::BLOCK_W * sec * (v[_d] + a[_d] * sec / 2);
+		d[_d] = gameVals::BLOCK_W() * sec * (v[_d] + a[_d] * sec / 2);
 		// Calculate velocity
 		v[_d] += a[_d] * sec;
 		double maxV = 5;
@@ -181,8 +191,8 @@ void Player::move(Timestep dt) {
 	// Check if we hit the ground
 	} else if (collided.y == CollideType::botRight) {
 		// If the fall distance was great enough, deal damage
-		if (fallDist > 10 * gameVals::BLOCK_W) {
-			hit((int)(fallDist / gameVals::BLOCK_W) - 10, 0, 0);
+		if (fallDist > 10 * gameVals::BLOCK_W()) {
+			hit((int)(fallDist / gameVals::BLOCK_W()) - 10, 0, 0);
 		}
 		fallDist = 0;
 	}
@@ -193,12 +203,18 @@ void Player::draw() {
 	SDL_Point shift = r.topLeft();
 	AssetManager& assets = UI::assets();
 
+	// Player image
 	assets.drawTexture(fullImgFile(), mRect - shift);
 
 #ifdef DEBUG_RANGES
-	assets.thickRect(pickUpRange - shift, 1, GREEN);
-	assets.thickRect(placementRange - shift, 1, RED);
+	assets.thickRect(pickUpRange - shift, 1,
+		AssetManager::BorderType::outside, GREEN);
+	assets.thickRect(placementRange - shift, 1,
+		AssetManager::BorderType::outside, RED);
 #endif
+
+	// Inventory
+	if (invOpen) { inventory.draw(SDL_Point{ 0,0 }); }
 
 	drawUI();
 }
@@ -228,16 +244,20 @@ void Player::leftClick(SDL_Point mouse) {
 		}
 	}*/
 	SDL_Point worldMouse = GameObjects::world().getWorldMousePos(mouse, mRect.center(), false);
-	SDL_Point loc = getBlockPos(worldMouse);
+	SDL_Point loc = worldMouse / gameVals::BLOCK_W();
 	if (SDL_PointInRect(&worldMouse, &placementRange)) { breakBlock(loc); }
 }
 
 void Player::rightClick(SDL_Point mouse) {
 	// TODO: fixeme (not mouse, use getWorldMousePos())
 	SDL_Point worldMouse = GameObjects::world().getWorldMousePos(mouse, mRect.center(), false);
-	SDL_Point loc = getBlockPos(worldMouse);
+	SDL_Point loc = worldMouse / gameVals::BLOCK_W();
 	if (SDL_PointInRect(&worldMouse, &placementRange) && !pointInPlayerBlock(loc)) {
-		placeBlock(loc, tile::Id::DIRT);
+		auto item = inventory.getItem(0, 0);
+		if (item.isItem()) {
+			tile::Id tile = Item::getItem(item.itemId)->getBlockId();
+			if (tile != tile::Id::numTiles) { placeBlock(loc, tile); }
+		}
 	}
 }
 
@@ -271,7 +291,8 @@ bool Player::pickUp(DroppedItem& drop) {
 		if (!space.empty()) {
 			drop.attract(Point<double>{mRect.cX(), mRect.cY()});
 			if (distance(mRect.center(), drop.getRect().center()) <= 1) {
-				return true; // Inventory.pickUpItem(drop.getInfo(), space);
+				inventory.setItem(0, 0, drop.getInfo());
+				return true;// inventory.pickUpItem(drop.getInfo(), space);
 			}
 		}
 	}
@@ -282,11 +303,11 @@ bool Player::pickUp(DroppedItem& drop) {
 void Player::setPos(const Point<double>& newPos) {
 	pos = newPos;
 	mRect.setTopLeft(SDL_Point{ (int)pos.x, (int)pos.y });
-	pickUpRange.w = mRect.w + 2 * PICKUP_DX * gameVals::BLOCK_W;
-	pickUpRange.h = mRect.h + 2 * PICKUP_DY * gameVals::BLOCK_W;
+	pickUpRange.w = mRect.w + 2 * PICKUP_DX * gameVals::BLOCK_W();
+	pickUpRange.h = mRect.h + 2 * PICKUP_DY * gameVals::BLOCK_W();
 	pickUpRange.setCenter(mRect.center());
-	placementRange.w = mRect.w + 2 * PLACE_DX * gameVals::BLOCK_W;
-	placementRange.h = mRect.h + 2 * PLACE_DY * gameVals::BLOCK_W;
+	placementRange.w = mRect.w + 2 * PLACE_DX * gameVals::BLOCK_W();
+	placementRange.h = mRect.h + 2 * PLACE_DY * gameVals::BLOCK_W();
 	placementRange.setCenter(mRect.center());
 }
 

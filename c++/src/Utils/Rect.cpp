@@ -163,6 +163,20 @@ SDL_Point& operator -=(SDL_Point& lhs, const SDL_Point& rhs) {
 SDL_Point operator -(SDL_Point lhs, const SDL_Point& rhs) {
     return lhs -= rhs;
 }
+SDL_Point& operator *=(SDL_Point& lhs, const double& rhs) {
+    lhs.x *= rhs; lhs.y *= rhs;
+    return lhs;
+}
+SDL_Point operator *(SDL_Point lhs, const double& rhs) {
+    return lhs *= rhs;
+}
+SDL_Point& operator /=(SDL_Point& lhs, const double& rhs) {
+    lhs.x /= rhs; lhs.y /= rhs;
+    return lhs;
+}
+SDL_Point operator /(SDL_Point lhs, const double& rhs) {
+    return lhs /= rhs;
+}
 std::ostream& operator <<(std::ostream& os, const SDL_Point& rhs) {
     os << "(" << rhs.x << "," << rhs.y << ")";
     return os;

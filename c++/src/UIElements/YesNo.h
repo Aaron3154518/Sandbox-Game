@@ -16,8 +16,8 @@
 class YesNo : public UIElement {
 public:
 	YesNo() = default;
-	YesNo(std::string _prompt);
-	~YesNo();
+	YesNo(std::string _prompt) : prompt(_prompt) {}
+	~YesNo() = default;
 
 	bool handleEvents(Event& e);
 	void draw();
@@ -32,8 +32,7 @@ private:
 	std::string prompt = "No prompt provided";
 	int scroll = 0, maxScroll = 0, scrollAmnt = 1;
 	Rect promptRect, promptRectFull, yesRect, noRect;
-	SDL_Texture* mTex = NULL;
-	SDL_Texture* promptTex = NULL;
+	Texture mTex = makeTexture(), promptTex = makeTexture();
 
 	const static std::string YES_IMG, NO_IMG;
 };

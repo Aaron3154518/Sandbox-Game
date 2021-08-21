@@ -29,8 +29,8 @@ void UI::runUI() {
         tickUI(e);
         SDL_RenderPresent(mRenderer);
 
-        if (dt.milliseconds() < gameVals::FRAME_DELAY) {
-            SDL_Delay(gameVals::FRAME_DELAY - dt.milliseconds());
+        if (dt.milliseconds() < gameVals::FRAME_DELAY()) {
+            SDL_Delay(gameVals::FRAME_DELAY() - dt.milliseconds());
         }
     }
     if (textInput) { SDL_StopTextInput(); }
@@ -52,7 +52,7 @@ void UI::init() {
         SDL_GetDisplayUsableBounds(0, &temp);
         maxW = temp.w; maxH = temp.h;
 
-        w = gameVals::MIN_W; h = gameVals::MIN_H;
+        w = gameVals::MIN_W(); h = gameVals::MIN_H();
         mWindow = SDL_CreateWindow("Sandbox Game", SDL_WINDOWPOS_CENTERED,
             SDL_WINDOWPOS_CENTERED, w, h, flags);
         std::cout << "Window Dimensions: " << w << " X " << h << std::endl;
@@ -66,10 +66,12 @@ void UI::init() {
     // Initialize SDL fonts module
     if (TTF_Init() == 0) {
         std::cout << "SDL_TTF Initialized" << std::endl;
-        UI::mAssetManager.loadFont(gameVals::LARGE_FONT,
-            gameVals::fontFile(), -1, gameVals::MIN_H / 10);
-        UI::mAssetManager.loadFont(gameVals::SMALL_FONT,
-            gameVals::fontFile(), -1, gameVals::MIN_H / 25);
+        UI::mAssetManager.loadFont(gameVals::LARGE_FONT(),
+            gameVals::fontFile(), -1, gameVals::MIN_H() / 10);
+        UI::mAssetManager.loadFont(gameVals::SMALL_FONT(),
+            gameVals::fontFile(), -1, gameVals::MIN_H() / 25);
+        UI::mAssetManager.loadFont(gameVals::INV_FONT(), gameVals::fontFile(),
+            gameVals::INV_FONT_W(), gameVals::INV_FONT_W());
     }
 
     initialized = true;

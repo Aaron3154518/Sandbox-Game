@@ -4,6 +4,7 @@
 #include <SDL.h>
 
 #include "../Definitions.h"
+#include "Inventory.h"
 #include "../UIs/UI.h"
 #include "../Utils/Rect.h"
 #include "../Utils/Point.h"
@@ -53,8 +54,6 @@ private:
 	Stats stats(STATS, DEF_PLAYER);
 	Stats itemStats(TOOL_STATS);
 	stats.addStats(itemStats);
-
-	PlayerInventory inventory;
 	
 	ActiveUI activeUI;
 	SDL_Point activeBlock{ 0,0 };
@@ -74,6 +73,10 @@ private:
 	std::string img = "player_pig.png";
 	Rect mRect, spriteRect, armRect;
 	Point<double> dim;
+
+	// Inventory
+	Inventory inventory;
+	bool invOpen = false;
 
 	// Ranges
 	static const double PICKUP_DX, PICKUP_DY;

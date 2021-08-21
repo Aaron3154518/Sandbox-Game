@@ -9,4 +9,8 @@ namespace GameObjects {
 		static PlayerAccess PLAYER;
 		return PLAYER;
 	}
+	PlayerInventory& playerInv() {
+		static PlayerInventory PLAYER_INV;
+		return PLAYER_INV;
+	}
 }

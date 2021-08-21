@@ -9,11 +9,13 @@
 #include <string>
 #include <map>
 #include <cmath>
+#include <memory>
 #include <sys/stat.h>
 
 #include <SDL.h>
 #include <SDL_ttf.h>
 
+#include "../Definitions.h"
 #include "../UIs/UI.h"
 #include "Rect.h"
 
@@ -55,11 +57,16 @@
 #endif
     }
 
-    enum PosType {
-        topleft = 0, center, botright
-    };
+    typedef std::unique_ptr<SDL_Texture, void(*)(SDL_Texture*)> Texture;
+    typedef std::shared_ptr<SDL_Texture> SharedTexture;
+    Texture makeTexture(SDL_Texture* tex = NULL);
+    SharedTexture makeSharedTexture(SDL_Texture* tex = NULL);
 
     struct TextData {
+        enum PosType : uint8_t {
+            topleft = 0, center, botright
+        };
+
         TTF_Font* font = NULL;
         std::string fontId = "", text = "";
         SDL_Color color = BLACK;
@@ -82,29 +89,32 @@
 
         static void getFontSize(std::string fileName, int size, int* w, int* h);
 
-        SDL_Texture* loadAsset(std::string fileName);
+        SharedTexture loadAsset(std::string fileName);
         TTF_Font* loadFont(std::string id, std::string fileName, int w, int h);
         // Doesn't store the resulting TTF_Font*
         // caller is responsible for deallocating
         TTF_Font* loadFont(std::string fileName, int w, int h);
 
-        SDL_Texture* getAsset(std::string fileName);
+        SharedTexture getAsset(std::string fileName);
         TTF_Font* getFont(std::string id) const;
+        TTF_Font* getFont(std::string id, std::string fileName, int w, int h);
 
-        SDL_Texture* renderText(TextData& data, Rect& rect) const;
-        SDL_Texture* renderTextWrapped(TextData& data, Rect& rect, Uint32 bkgrnd = -1) const;
+        Texture createTexture(int w, int h) const;
+        Texture renderText(TextData& data, Rect& rect) const;
+        Texture renderTextWrapped(TextData& data, Rect& rect, Uint32 bkgrnd = -1) const;
         void drawTexture(SDL_Texture* tex, const Rect& destRect, Rect* boundary = NULL) const;
         void drawTexture(std::string fileName, const Rect& destRect, Rect* boundary = NULL);
         void drawText(TextData& data, Rect* boundary) const;
         void drawTextWrapped(TextData& data, Rect* boundary, Uint32 bkgrnd = -1) const;
 
+        enum BorderType : uint8_t { outside = 0, middle, inside };
         void rect(Rect* r, const SDL_Color& color) const;
-        void thickRect(const Rect& r, int thickness, const SDL_Color& color) const;
+        void thickRect(Rect r, int thickness, BorderType border, const SDL_Color& color) const;
 
         //void drawProgressBar(Number amnt, Number cap, Rect& rect, SDL_Color color, SDL_Color bkgrnd) const;
         //void drawProgressBarLog(Number amnt, Number cap, Rect& rect, SDL_Color color, SDL_Color bkgrnd) const;
     private:
-        std::map<std::string, SDL_Texture*> assets;
+        std::map<std::string, SharedTexture> assets;
         std::map<std::string, TTF_Font*> fonts;
     };
 //}

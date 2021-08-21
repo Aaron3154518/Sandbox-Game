@@ -3,13 +3,6 @@
 const std::string YesNo::YES_IMG = gameVals::images() + "confirm.png";
 const std::string YesNo::NO_IMG = gameVals::images() + "cancel.png";
 
-YesNo::YesNo(std::string _prompt) : prompt(_prompt) {}
-
-YesNo::~YesNo() {
-	if (mTex) { SDL_DestroyTexture(mTex); }
-	if (promptTex) { SDL_DestroyTexture(promptTex); }
-}
-
 bool YesNo::handleEvents(Event& e) {
 	SDL_Point pos = e.mouse - mRect.topLeft();
 	if (e.clicked(e.left)) {
@@ -38,14 +31,12 @@ bool YesNo::handleEvents(Event& e) {
 }
 
 void YesNo::draw() {
-	UI::assets().drawTexture(mTex, mRect);
+	UI::assets().drawTexture(mTex.get(), mRect);
 	Rect r = promptRectFull - SDL_Point{ 0, scroll };
-	UI::assets().drawTexture(promptTex, r, &promptRect);
+	UI::assets().drawTexture(promptTex.get(), r, &promptRect);
 }
 
 void YesNo::setRect(Rect rect) {
-	if (mTex) { SDL_DestroyTexture(mTex); }
-	if (promptTex) { SDL_DestroyTexture(promptTex); }
 	mRect = rect;
 
 	// Calculate UI variables
@@ -59,11 +50,10 @@ void YesNo::setRect(Rect rect) {
 	yesRect = Rect(marginX, promptRect.y2() + marginY, lineH, lineH);
 	noRect = Rect(mRect.w - lineH - marginX, yesRect.y, lineH, lineH);
 	// Render the main texture
-	mTex = SDL_CreateTexture(UI::renderer(), SDL_PIXELFORMAT_RGBA8888,
-		SDL_TEXTUREACCESS_TARGET, mRect.w, mRect.h);
-	UI::setRenderTarget(mTex);
+	mTex = UI::assets().createTexture(mRect.w, mRect.h);
+	UI::setRenderTarget(mTex.get());
 	UI::assets().rect(NULL, GRAY);
-	UI::assets().thickRect(promptRect, 3, BLACK);
+	UI::assets().thickRect(promptRect, 3, AssetManager::BorderType::outside, BLACK);
 	UI::assets().drawTexture(YES_IMG, yesRect);
 	UI::assets().drawTexture(NO_IMG, noRect);
 	UI::resetRenderTarget();

@@ -15,17 +15,21 @@ tile::Id Tile::registerTile(TilePtr t, tile::Id id) {
 	return id;
 }
 
+bool Tile::isCrafter(tile::Id id) {
+	return getTile(id)->getTileData(TileData::crafting);
+}
+
 //Tile
 void Tile::tick(int x, int y, Timestep dt) {}
 
-SDL_Texture* Tile::getImage(SDL_Point pos) const {
+SharedTexture Tile::getImage(SDL_Point pos) const {
 	AssetManager& assets = UI::assets();
 	if (animIdx == -1) {
 		return assets.getAsset(gameVals::items() + img);
 	} else {
-		return NULL;
+		// TODO: Animation
 	}
-	return NULL;
+	return makeSharedTexture(NULL);
 }
 
 void Tile::setAnimation(Animation& anim) {}
@@ -50,8 +54,8 @@ std::forward_list<ItemInfo> Tile::generateDrops() const {
 }
 
 bool Tile::onBreak(SDL_Point loc) {
-	Point<double> pos{(double)loc.x * gameVals::BLOCK_W,
-		(double)loc.y * gameVals::BLOCK_W};
+	Point<double> pos{(double)loc.x * gameVals::BLOCK_W(),
+		(double)loc.y * gameVals::BLOCK_W()};
 	for (ItemInfo& info : generateDrops()) {
 		GameObjects::world().dropItem(DroppedItem(info),
 			DroppedItem::DropDir::none, pos);

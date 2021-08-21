@@ -1,22 +1,29 @@
 #include "AssetManager.h"
 
-//namespace utils {
-    void TextData::setRectPos(Rect& r) {
+Texture makeTexture(SDL_Texture* tex) {
+    return Texture(tex, SDL_DestroyTexture);
+}
+SharedTexture makeSharedTexture(SDL_Texture* tex) {
+    return SharedTexture(tex, SDL_DestroyTexture);
+}
+
+// Text Data
+void TextData::setRectPos(Rect& r) {
         switch (xMode) {
         case PosType::topleft: r.x = x; break;
-        case PosType::center: r.setCenterX(x); break;
+        case PosType::center: r.setCX(x); break;
         case PosType::botright: r.setX2(x); break;
         default: break;
         }
         switch (yMode) {
         case PosType::topleft: r.y = y; break;
-        case PosType::center: r.setCenterY(y); break;
+        case PosType::center: r.setCY(y); break;
         case PosType::botright: r.setY2(y); break;
         default: break;
         }
     }
 
-    void TextData::getPosFromRect(const Rect& r) {
+void TextData::getPosFromRect(const Rect& r) {
         switch (xMode) {
         case PosType::topleft: x = r.x; break;
         case PosType::center: x = r.cX(); break;
@@ -31,48 +38,45 @@
         }
     }
 
-    void TextData::constrainToRect(const Rect& r) {
+void TextData::constrainToRect(const Rect& r) {
         getPosFromRect(r);
         w = r.w; h = r.h;
     }
 
-    void TextData::deleteFont() {
+void TextData::deleteFont() {
         if (font) {
             TTF_CloseFont(font);
             font = NULL;
         }
     }
 
-    AssetManager::AssetManager() {}
-    AssetManager::~AssetManager() { clean(); }
+// AssetManager
+AssetManager::AssetManager() {}
+AssetManager::~AssetManager() { clean(); }
 
-    void AssetManager::clean() {
-        for (auto pair : assets) { SDL_DestroyTexture(pair.second); }
-        assets.clear();
+void AssetManager::clean() {
         for (auto pair : fonts) { TTF_CloseFont(pair.second); }
         fonts.clear();
     }
 
-    void AssetManager::getFontSize(std::string fileName, int size, int* w, int* h) {
+void AssetManager::getFontSize(std::string fileName, int size, int* w, int* h) {
         TTF_Font* font = TTF_OpenFont(fileName.c_str(), size);
         TTF_SizeText(font, "|", w, NULL);
         *h = TTF_FontHeight(font);
         TTF_CloseFont(font);
     }
 
-    SDL_Texture* AssetManager::loadAsset(std::string fileName) {
+SharedTexture AssetManager::loadAsset(std::string fileName) {
         struct stat buffer;
         if (stat(fileName.c_str(), &buffer) != 0) {
             std::cout << "Could not find " << fileName << std::endl;
             return NULL;
         }
         SDL_Surface* tmpSurface = IMG_Load(fileName.c_str());
-        SDL_Texture* tex = SDL_CreateTextureFromSurface(UI::renderer(), tmpSurface);
+        SharedTexture tex = makeSharedTexture(SDL_CreateTextureFromSurface(UI::renderer(), tmpSurface));
         SDL_FreeSurface(tmpSurface);
         if (tex) {
-            auto it = assets.find(fileName);
-            if (it == assets.end()) { assets[fileName] = tex; }
-            else { SDL_DestroyTexture(it->second); it->second = tex; }
+            assets[fileName] = tex;
 #ifdef RENDER_DEBUG
             std::cout << "Successfully loaded asset: " << id << std::endl;
 #endif
@@ -80,11 +84,12 @@
         return tex;
     }
 
-    TTF_Font* AssetManager::loadFont(std::string id, std::string fileName, int maxW, int maxH) {
+TTF_Font* AssetManager::loadFont(std::string id, std::string fileName, int maxW, int maxH) {
         TTF_Font* font = loadFont(fileName, maxW, maxH);
         if (font) {
             auto it = fonts.find(id);
-            if (it == fonts.end()) { fonts[id] = font; }             else { TTF_CloseFont(it->second); it->second = font; }
+            if (it == fonts.end()) { fonts[id] = font; }
+            else { TTF_CloseFont(it->second); it->second = font; }
 #ifdef RENDER_DEBUG
             std::cerr << "Successfully loaded font: " << id << std::endl;
 #endif
@@ -92,7 +97,7 @@
         return font;
     }
 
-    TTF_Font* AssetManager::loadFont(std::string fileName, int maxW, int maxH) {
+TTF_Font* AssetManager::loadFont(std::string fileName, int maxW, int maxH) {
         int minSize = 1, maxSize = 10;
         int w, h;
         getFontSize(fileName, 1, &w, &h);
@@ -126,41 +131,51 @@
         return font;
     }
 
-    SDL_Texture* AssetManager::getAsset(std::string fileName) {
-        auto it = assets.find(fileName);
-        return it == assets.end() ? loadAsset(fileName) : it->second;
-    }
+SharedTexture AssetManager::getAsset(std::string fileName) {
+    auto it = assets.find(fileName);
+    return it == assets.end() ? loadAsset(fileName) : it->second;
+}
 
-    TTF_Font* AssetManager::getFont(std::string id) const {
-        auto it = fonts.find(id);
-        return it == fonts.end() ? NULL : it->second;
-    }
+TTF_Font* AssetManager::getFont(std::string id) const {
+    auto it = fonts.find(id);
+    return it == fonts.end() ? NULL : it->second;
+}
 
-    SDL_Texture* AssetManager::renderText(TextData& data, Rect& rect) const {
+TTF_Font* AssetManager::getFont(std::string id, std::string fileName, int maxW, int maxH) {
+    auto it = fonts.find(id);
+    return it == fonts.end() ? loadFont(id, fileName, maxW, maxH) : it->second;
+}
+
+Texture AssetManager::createTexture(int w, int h) const {
+    return makeTexture(SDL_CreateTexture(UI::renderer(),
+        SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, w, h));
+}
+
+Texture AssetManager::renderText(TextData& data, Rect& rect) const {
         TTF_Font* font = data.font ? data.font : getFont(data.fontId);
         if (!font) {
             std::cout << "Could not load font" << std::endl;
-            return NULL;
+            return makeTexture();
         }
         SDL_Surface* surface = TTF_RenderText_Blended(font, data.text.c_str(), data.color);
-        SDL_Texture* tex = SDL_CreateTextureFromSurface(UI::renderer(), surface);
+        Texture tex = makeTexture(SDL_CreateTextureFromSurface(UI::renderer(), surface));
         SDL_FreeSurface(surface);
         if (tex) {
-            rect = Rect::getMinRect(tex, data.w, data.h);
+            rect = Rect::getMinRect(tex.get(), data.w, data.h);
             data.setRectPos(rect);
         }
         return tex;
     }
 
-    SDL_Texture* AssetManager::renderTextWrapped(TextData& data, Rect& rect, Uint32 bkgrnd) const {
+Texture AssetManager::renderTextWrapped(TextData& data, Rect& rect, Uint32 bkgrnd) const {
         TTF_Font* font = data.font ? data.font : getFont(data.fontId);
         if (!font) {
             std::cerr << "Could not load font" << std::endl;
-            return NULL;
+            return makeTexture();
         }
         if (data.w == 0) {
             std::cerr << "Cannot render wrapped text with 0 length" << std::endl;
-            return NULL;
+            return makeTexture();
         }
 
         std::vector<std::string> lines;
@@ -227,13 +242,13 @@
             y += lineH;
         }
         lines.clear();
-        SDL_Texture* tex = SDL_CreateTextureFromSurface(UI::renderer(), surf);
+        Texture tex = makeTexture(SDL_CreateTextureFromSurface(UI::renderer(), surf));
         SDL_FreeSurface(surf);
         return tex;
     }
 
-    void AssetManager::drawTexture(SDL_Texture* tex, const Rect& destRect, Rect* boundary) const {
-        if (tex == NULL) {
+void AssetManager::drawTexture(SDL_Texture* tex, const Rect& destRect, Rect* boundary) const {
+        if (!tex) {
             std::cout << "Invalid Texture" << std::endl;
             return;
         }
@@ -297,42 +312,50 @@
         SDL_RenderCopy(UI::renderer(), tex, &texRect, &drawRect);
     }
 
-    void AssetManager::drawTexture(std::string fileName, const Rect& destRect, Rect* boundary) {
-        drawTexture(getAsset(fileName), destRect, boundary);
-    }
+void AssetManager::drawTexture(std::string fileName, const Rect& destRect, Rect* boundary) {
+    drawTexture(getAsset(fileName).get(), destRect, boundary);
+}
 
-    void AssetManager::drawText(TextData& data, Rect* boundary) const {
+void AssetManager::drawText(TextData& data, Rect* boundary) const {
         Rect r;
-        SDL_Texture* tex = renderText(data, r);
-        if (tex != NULL) {
-            drawTexture(tex, r, boundary);
-            SDL_DestroyTexture(tex);
-        }
+        SharedTexture tex = renderText(data, r);
+        if (tex) { drawTexture(tex.get(), r, boundary); }
     }
 
-    void AssetManager::drawTextWrapped(TextData& data, Rect* boundary, Uint32 bkgrnd) const {
+void AssetManager::drawTextWrapped(TextData& data, Rect* boundary, Uint32 bkgrnd) const {
         Rect r;
-        SDL_Texture* tex = renderTextWrapped(data, r, bkgrnd);
-        if (tex != nullptr) {
-            drawTexture(tex, r, boundary);
-            SDL_DestroyTexture(tex);
-        }
+        SharedTexture tex = renderTextWrapped(data, r, bkgrnd);
+        if (tex) { drawTexture(tex.get(), r, boundary); }
     }
 
-    void AssetManager::rect(Rect* r, const SDL_Color& color) const {
+void AssetManager::rect(Rect* r, const SDL_Color& color) const {
         UI::setDrawColor(color);
         SDL_RenderFillRect(UI::renderer(), r);
         UI::resetDrawColor();
     }
         
-    void AssetManager::thickRect(const Rect& r, int thickness, const SDL_Color& color) const {
+void AssetManager::thickRect(Rect r, int thickness, AssetManager::BorderType border, const SDL_Color& color) const {
         UI::setDrawColor(color);
-        int lb = -(int)(thickness / 2);
-        int ub = (int)(((double)thickness / 2) + .5);
-        for (int i = lb; i < ub; i++) {
-            Rect r2(r.x - i, r.y - i, r.w + 2 * i, r.h + 2 * i);
-            if (r2.w <= 0 || r2.h <= 0) { continue; }
-            SDL_RenderDrawRect(UI::renderer(), &r2);
+        int lb, ub;
+        switch (border) {
+            case BorderType::inside:
+                lb = -thickness; ub = 0; break;
+            case BorderType::outside:
+                lb = 0; ub = thickness; break;
+            case BorderType::middle:
+                lb = -(int)(thickness / 2);
+                ub = (int)(((double)thickness / 2) + .5);
+                break;
+            default:
+                lb = ub = 0; break;
+        }
+        // Set inital rect
+        r.x -= lb; r.y -= lb; r.w += lb * 2; r.h += lb * 2;
+        while (lb++ < ub) {
+            // Expand rect each time
+            r.x--; r.y--; r.w += 2; r.h += 2;
+            if (r.w <= 0 || r.h <= 0) { break; }
+            SDL_RenderDrawRect(UI::renderer(), &r);
         }
         UI::resetDrawColor();
     }

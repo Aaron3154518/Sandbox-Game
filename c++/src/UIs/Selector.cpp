@@ -14,15 +14,15 @@ Selector::Selector(bool allowTextInput) :
 	ITEM_FONT(std::string("selectorfont").append(std::to_string(selectorCnt++))) {
 	itemText.fontId = ITEM_FONT;
 	itemText.color = WHITE;
-	itemText.xMode = itemText.yMode = PosType::center;
+	itemText.xMode = itemText.yMode = TextData::PosType::center;
 
 	textInput = true;
 
 	TextData td;
 	td.fontId = ITEM_FONT;
 	td.color = WHITE;
-	td.xMode = PosType::topleft;
-	td.yMode = PosType::center;
+	td.xMode = TextData::PosType::topleft;
+	td.yMode = TextData::PosType::center;
 	input.setBackground(BLACK);
 	input.setTextData(td);
 	input.setCharConstraint([](const char& ch) {
@@ -43,9 +43,9 @@ void Selector::tickUI(Event& e) {
 
 void Selector::resize(Rect* rect) {
 	mRect = rect ? *rect : Rect(0, 0, UI::width(), UI::height());
-	//itemW = (int)(std::max(mRect.w, gameVals::MIN_W) / 2);
+	//itemW = (int)(std::max(mRect.w, gameVals::MIN_W()) / 2);
 	itemW = (int)(mRect.w / 2);
-	//itemH = (int)(std::max(mRect.h, gameVals::MIN_H) / 10);
+	//itemH = (int)(std::max(mRect.h, gameVals::MIN_H()) / 10);
 	itemH = (int)(mRect.h / 10);
 	//buttonW = (int)(itemH / 2);
 	scrollAmnt = (int)(itemH / 3);
@@ -150,21 +150,19 @@ void Selector::drawScroll() {
 	UI::assets().rect(&scrollRect, SCROLL_BKGRND);
 	for (int i = (int)(scroll / itemH);
 		i <= (int)((scroll + scrollRect.h) / itemH); i++) {
-		SDL_Texture* tex = drawItem(i);
+		Texture tex = drawItem(i);
 		if (!tex) { continue; }
 		int y = i * itemH - scroll;
 		Rect dest(scrollRect.x, scrollRect.y + y, itemW, itemH);
-		UI::assets().drawTexture(tex, dest, &scrollRect);
-		SDL_DestroyTexture(tex);
+		UI::assets().drawTexture(tex.get(), dest, &scrollRect);
 	}
 }
 
-SDL_Texture* Selector::drawItem(int idx) {
-	if (idx >= files.size()) { return NULL; }
+Texture Selector::drawItem(int idx) {
+	if (idx >= files.size()) { return makeTexture(); }
 
-	SDL_Texture* tex = SDL_CreateTexture(UI::renderer(),
-		SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, itemW, itemH);
-	UI::setRenderTarget(tex);
+	Texture tex = UI::assets().createTexture(itemW, itemH);
+	UI::setRenderTarget(tex.get());
 	UI::assets().rect(NULL, BLACK);
 	UI::assets().drawTexture(PLAY_IMG, buttonPlay, NULL);
 	UI::assets().drawTexture(DELETE_IMG, buttonDelete, NULL);

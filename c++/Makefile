@@ -17,7 +17,7 @@ Utils/Utils Utils/Rect Utils/AssetManager Utils/FileIO Utils/Point \
 UIs/UI UIs/Game UIs/Selector UIs/PlayerSelector UIs/UniverseSelector \
 UIElements/YesNo UIElements/TextInput \
 World/World \
-Player/Player \
+Player/Player Player/Inventory \
 Objects/Tile Objects/TileObjects Objects/Item Objects/ItemObjects \
 Objects/DroppedItem
 SRCS := $(patsubst %, $(SRC)/%.$(CEXT), $(SRCS))

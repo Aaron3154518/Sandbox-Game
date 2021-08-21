@@ -5,10 +5,10 @@ constexpr double X_SPEED = 15.;
 constexpr double MAX_FALL_SPEED = 10.;
 
 DroppedItem::DroppedItem(ItemInfo _info) : info(_info) {
-	mRect = Rect::getMinRect(Item::getItem(info.itemId)->getImage(),
-		gameVals::ITEM_W, gameVals::ITEM_W);
-	ratio.x = (double)mRect.w / gameVals::BLOCK_W;
-	ratio.y = (double)mRect.h / gameVals::BLOCK_W;
+	mRect = Rect::getMinRect(Item::getItem(info.itemId)->getImage().get(),
+		gameVals::ITEM_W(), gameVals::ITEM_W());
+	ratio.x = (double)mRect.w / gameVals::BLOCK_W();
+	ratio.y = (double)mRect.h / gameVals::BLOCK_W();
 }
 
 void DroppedItem::move(Timestep& dt) {
@@ -16,8 +16,8 @@ void DroppedItem::move(Timestep& dt) {
 	auto sec = dt.seconds();
 	if (ms == 0) { return; }
 	if (pickUpImmune()) { pickUpImmunity -= ms; }
-	Point<double> d = {v.x * sec * gameVals::BLOCK_W,
-		v.y * sec * gameVals::BLOCK_W};
+	Point<double> d = {v.x * sec * gameVals::BLOCK_W(),
+		v.y * sec * gameVals::BLOCK_W()};
 	if (pulledIn) {
 		pos = { pos.x + d.x, pos.y + d.y };
 		Point<double> pxDim = { (double)mRect.w, (double)mRect.h };

@@ -82,4 +82,28 @@ namespace gameVals {
 	std::string worldFile(const std::string& uName, const std::string& wName) {
 		return concat({ universes(), uName, "/", wName, worldExt() });
 	}
+
+	// Constants
+	// FPS info
+	int FPS() { return 60; }
+	int FRAME_DELAY() { return 1000 / FPS(); }
+
+	// Fonts
+	const char* SMALL_FONT() { return "smallfont"; }
+	const char* LARGE_FONT() { return "largefont"; }
+	const char* INV_FONT() { return "invfont"; }
+
+	// Game constants
+	float FLOAT_ERR() { return 1e-5; }
+	double DOUBLE_ERR() { return 1e-10; }
+	int MIN_W() { return 800; }
+	int MIN_H() { return 600; }
+	int BLOCK_W() { return 32; }
+	int MAP_W() { return std::min(MIN_W() / 4, MIN_H() / 3); }
+	int SPRITE_W() { return MAP_W() / 15; }
+	int ITEM_W() { return BLOCK_W() * 3 / 4; }
+	int INV_W() { return BLOCK_W(); }
+	int INV_IMG_W() { return INV_W() * 7 / 8; }
+	int INV_FONT_W() { return INV_W() / 3; }
+	int INV_MARGIN() { return (INV_W() - INV_IMG_W()) / 2; }
 }

@@ -30,13 +30,13 @@ void TextInput::draw() {
 	TTF_SizeText(font, text.append("|").c_str(), &w, NULL);
 	if (cursor) { textData.text = text; }
 
-	PosType horizAlign = textData.xMode;
-	if (w <= mRect.w && horizAlign == PosType::topleft) {
+	TextData::PosType horizAlign = textData.xMode;
+	if (w <= mRect.w && horizAlign == TextData::PosType::topleft) {
 		UI::assets().drawText(textData, &mRect);
 	} else {
 		// Set left
-		textData.xMode = PosType::topleft;
-		if (horizAlign == PosType::center) {
+		textData.xMode = TextData::PosType::topleft;
+		if (horizAlign == TextData::PosType::center) {
 			textData.x = mRect.cX() - (int)(w / 2);
 		} else {
 			textData.x = mRect.x2() - w;

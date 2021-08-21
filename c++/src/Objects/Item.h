@@ -52,8 +52,8 @@ public:
 	virtual void useAnim(double timeUsed, void* arm, bool left,
 		std::pair<int, int> playerCenter, Rect& rect);
 
-	SDL_Texture* getImage() const;
-	virtual SDL_Texture* getImage(ByteArray data) const { return getImage(); }
+	SharedTexture getImage() const;
+	virtual SharedTexture getImage(ByteArray data) const { return getImage(); }
 	virtual ByteArray newItemData() const { return ByteArray(); }
 
 	virtual void onLeftClick() {}
@@ -64,7 +64,7 @@ public:
 	virtual std::string getDescription() { return ""; }
 	virtual std::string getFullDescription();
 
-	SDL_Texture* drawDescription();
+	Texture drawDescription();
 
 	// Getters/Setters
 	typedef std::initializer_list<ItemData> DataKeys;
@@ -72,6 +72,7 @@ public:
 	std::map<ItemData, bool> getItemData(const DataKeys& keys) const;
 	void setItemData(ItemData idx, bool val) { data[idx] = val; }
 	void setItemData(const DataKeys& keys, bool val);
+	tile::Id getBlockId() const { return blockId; }
 
 	virtual int id() { return Item::ID; }
 	static int Id() { return ID; }
@@ -119,9 +120,9 @@ struct ItemInfo {
 	size_t amnt = 0;
 	ByteArray data;
 
-	bool isItem() const { return amnt > 0; }
+	bool isItem() const { return amnt > 0 && itemId != item::Id::numItems; }
 	int max_stack() const { return Item::getItem(itemId)->maxStack; }
-	SDL_Texture* getImage() const { return Item::getItem(itemId)->getImage(data); }
+	SharedTexture getImage() const { return Item::getItem(itemId)->getImage(data); }
 
 	void read(IO& io);
 	void write(IO& io) const;

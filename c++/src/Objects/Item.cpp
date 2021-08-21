@@ -43,14 +43,14 @@ item::Id Item::registerItem(ItemPtr t, item::Id id) {
 void Item::useAnim(double timeUsed, void* arm, bool left,
 	std::pair<int, int> playerCenter, Rect& rect) {}
 
-SDL_Texture* Item::getImage() const {
+SharedTexture Item::getImage() const {
 	AssetManager& assets = UI::assets();
 	if (animIdx == -1) {
 		return assets.getAsset(gameVals::items() + img);
 	} else {
-		return NULL;
+		// TODO: Animation
 	}
-	return NULL;
+	return makeSharedTexture(NULL);
 }
 
 void Item::tick() {}
@@ -59,8 +59,8 @@ std::string Item::getFullDescription() {
 	return getDescription();
 }
 
-SDL_Texture* Item::drawDescription() {
-	return NULL;
+Texture Item::drawDescription() {
+	return makeTexture();
 }
 
 std::map<Item::ItemData, bool> Item::getItemData(const DataKeys& keys) const {

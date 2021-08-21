@@ -106,18 +106,11 @@ bool eq(double f1, double f2, double err) {
 }
 int toInt(double d, double err) { return (int)(d + err); }
 
-SDL_Point getBlockPos(const SDL_Point& p) {
-    return SDL_Point{ p.x / gameVals::BLOCK_W, p.y / gameVals::BLOCK_W };
-}
-SDL_Point getPixelPos(const SDL_Point& p) {
-    return SDL_Point{ p.x * gameVals::BLOCK_W, p.y * gameVals::BLOCK_W };
-}
-
 Rect toBlockRect(Rect r) {
-    int lbX = r.x / gameVals::BLOCK_W;
-    int lbY = r.y / gameVals::BLOCK_W;
-    int ubX = (int)std::ceil((double)r.x2() / gameVals::BLOCK_W);
-    int ubY = (int)std::ceil((double)r.y2() / gameVals::BLOCK_W);
+    int lbX = r.x / gameVals::BLOCK_W();
+    int lbY = r.y / gameVals::BLOCK_W();
+    int ubX = (int)std::ceil((double)r.x2() / gameVals::BLOCK_W());
+    int ubY = (int)std::ceil((double)r.y2() / gameVals::BLOCK_W());
     // x range = [lbX, ubX), y range = [lbY, ubY)
     return Rect(lbX, lbY, ubX - lbX, ubY - lbY);
 }
@@ -144,10 +137,8 @@ void Event::update(Timestep ts) {
     // Update text editing
     inputText = "";
     // Update buttons and mouse
-    int dx, dy;
-    SDL_GetMouseState(&dx, &dy);
-    mouse = { dx, dy };
-    mouseDx = 0; mouseDy = 0;
+    SDL_GetMouseState(&mouse.x, &mouse.y);
+    mouseDx = mouseDy = 0;
     scroll = 0;
     // Reset event flags
     quit = resize = false;

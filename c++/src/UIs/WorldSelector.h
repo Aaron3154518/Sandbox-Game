@@ -20,7 +20,6 @@ private:
 	std::vector<std::string> files;
 
 	void loadFiles();
-	SDL_Texture* drawItem(int idx);
 };
 
 #endif
