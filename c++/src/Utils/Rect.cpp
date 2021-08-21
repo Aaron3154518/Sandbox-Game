@@ -149,6 +149,7 @@ Rect operator -(Rect lhs, const SDL_Point& rhs) {
 bool operator ==(const SDL_Point& lhs, const SDL_Point& rhs) {
     return lhs.x == rhs.x && lhs.y == rhs.y;
 }
+// Point with point
 SDL_Point& operator +=(SDL_Point& lhs, const SDL_Point& rhs) {
     lhs.x += rhs.x; lhs.y += rhs.y;
     return lhs;
@@ -161,6 +162,35 @@ SDL_Point& operator -=(SDL_Point& lhs, const SDL_Point& rhs) {
     return lhs;
 }
 SDL_Point operator -(SDL_Point lhs, const SDL_Point& rhs) {
+    return lhs -= rhs;
+}
+SDL_Point& operator *=(SDL_Point& lhs, const SDL_Point& rhs) {
+    lhs.x *= rhs.x; lhs.y *= rhs.y;
+    return lhs;
+}
+SDL_Point operator *(SDL_Point lhs, const SDL_Point& rhs) {
+    return lhs *= rhs;
+}
+SDL_Point& operator /=(SDL_Point& lhs, const SDL_Point& rhs) {
+    lhs.x /= rhs.x; lhs.y /= rhs.y;
+    return lhs;
+}
+SDL_Point operator /(SDL_Point lhs, const SDL_Point& rhs) {
+    return lhs /= rhs;
+}
+// Point with double
+SDL_Point& operator +=(SDL_Point& lhs, const double& rhs) {
+    lhs.x += rhs; lhs.y += rhs;
+    return lhs;
+}
+SDL_Point operator +(SDL_Point lhs, const double& rhs) {
+    return lhs += rhs;
+}
+SDL_Point& operator -=(SDL_Point& lhs, const double& rhs) {
+    lhs.x -= rhs; lhs.y -= rhs;
+    return lhs;
+}
+SDL_Point operator -(SDL_Point lhs, const double& rhs) {
     return lhs -= rhs;
 }
 SDL_Point& operator *=(SDL_Point& lhs, const double& rhs) {
