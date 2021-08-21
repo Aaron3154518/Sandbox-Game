@@ -282,6 +282,7 @@ void World::saveWorld() {
 		std::cerr << "World::saveWorld(): Unable to open world file for writing" << std::endl;
 		return;
 	}
+	applyBlockChanges();
 	// Save world info
 	saveInfo();
 	saveBlocks(0., dim.y);
@@ -307,6 +308,7 @@ double World::saveWorld(double progress) {
 			std::cerr << "World::saveWorld(): Unable to open world file for writing" << std::endl;
 			return 1.;
 		}
+		applyBlockChanges();
 		// Save world info
 		saveInfo();
 	}
