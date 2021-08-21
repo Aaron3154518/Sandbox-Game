@@ -57,17 +57,23 @@
 #endif
     }
 
+    // Memory management for textures and fonts
     typedef std::unique_ptr<SDL_Texture, void(*)(SDL_Texture*)> Texture;
     typedef std::shared_ptr<SDL_Texture> SharedTexture;
     Texture makeTexture(SDL_Texture* tex = NULL);
     SharedTexture makeSharedTexture(SDL_Texture* tex = NULL);
+
+    typedef std::unique_ptr<TTF_Font, void(*)(TTF_Font*)> Font;
+    typedef std::shared_ptr<TTF_Font> SharedFont;
+    Font makeFont(TTF_Font* font = NULL);
+    SharedFont makeSharedFont(TTF_Font* font = NULL);
 
     struct TextData {
         enum PosType : uint8_t {
             topleft = 0, center, botright
         };
 
-        TTF_Font* font = NULL;
+        SharedFont font = makeSharedFont();
         std::string fontId = "", text = "";
         SDL_Color color = BLACK;
         double x = 0., y = 0.;
@@ -77,29 +83,26 @@
         void setRectPos(Rect& r);
         void getPosFromRect(const Rect& r);
         void constrainToRect(const Rect& r);
-        void deleteFont();
     };
 
     class AssetManager {
     public:
-        AssetManager();
-        ~AssetManager();
-
-        void clean();
+        AssetManager() = default;
+        ~AssetManager() = default;
 
         static void getFontSize(std::string fileName, int size, int* w, int* h);
 
         SharedTexture loadAsset(std::string fileName);
-        TTF_Font* loadFont(std::string id, std::string fileName, int w, int h);
-        // Doesn't store the resulting TTF_Font*
-        // caller is responsible for deallocating
-        TTF_Font* loadFont(std::string fileName, int w, int h);
+        SharedFont loadFont(std::string id, std::string fileName, int w, int h);
 
         SharedTexture getAsset(std::string fileName);
-        TTF_Font* getFont(std::string id) const;
-        TTF_Font* getFont(std::string id, std::string fileName, int w, int h);
+        SharedFont getFont(std::string id) const;
+        SharedFont getFont(std::string id, std::string fileName, int w, int h);
+        SharedFont getFont(const TextData& td) const;
 
         Texture createTexture(int w, int h) const;
+        Font createFont(std::string fileName, int w, int h) const;
+
         Texture renderText(TextData& data, Rect& rect) const;
         Texture renderTextWrapped(TextData& data, Rect& rect, Uint32 bkgrnd = -1) const;
         void drawTexture(SDL_Texture* tex, const Rect& destRect, Rect* boundary = NULL) const;
@@ -115,7 +118,7 @@
         //void drawProgressBarLog(Number amnt, Number cap, Rect& rect, SDL_Color color, SDL_Color bkgrnd) const;
     private:
         std::map<std::string, SharedTexture> assets;
-        std::map<std::string, TTF_Font*> fonts;
+        std::map<std::string, SharedFont> fonts;
     };
 //}
 

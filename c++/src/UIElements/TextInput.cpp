@@ -20,14 +20,14 @@ void TextInput::draw() {
 	SDL_RenderFillRect(UI::renderer(), &mRect);
 	UI::resetDrawColor();
 
-	TTF_Font* font = UI::assets().getFont(textData.fontId);
+	SharedFont font = UI::assets().getFont(textData);
 	if (!font) { return; }
 	bool cursor = time >= CURSOR_DELAY;
 	std::string text = currInput.str();
 	if (!cursor) { textData.text = text; }
 	// Width of the text with the cursor
 	int w = 0;
-	TTF_SizeText(font, text.append("|").c_str(), &w, NULL);
+	TTF_SizeText(font.get(), text.append("|").c_str(), &w, NULL);
 	if (cursor) { textData.text = text; }
 
 	TextData::PosType horizAlign = textData.xMode;

@@ -62,11 +62,10 @@ void YesNo::setRect(Rect rect) {
 	TextData td;
 	td.w = lineW;
 	td.text = prompt;
-	td.font = UI::assets().loadFont(gameVals::fontFile(), -1, (int)(lineH / 2));
+	td.font = UI::assets().createFont(gameVals::fontFile(), -1, (int)(lineH / 2));
 	promptTex = UI::assets().renderTextWrapped(td, promptRectFull);
 	promptRect += mRect.topLeft();
 	promptRectFull += promptRect.topLeft();
-	td.deleteFont();
 
 	// Update scrolling
 	int oldMax = maxScroll;

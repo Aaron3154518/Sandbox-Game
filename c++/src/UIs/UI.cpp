@@ -81,7 +81,6 @@ void UI::clean() {
     SDL_DestroyWindow(mWindow);
     SDL_DestroyRenderer(mRenderer);
     SDL_Quit();
-    mAssetManager.clean();
     initialized = false;
     std::cout << "SDL Uninitialized" << std::endl;
 }

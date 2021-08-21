@@ -1,11 +1,50 @@
 #include "AssetManager.h"
 
+//#define DEBUG_ALLOC
+
+#ifdef DEBUG_ALLOC
+int texCreateCnt = 0, texDestroyCnt = 0;
+void destroyTexture(SDL_Texture* tex) {
+    SDL_DestroyTexture(tex);
+    std::cerr << "Destroyed Texture: " << texDestroyCnt++ << std::endl;
+}
+Texture makeTexture(SDL_Texture* tex) {
+    std::cerr << "Created Texture: " << texCreateCnt++ << std::endl;
+    return Texture(tex, destroyTexture);
+}
+SharedTexture makeSharedTexture(SDL_Texture* tex) {
+    std::cerr << "Created Texture: " << texCreateCnt++ << std::endl;
+    return SharedTexture(tex, destroyTexture);
+}
+
+int fontCreateCnt = 0, fontDestroyCnt = 0;
+void destroyFont(TTF_Font* font) {
+    TTF_CloseFont(font);
+    std::cerr << "Destroyed Font: " << fontDestroyCnt++ << std::endl;
+}
+Font makeFont(TTF_Font* font) {
+    std::cerr << "Created Font: " << fontCreateCnt++ << std::endl;
+    return Font(font, destroyFont);
+}
+SharedFont makeSharedFont(TTF_Font* font) {
+    std::cerr << "Created Font: " << fontCreateCnt++ << std::endl;
+    return SharedFont(font, destroyFont);
+}
+#else
 Texture makeTexture(SDL_Texture* tex) {
     return Texture(tex, SDL_DestroyTexture);
 }
 SharedTexture makeSharedTexture(SDL_Texture* tex) {
     return SharedTexture(tex, SDL_DestroyTexture);
 }
+
+Font makeFont(TTF_Font* font) {
+    return Font(font, TTF_CloseFont);
+}
+SharedFont makeSharedFont(TTF_Font* font) {
+    return SharedFont(font, TTF_CloseFont);
+}
+#endif
 
 // Text Data
 void TextData::setRectPos(Rect& r) {
@@ -43,29 +82,14 @@ void TextData::constrainToRect(const Rect& r) {
         w = r.w; h = r.h;
     }
 
-void TextData::deleteFont() {
-        if (font) {
-            TTF_CloseFont(font);
-            font = NULL;
-        }
-    }
-
 // AssetManager
-AssetManager::AssetManager() {}
-AssetManager::~AssetManager() { clean(); }
-
-void AssetManager::clean() {
-        for (auto pair : fonts) { TTF_CloseFont(pair.second); }
-        fonts.clear();
-    }
-
 void AssetManager::getFontSize(std::string fileName, int size, int* w, int* h) {
-        TTF_Font* font = TTF_OpenFont(fileName.c_str(), size);
-        TTF_SizeText(font, "|", w, NULL);
-        *h = TTF_FontHeight(font);
-        TTF_CloseFont(font);
+        Font font = makeFont(TTF_OpenFont(fileName.c_str(), size));
+        TTF_SizeText(font.get(), "|", w, NULL);
+        *h = TTF_FontHeight(font.get());
     }
-
+ 
+// Load font/asset
 SharedTexture AssetManager::loadAsset(std::string fileName) {
         struct stat buffer;
         if (stat(fileName.c_str(), &buffer) != 0) {
@@ -84,12 +108,10 @@ SharedTexture AssetManager::loadAsset(std::string fileName) {
         return tex;
     }
 
-TTF_Font* AssetManager::loadFont(std::string id, std::string fileName, int maxW, int maxH) {
-        TTF_Font* font = loadFont(fileName, maxW, maxH);
+SharedFont AssetManager::loadFont(std::string id, std::string fileName, int maxW, int maxH) {
+        SharedFont font = createFont(fileName, maxW, maxH);
         if (font) {
-            auto it = fonts.find(id);
-            if (it == fonts.end()) { fonts[id] = font; }
-            else { TTF_CloseFont(it->second); it->second = font; }
+            fonts[id] = font;
 #ifdef RENDER_DEBUG
             std::cerr << "Successfully loaded font: " << id << std::endl;
 #endif
@@ -97,67 +119,73 @@ TTF_Font* AssetManager::loadFont(std::string id, std::string fileName, int maxW,
         return font;
     }
 
-TTF_Font* AssetManager::loadFont(std::string fileName, int maxW, int maxH) {
-        int minSize = 1, maxSize = 10;
-        int w, h;
-        getFontSize(fileName, 1, &w, &h);
-        while ((maxW != -1 && w < maxW) || (maxH != -1 && h < maxH)) {
-            minSize = maxSize;
-            maxSize *= 2;
-            getFontSize(fileName, maxSize, &w, &h);
-        }
-        TTF_Font* font;
-        while (true) {
-            int size = (int)((maxSize + minSize) / 2);
-            getFontSize(fileName, size, &w, &h);
-            if ((maxW != -1 && w <= maxW) || (maxH != -1 && h <= maxH)) {
-                getFontSize(fileName, size + 1, &w, &h);
-                if ((maxW == -1 || w > maxW) && (maxH == -1 || h > maxH)) {
-                    font = TTF_OpenFont(fileName.c_str(), size + 1);
-                    break;
-                } else {
-                    minSize = size + 1;
-                }
-            } else {
-                getFontSize(fileName, size - 1, &w, &h);
-                if ((maxW == -1 || w > maxW) && (maxH == -1 || h > maxH)) {
-                    maxSize = size - 1;
-                } else {
-                    font = TTF_OpenFont(fileName.c_str(), size - 1);
-                    break;
-                }
-            }
-        }
-        return font;
-    }
-
+// Get font/asset
 SharedTexture AssetManager::getAsset(std::string fileName) {
     auto it = assets.find(fileName);
     return it == assets.end() ? loadAsset(fileName) : it->second;
 }
 
-TTF_Font* AssetManager::getFont(std::string id) const {
+SharedFont AssetManager::getFont(std::string id) const {
     auto it = fonts.find(id);
-    return it == fonts.end() ? NULL : it->second;
+    return it == fonts.end() ? makeSharedFont() : it->second;
 }
 
-TTF_Font* AssetManager::getFont(std::string id, std::string fileName, int maxW, int maxH) {
+SharedFont AssetManager::getFont(std::string id, std::string fileName, int maxW, int maxH) {
     auto it = fonts.find(id);
     return it == fonts.end() ? loadFont(id, fileName, maxW, maxH) : it->second;
 }
 
+SharedFont AssetManager::getFont(const TextData& td) const {
+    return td.font ? td.font : getFont(td.fontId);
+}
+
+// Create font/asset
 Texture AssetManager::createTexture(int w, int h) const {
     return makeTexture(SDL_CreateTexture(UI::renderer(),
         SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, w, h));
 }
 
+Font AssetManager::createFont(std::string fileName, int maxW, int maxH)const {
+    int minSize = 1, maxSize = 10;
+    int w, h;
+    getFontSize(fileName, 1, &w, &h);
+    while ((maxW != -1 && w < maxW) || (maxH != -1 && h < maxH)) {
+        minSize = maxSize;
+        maxSize *= 2;
+        getFontSize(fileName, maxSize, &w, &h);
+    }
+    Font font = makeFont();
+    while (true) {
+        int size = (int)((maxSize + minSize) / 2);
+        getFontSize(fileName, size, &w, &h);
+        if ((maxW != -1 && w <= maxW) || (maxH != -1 && h <= maxH)) {
+            getFontSize(fileName, size + 1, &w, &h);
+            if ((maxW == -1 || w > maxW) && (maxH == -1 || h > maxH)) {
+                font = makeFont(TTF_OpenFont(fileName.c_str(), size + 1));
+                break;
+            } else {
+                minSize = size + 1;
+            }
+        } else {
+            getFontSize(fileName, size - 1, &w, &h);
+            if ((maxW == -1 || w > maxW) && (maxH == -1 || h > maxH)) {
+                maxSize = size - 1;
+            } else {
+                font = makeFont(TTF_OpenFont(fileName.c_str(), size - 1));
+                break;
+            }
+        }
+    }
+    return font;
+}
+
 Texture AssetManager::renderText(TextData& data, Rect& rect) const {
-        TTF_Font* font = data.font ? data.font : getFont(data.fontId);
+        SharedFont font = getFont(data);
         if (!font) {
             std::cout << "Could not load font" << std::endl;
             return makeTexture();
         }
-        SDL_Surface* surface = TTF_RenderText_Blended(font, data.text.c_str(), data.color);
+        SDL_Surface* surface = TTF_RenderText_Blended(font.get(), data.text.c_str(), data.color);
         Texture tex = makeTexture(SDL_CreateTextureFromSurface(UI::renderer(), surface));
         SDL_FreeSurface(surface);
         if (tex) {
@@ -168,7 +196,7 @@ Texture AssetManager::renderText(TextData& data, Rect& rect) const {
     }
 
 Texture AssetManager::renderTextWrapped(TextData& data, Rect& rect, Uint32 bkgrnd) const {
-        TTF_Font* font = data.font ? data.font : getFont(data.fontId);
+        SharedFont font = getFont(data);
         if (!font) {
             std::cerr << "Could not load font" << std::endl;
             return makeTexture();
@@ -181,7 +209,7 @@ Texture AssetManager::renderTextWrapped(TextData& data, Rect& rect, Uint32 bkgrn
         std::vector<std::string> lines;
         std::stringstream line_ss, word_ss;
         int spaceW;
-        TTF_SizeText(font, " ", &spaceW, NULL);
+        TTF_SizeText(font.get(), " ", &spaceW, NULL);
         int width = 0;
         int maxW = data.w;
         bool addSpace = false;
@@ -190,7 +218,7 @@ Texture AssetManager::renderTextWrapped(TextData& data, Rect& rect, Uint32 bkgrn
                 std::string word = word_ss.str();
                 word_ss.str("");
                 int wordW;
-                TTF_SizeText(font, word.c_str(), &wordW, NULL);
+                TTF_SizeText(font.get(), word.c_str(), &wordW, NULL);
                 if (width + wordW < data.w) {
                     if (addSpace) { line_ss << ' '; }
                     line_ss << word;
@@ -221,7 +249,7 @@ Texture AssetManager::renderTextWrapped(TextData& data, Rect& rect, Uint32 bkgrn
 
         // TODO: Switch to all SDL_Texture* (faster)
         int lineH;
-        TTF_SizeText(font, "|", NULL, &lineH);
+        TTF_SizeText(font.get(), "|", NULL, &lineH);
         rect = Rect(0, 0, maxW, (int)(lineH * lines.size()));
         data.setRectPos(rect);
         SDL_Surface* surf = SDL_CreateRGBSurface(0, rect.w, rect.h, 32, rmask, gmask, bmask, amask);
@@ -229,7 +257,7 @@ Texture AssetManager::renderTextWrapped(TextData& data, Rect& rect, Uint32 bkgrn
         int x = maxW / 2, y = lineH / 2;
         for (std::string line : lines) {
             if (line == "") { y += lineH; continue; }
-            SDL_Surface* lineSurf = TTF_RenderText_Blended(font, line.c_str(), data.color);
+            SDL_Surface* lineSurf = TTF_RenderText_Blended(font.get(), line.c_str(), data.color);
             if (lineSurf != nullptr) {
                 Rect lineRect = Rect(0, 0, lineSurf->w, lineSurf->h);
                 lineRect.setCenter(x, y);
