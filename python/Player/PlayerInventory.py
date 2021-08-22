@@ -4,12 +4,12 @@ from Player.Inventory import *
 from Player.Stats import Stats, STATS
 from Objects.DroppedItem import DroppedItem
 from Objects.ItemTypes import Weapon, ItemInfo
-from Tools import game_vars, item_ids as items
+from Tools import game_vars, item_ids as items, constants as c
 
 hotbar_controls = {
-    K_1: 0, K_2: 1, K_3: 2, K_4: 3,
-    K_5: 4, K_6: 5, K_7: 6, K_8: 7,
-    K_9: 8, K_0: 9
+    c.key(K_1): 0, c.key(K_2): 1, c.key(K_3): 2, c.key(K_4): 3,
+    c.key(K_5): 4, c.key(K_6): 5, c.key(K_7): 6, c.key(K_8): 7,
+    c.key(K_9): 8, c.key(K_0): 9
 }
 
 DIM = (10, 5)
@@ -165,7 +165,7 @@ class PlayerInventory(Inventory):
 
     # Pressed a certain key
     def key_pressed(self, key):
-        if key == K_ESCAPE:
+        if key == c.key(K_ESCAPE):
             self.toggle()
         elif key in hotbar_controls.keys():
             self.select_hotbar(hotbar_controls[key])

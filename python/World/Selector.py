@@ -337,7 +337,7 @@ class MainSelector(Selector):
                         self.create_new()
             # Key press
             elif e.type == KEYDOWN:
-                if e.key == K_RETURN:
+                if c.key(e.key) == c.key(K_RETURN):
                     self.create_new()
                 else:
                     self.file.type_char(e)

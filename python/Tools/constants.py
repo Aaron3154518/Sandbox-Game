@@ -54,6 +54,10 @@ inv_font = load_font = ui_font = None
 screen_w = screen_h = 0
 screen_center = [MIN_W // 2, MIN_H // 2]
 
+comp = 0xFF
+def key(_key):
+    return _key & comp
+
 
 def load_fonts():
     global inv_font, load_font, ui_font
@@ -253,10 +257,10 @@ class PlayerFile:
 
     def type_char(self, event):
         if event.type == pg.KEYDOWN:
-            if event.key == pg.K_BACKSPACE:
+            if event.key == pg.c.key(K_BACKSPACE):
                 self.name = self.name[:-1]
             elif len(self.name) < 20:
-                if event.key == pg.K_SPACE:
+                if event.key == pg.c.key(K_SPACE):
                     self.name += " "
                 else:
                     char = event.unicode

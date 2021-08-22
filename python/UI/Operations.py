@@ -172,12 +172,12 @@ class TextInput(UIOperation):
             # Key pressed
             elif e.type == KEYDOWN:
                 # Delete last character
-                if e.key == K_BACKSPACE:
+                if c.key(e.key) == c.key(K_BACKSPACE):
                     self.input = self.input[:-1]
-                elif e.key == K_SPACE:
+                elif c.key(e.key) == c.key(K_SPACE):
                     self.input += " "
                 # Add single character
-                elif len(pg.key.name(e.key)) == 1 and \
+                elif len(pg.key.name(c.key(e.key))) == 1 and \
                         (self.char_limit == -1 or len(self.input) < self.char_limit):
                     self.input += e.unicode
             # Clicks

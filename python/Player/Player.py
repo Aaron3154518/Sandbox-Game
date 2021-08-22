@@ -150,29 +150,29 @@ class Player:
                         self.dragging_ui = True
                 elif e.type == KEYDOWN:
                     # Try to jump
-                    if e.key == K_SPACE and self.can_move:
+                    if c.key(e.key) == c.key(K_SPACE) and self.can_move:
                         if game_vars.touching_blocks_y(self.pos, self.dim, False):
                             self.v[1] = -15
                     # Close current active ui
-                    if e.key == K_ESCAPE and self.active_ui and self.active_ui != self.crafting_ui:
+                    if c.key(e.key) == c.key(K_ESCAPE) and self.active_ui and self.active_ui != self.crafting_ui:
                         self.active_ui.on_exit()
                         self.active_ui = None
                     # Inventory buttons
                     elif self.use_time <= 0:
-                        self.inventory.key_pressed(e.key)
+                        self.inventory.key_pressed(c.key(e.key))
                 elif e.type == KEYUP:
                     # Open map
-                    if e.key == K_m:
+                    if c.key(e.key) == c.key(K_m):
                         self.map_open = True
                         self.map.set_center([p / BLOCK_W for p in self.rect.center])
                         self.map.zoom = 1
 
             # Check keys
-            if keys[K_RIGHT]:
+            if keys[c.key(K_RIGHT)]:
                 self.map.zoom += game_vars.dt * 10
                 if self.map.zoom > 5:
                     self.map.zoom = 5
-            if keys[K_LEFT]:
+            if keys[c.key(K_LEFT)]:
                 self.map.zoom -= game_vars.dt * 10
                 if self.map.zoom < 1:
                     self.map.zoom = 1
@@ -203,11 +203,11 @@ class Player:
             # Check if we can move
             if self.can_move:
                 acc = self.stats.get_stat("acceleration")
-                if keys[K_a] and not keys[K_d]:
+                if keys[c.key(K_a)] and not keys[c.key(K_d)]:
                     self.a[0] = -acc
-                elif keys[K_d] and not keys[K_a]:
+                elif keys[c.key(K_d)] and not keys[c.key(K_a)]:
                     self.a[0] = acc
-                if keys[K_SPACE] and self.collisions[1] == 1:
+                if keys[c.key(K_SPACE)] and self.collisions[1] == 1:
                     self.v[1] = -self.stats.get_stat("jump_speed")
                 self.move()
 
@@ -310,20 +310,20 @@ class Player:
                         self.map.zoom -= .5
             elif e.type == KEYUP:
                 # Leave map
-                if e.key == K_ESCAPE or e.key == K_m:
+                if c.key(e.key) == c.key(K_ESCAPE) or c.key(e.key) == c.key(K_m):
                     self.map.set_center([p / BLOCK_W for p in self.rect.center])
                     self.map_open = False
 
         # Move the map, drawing the map automatically puts center in world bounds
         move = game_vars.dt * 100
         keys = pg.key.get_pressed()
-        if keys[K_a]:
+        if keys[c.key(K_a)]:
             self.map.center[0] -= move
-        if keys[K_d]:
+        if keys[c.key(K_d)]:
             self.map.center[0] += move
-        if keys[K_w]:
+        if keys[c.key(K_w)]:
             self.map.center[1] -= move
-        if keys[K_s]:
+        if keys[c.key(K_s)]:
             self.map.center[1] += move
 
         self.move()
