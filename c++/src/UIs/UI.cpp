@@ -37,6 +37,7 @@ void UI::runUI() {
 }
 
 void UI::init() {
+    if (initialized) { return; }
     // Create any necessary directories
     std::vector<std::string> dirs = { "saves/", "saves/players/", "saves/universes/" };
     for (auto& dir : dirs) {
@@ -47,6 +48,8 @@ void UI::init() {
     int flags = SDL_WINDOW_RESIZABLE;
     if (SDL_Init(SDL_INIT_EVERYTHING) == 0) {
         std::cout << "SDL Initialized" << std::endl;
+        // Use opengl
+        SDL_SetHint(SDL_HINT_RENDER_DRIVER, "opengl");
 
         Rect temp;
         SDL_GetDisplayUsableBounds(0, &temp);
@@ -59,7 +62,9 @@ void UI::init() {
 
         mRenderer = SDL_CreateRenderer(mWindow, -1, 0);
         if (renderer) {
-            SDL_SetRenderDrawColor(mRenderer, 255, 255, 255, 255);
+            resetDrawColor();
+            resetRenderTarget();
+            resetRenderBlendMode();
         }
     }
 
@@ -113,6 +118,11 @@ int UI::width() { return w; }
 int UI::height() { return h; }
 SDL_Renderer* UI::renderer() { return mRenderer; }
 AssetManager& UI::assets() { return mAssetManager; }
+SDL_Point UI::mouse() {
+    SDL_Point p;
+    SDL_GetMouseState(&p.x, &p.y);
+    return p;
+}
 
 void UI::setDrawColor(const SDL_Color& c) {
     SDL_SetRenderDrawColor(mRenderer, c.r, c.g, c.b, c.a);
@@ -128,4 +138,10 @@ void UI::setRenderTarget(SDL_Texture* tex) {
 void UI::resetRenderTarget() {
     SDL_SetRenderTarget(mRenderer, NULL);
     resetDrawColor();
+}
+void UI::setRenderBlendMode(SDL_BlendMode mode) {
+    SDL_SetRenderDrawBlendMode(mRenderer, mode);
+}
+void UI::resetRenderBlendMode() {
+    SDL_SetRenderDrawBlendMode(mRenderer, SDL_BLENDMODE_BLEND);
 }

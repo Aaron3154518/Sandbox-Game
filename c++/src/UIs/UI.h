@@ -33,12 +33,15 @@ public:
 	static void resetDrawColor();
 	static void setRenderTarget(SDL_Texture* tex);
 	static void resetRenderTarget();
+	static void setRenderBlendMode(SDL_BlendMode mode);
+	static void resetRenderBlendMode();
 
 	// Getters
 	static int width();
 	static int height();
 	static SDL_Renderer* renderer();
 	static AssetManager& assets();
+	static SDL_Point mouse();
 protected:
 	Uint32 gameTime = 0;
 	bool running = false, textInput = false;

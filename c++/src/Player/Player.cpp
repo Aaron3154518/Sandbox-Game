@@ -5,10 +5,12 @@
 
 const double Player::PICKUP_DX = 1.5, Player::PICKUP_DY = 1.5;
 const double Player::PLACE_DX = 2.5, Player::PLACE_DY = 2;
+const std::string Player::IMG = gameVals::entities() + "player_pig.png";
 
 Player::Player() {
 	// Setup rectangles
-	SharedTexture tex = UI::assets().getAsset(fullImgFile());
+	mTex.textureId = IMG;
+	SharedTexture tex = UI::assets().getAsset(IMG);
 	mRect = Rect::getMinRect(tex.get(), (int)(gameVals::BLOCK_W() * 3 / 2), 0);
 	dim = { (double)mRect.w / gameVals::BLOCK_W(),
 		(double)mRect.h / gameVals::BLOCK_W() };
@@ -20,7 +22,6 @@ Player::Player() {
 	a.y = 10;
 
 	// Setup inventory
-	inventory = Inventory(SDL_Point{ 10,5 });
 	inventory.setPos(SDL_Point{ 0,0 });
 }
 
@@ -66,7 +67,7 @@ void Player::tick(Event& e) {
 				resetActiveUI();
 			   } else {
 			}*/
-			invOpen = !invOpen;
+			inventory.toggleOpen();
 			// }
 		} else if (e.keyReleased(SDLK_m)) {
 			mapOpen = true;
@@ -204,7 +205,8 @@ void Player::draw() {
 	AssetManager& assets = UI::assets();
 
 	// Player image
-	assets.drawTexture(fullImgFile(), mRect - shift);
+	mTex.dest = mRect - shift;
+	assets.drawTexture(mTex);
 
 #ifdef DEBUG_RANGES
 	assets.thickRect(pickUpRange - shift, 1,
@@ -214,7 +216,7 @@ void Player::draw() {
 #endif
 
 	// Inventory
-	if (invOpen) { inventory.draw(SDL_Point{ 0,0 }); }
+	inventory.draw();
 
 	drawUI();
 }
@@ -225,31 +227,29 @@ void Player::drawUI() {
 
 // Event functions
 void Player::leftClick(SDL_Point mouse) {
-	/*if (!inventory.leftClick(mouse)) {
+	if (!inventory.leftClick(mouse)) {
+		SDL_Point worldMouse = GameObjects::world().getWorldMousePos(mouse, mRect.center(), false);
 		ItemInfo item = inventory.getCurrentItem();
 		if (item.isItem()) {
 			ItemPtr itemPtr = Item::getItem(item.itemId);
-			usedLeft = GameObjects::world().getWorldMousePos(mouse, mRect.center(), pos).x
-				< mRect.cX();
-			if (itemPtr->leftClick && (firstSwing || itemPtr->autoUse)) {
+			usedLeft = worldMouse.x < mRect.cX();
+			if ((*itemPtr)[Item::ItemData::left] &&
+				(firstSwing || (*itemPtr)[Item::ItemData::autoUse])) {
 				firstSwing = false;
 				// Use item
 				itemPtr->onLeftClick();
-				itemUsed = item.itemId;
-				useTime = itemPtr->useTime;
+				itemUsed = itemPtr->id();
+				useTime = itemPtr->getUseTime();
 			}
 		} else {
-			breakBlock(GameObjects::world().getWorldMousePos(mouse, mRect.center(), pos, true));
+			SDL_Point loc = worldMouse / gameVals::BLOCK_W();
+			if (SDL_PointInRect(&worldMouse, &placementRange)) { breakBlock(loc); }
 			useTime = 500;
 		}
-	}*/
-	SDL_Point worldMouse = GameObjects::world().getWorldMousePos(mouse, mRect.center(), false);
-	SDL_Point loc = worldMouse / gameVals::BLOCK_W();
-	if (SDL_PointInRect(&worldMouse, &placementRange)) { breakBlock(loc); }
+	}
 }
 
 void Player::rightClick(SDL_Point mouse) {
-	// TODO: fixeme (not mouse, use getWorldMousePos())
 	SDL_Point worldMouse = GameObjects::world().getWorldMousePos(mouse, mRect.center(), false);
 	SDL_Point loc = worldMouse / gameVals::BLOCK_W();
 	if (SDL_PointInRect(&worldMouse, &placementRange) && !pointInPlayerBlock(loc)) {
@@ -300,6 +300,10 @@ bool Player::pickUp(DroppedItem& drop) {
 }
 
 // Other functions
+Point<double> Player::getCPosf() const {
+	return Point<double>{mRect.cX(), mRect.cY()};
+}
+
 void Player::setPos(const Point<double>& newPos) {
 	pos = newPos;
 	mRect.setTopLeft(SDL_Point{ (int)pos.x, (int)pos.y });
@@ -334,7 +338,3 @@ void Player::hit(int damage, int centerX, int kbPower) {
 }
 
 void Player::respawn() {}
-
-std::string Player::fullImgFile() const {
-	return gameVals::entities() + img;
-}

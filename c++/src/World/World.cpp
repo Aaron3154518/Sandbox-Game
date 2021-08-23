@@ -83,7 +83,6 @@ void World::tick(Timestep& dt) {
 }
 
 // File saving/loading
-// These should use blocks[][] directly
 void World::loadWorld() {
 	std::cerr << "Loading World" << std::endl;
 	if (fw.isOpen()) {
@@ -585,8 +584,10 @@ void World::drawDroppedItems(const Rect& worldRect) const {
 	SDL_Point tl = worldRect.topLeft();
 	AssetManager& assets = UI::assets();
 	for (const DroppedItem& drop : droppedItems) {
-		Rect r = drop.getRect() + tl;
-		assets.drawTexture(drop.getInfo().getImage().get(), r);
+		TextureData data;
+		data.dest = drop.getRect() + tl;
+		data.texture = drop.getInfo().getImage();
+		assets.drawTexture(data);
 	}
 }
 
@@ -659,30 +660,33 @@ void WorldAccess::draw(SDL_Point center) {
 	int ubY = (int)ceil(std::min(screen.y2(), worldH) / gameVals::BLOCK_W());
 	// Draw blocks
 	assets.rect(&worldRect, skyColor());
-	Rect r(lbX * gameVals::BLOCK_W() - screen.x, lbY * gameVals::BLOCK_W() - screen.y,
+	TextureData data;
+	data.dest = Rect(lbX * gameVals::BLOCK_W() - screen.x,
+		lbY * gameVals::BLOCK_W() - screen.y,
 		gameVals::BLOCK_W(), gameVals::BLOCK_W());
 	for (int row = lbY; row < ubY; row++) {
 		for (int col = lbX; col < ubX; col++) {
 			tile::Id id = getBlock(col, row).id;
 			if (id != tile::Id::AIR) {
-				SharedTexture tex = Tile::getTile(id)->getImage({ col, row });
-				assets.drawTexture(tex.get(), r);
+				data.texture = Tile::getTile(id)->getImage({ col, row });
+				assets.drawTexture(data);
 			}
-			r.x += gameVals::BLOCK_W();
+			data.dest.x += gameVals::BLOCK_W();
 		}
-		r.x = lbX * gameVals::BLOCK_W() - screen.x;
-		r.y += gameVals::BLOCK_W();
+		data.dest.x = lbX * gameVals::BLOCK_W() - screen.x;
+		data.dest.y += gameVals::BLOCK_W();
 	}
 	// Draw dropped items
 	drawDroppedItems(worldRect);
 	// Draw border
 	assets.thickRect(worldRect, 2, AssetManager::BorderType::inside, BLACK);
 	// Draw player
-	SharedTexture playerTex = assets.getAsset(
-		gameVals::entities() + "player_pig.png");
-	r = Rect::getMinRect(playerTex.get(), gameVals::BLOCK_W(), gameVals::BLOCK_W() * 2);
-	r.setCenter(center - screen.topLeft());
-	assets.drawTexture(playerTex.get(), r);
+	data.clearTexture();
+	data.textureId = gameVals::entities() + "player_pig.png";
+	data.dest = UI::assets().getMinRect(data.textureId,
+		gameVals::BLOCK_W(), gameVals::BLOCK_W() * 2);
+	data.dest.setCenter(center - screen.topLeft());
+	assets.drawTexture(data);
 }
 
 void WorldAccess::drawLight(const Rect& rect) {}

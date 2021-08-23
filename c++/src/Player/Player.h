@@ -4,7 +4,7 @@
 #include <SDL.h>
 
 #include "../Definitions.h"
-#include "Inventory.h"
+#include "PlayerInventory.h"
 #include "../UIs/UI.h"
 #include "../Utils/Rect.h"
 #include "../Utils/Point.h"
@@ -26,9 +26,8 @@ public:
 	void hit(int damage, int centerX, int kbPower);
 
 	// Getters/Setters
-	std::string fullImgFile() const;
 	SDL_Point getCPos() const { return mRect.center(); }
-	Point<double> getCPosf() const { return Point<double>{mRect.cX(), mRect.cY()}; }
+	Point<double> getCPosf() const;
 	Point<double> getPos() const { return pos; }
 	void setPos(const Point<double>& newP);
 
@@ -70,13 +69,12 @@ private:
 	bool usedLeft = true, firstSwing = true;
 
 	// Player image
-	std::string img = "player_pig.png";
+	TextureData mTex;
 	Rect mRect, spriteRect, armRect;
 	Point<double> dim;
 
 	// Inventory
-	Inventory inventory;
-	bool invOpen = false;
+	PlayerInventory inventory;
 
 	// Ranges
 	static const double PICKUP_DX, PICKUP_DY;
@@ -103,6 +101,8 @@ private:
 	bool mapOpen = false;
 
 	std::string fileName;
+
+	const static std::string IMG;
 };
 
 class PlayerAccess : public Player {

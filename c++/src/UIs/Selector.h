@@ -7,6 +7,7 @@
 #include "UI.h"
 #include "../UIElements/TextInput.h"
 #include "../UIElements/YesNo.h"
+#include "../UIElements/Button.h"
 #include "../Utils/Utils.h"
 #include "../Utils/Rect.h"
 #include "../Utils/AssetManager.h"
@@ -41,10 +42,10 @@ protected:
 
 	int scroll = 0, maxScroll = 0;
 	Rect mRect, scrollRect;
-	Rect buttonPlay, buttonDelete;
+	Button newButton, playButton, deleteButton;
 	TextData itemText;
 
-	Rect buttonNew, inputName;
+	Rect inputName;
 	TextInput input;
 
 	int deleteIdx = 0;

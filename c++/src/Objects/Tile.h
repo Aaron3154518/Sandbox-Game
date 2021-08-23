@@ -68,8 +68,8 @@ public:
 	SDL_Color getMapColor() const { return mapColor; }
 	Point<uint8_t> getDim() const { return dim; }
 
-	virtual int id() { return Tile::ID; }
-	static int Id() { return ID; }
+	virtual tile::Id id() { return Tile::ID; }
+	static tile::Id Id() { return ID; }
 	static TilePtr getTile(tile::Id id);
 	static bool isCrafter(tile::Id id);
 
@@ -121,8 +121,8 @@ friend class Tile; \
 TYPE(); \
 const static tile::Id ID; \
 public: \
-int id() { return TYPE::ID; } \
-static int Id() { return ID; }
+tile::Id id() { return TYPE::ID; } \
+static tile::Id Id() { return ID; }
 
 #define ADD_TILE(TYPE, TILE_ID) \
 const tile::Id TYPE::ID = \

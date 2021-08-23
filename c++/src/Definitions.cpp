@@ -86,10 +86,13 @@ namespace gameVals {
 	// Constants
 	// FPS info
 	int FPS() { return 60; }
-	int FRAME_DELAY() { return 1000 / FPS(); }
+	int FRAME_DELAY() {
+		const static int _FRAME_DELAY = 1000 / FPS();
+		return _FRAME_DELAY;
+	}
 
 	// Fonts
-	const char* SMALL_FONT() { return "smallfont"; }
+	const char* SMALL_FONT() { "smallfont"; }
 	const char* LARGE_FONT() { return "largefont"; }
 	const char* INV_FONT() { return "invfont"; }
 
@@ -99,11 +102,40 @@ namespace gameVals {
 	int MIN_W() { return 800; }
 	int MIN_H() { return 600; }
 	int BLOCK_W() { return 32; }
-	int MAP_W() { return std::min(MIN_W() / 4, MIN_H() / 3); }
-	int SPRITE_W() { return MAP_W() / 15; }
-	int ITEM_W() { return BLOCK_W() * 3 / 4; }
-	int INV_W() { return BLOCK_W(); }
-	int INV_IMG_W() { return INV_W() * 7 / 8; }
-	int INV_FONT_W() { return INV_W() / 3; }
-	int INV_MARGIN() { return (INV_W() - INV_IMG_W()) / 2; }
+	int MAP_W() {
+		const static int _MAP_W = std::min(MIN_W() / 4, MIN_H() / 3);
+		return _MAP_W;
+	}
+	int SPRITE_W() {
+		const static int _SPRITE_W = MAP_W() / 15;
+		return _SPRITE_W;
+	}
+	int ITEM_W() {
+		const static int _ITEM_W = BLOCK_W() * 3 / 4;
+		return _ITEM_W;
+	}
+	int INV_W() {
+		const static int _INV_W = BLOCK_W();
+		return _INV_W;
+	}
+	int INV_IMG_W() {
+		const static int _INV_IMG_W = INV_W() * 7 / 8;
+		return _INV_IMG_W;
+	}
+	int INV_FONT_W() {
+		const static int _INV_FONT_W = INV_W() / 2;
+		return _INV_FONT_W;
+	}
+	int INV_MARGIN() {
+		const static int _INV_MARGIN = (INV_W() - INV_IMG_W()) / 3;
+		return _INV_MARGIN;
+	}
+
+	const std::map<SDL_KeyCode, unsigned int>& KEY_NUMS() {
+		const static std::map<SDL_KeyCode, unsigned int> _KEY_NUMS =
+		{ {SDLK_0, 0}, {SDLK_1, 1}, {SDLK_2, 2}, {SDLK_3, 3},
+			{SDLK_4, 4}, { SDLK_5, 5}, { SDLK_6, 6},
+			{SDLK_7, 7}, {SDLK_8, 8}, {SDLK_9, 9} };
+		return _KEY_NUMS;
+	}
 }

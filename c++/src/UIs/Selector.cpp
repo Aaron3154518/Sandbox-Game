@@ -6,7 +6,6 @@ const SDL_Color Selector::SCROLL_BKGRND{ 0,0,128 };
 const std::string Selector::PLAY_IMG = gameVals::images() + "play.png";
 const std::string Selector::DELETE_IMG = gameVals::images() + "delete.png";
 const std::string Selector::ADD_IMG = gameVals::images() + "add.png";
-
 // Used to give selectors uniquely named fonts
 static int selectorCnt = 0;
 
@@ -29,6 +28,12 @@ Selector::Selector(bool allowTextInput) :
 		return isalnum(ch) || ch == ' ';
 		});
 	input.setActive(allowTextInput);
+
+	// Setup textures
+	AssetManager& assets = UI::assets();
+	newButton = Button(ADD_IMG, 200);
+	playButton = Button(PLAY_IMG, 200);
+	deleteButton = Button(DELETE_IMG, 200);
 }
 
 void Selector::initUI() {
@@ -64,7 +69,8 @@ void Selector::resize(Rect* rect) {
 	int quarter = (int)(itemH / 4);
 	int eigth = (int)(itemH / 8);
 	SDL_Point offset{ scrollRect.x, scrollRect.y2() };
-	buttonNew = Rect(itemW - half - quarter, quarter, half, half) + offset;
+	newButton.setRect(
+		Rect(itemW - half - quarter, quarter, half, half) + offset);
 	inputName = Rect(eigth, eigth, itemW - itemH, itemH - quarter) + offset;
 
 	maxScroll = std::max(0, (int)files.size() * itemH - scrollRect.h);
@@ -73,8 +79,9 @@ void Selector::resize(Rect* rect) {
 	Rect promptRect(0, 0, (int)(mRect.w / 3), (int)(mRect.h / 3));
 	promptRect.setCenter(mRect.cX(), mRect.cY());
 	deletePrompt.setRect(promptRect);
-	buttonPlay = Rect(itemW - half, 0, half, half);
-	buttonDelete = Rect(buttonPlay.x, buttonPlay.y2(), half, half);
+	Rect playRect = Rect(itemW - half, 0, half, half);
+	playButton.setRect(playRect);
+	deleteButton.setRect(Rect(playRect.x, playRect.y2(), half, half));
 
 	UI::assets().loadFont(ITEM_FONT, gameVals::fontFile(), -1, half);
 }
@@ -104,11 +111,12 @@ void Selector::handleEvents(Event& e) {
 			SDL_Point mouse = e.mouse - scrollRect.topLeft();
 			mouse.y += scroll;
 			int idx = (int)(mouse.y / itemH);
+			mouse.y -= idx * itemH;
 			// Clicked player or delete button
-			if (idx < files.size() && mouse.x >= buttonPlay.x) {
-				if (std::fmod(mouse.y, itemH) < buttonPlay.h) {
+			if (idx >= 0 && idx < files.size()) {
+				if (playButton.clicked(mouse)) {
 					selectItem(idx);
-				} else {
+				} else if (deleteButton.clicked(mouse)) {
 					deleteIdx = idx;
 					std::ostringstream ss;
 					ss << "Delete " << files[idx] << "?";
@@ -121,8 +129,7 @@ void Selector::handleEvents(Event& e) {
 				}
 			}
 		}
-	} else if (input.active() &&
-		SDL_PointInRect(&e.mouse, &buttonNew) && e.clicked(e.left)) {
+	} else if (input.active() && e.clicked(e.left) && newButton.clicked(e.mouse)) {
 		if (newItem()) { onNewItem(); }
 	}
 	if (input.active()) {
@@ -139,7 +146,7 @@ void Selector::draw() {
 		input.draw();
 
 		// Draw add button
-		UI::assets().drawTexture(ADD_IMG, buttonNew, NULL);
+		newButton.draw(mRect.topLeft());
 	}
 	if (deletePrompt.active()) {
 		deletePrompt.draw();
@@ -148,13 +155,21 @@ void Selector::draw() {
 
 void Selector::drawScroll() {
 	UI::assets().rect(&scrollRect, SCROLL_BKGRND);
-	for (int i = (int)(scroll / itemH);
-		i <= (int)((scroll + scrollRect.h) / itemH); i++) {
-		Texture tex = drawItem(i);
-		if (!tex) { continue; }
+	int lb = scroll / itemH, ub = (scroll + scrollRect.h) / itemH;
+	SDL_Point topLeft = mRect.topLeft() + scrollRect.topLeft()
+		+ SDL_Point{ 0,-scroll + lb * itemH };
+	for (int i = lb; i <= ub; i++) {
+		TextureData data;
+		data.texture = drawItem(i);
+		if (!data.texture) { continue; }
 		int y = i * itemH - scroll;
-		Rect dest(scrollRect.x, scrollRect.y + y, itemW, itemH);
-		UI::assets().drawTexture(tex.get(), dest, &scrollRect);
+		data.dest = Rect(scrollRect.x, scrollRect.y + y, itemW, itemH);
+		data.boundary = scrollRect;
+		UI::assets().drawTexture(data);
+
+		playButton.draw(topLeft, scrollRect);
+		deleteButton.draw(topLeft, scrollRect);
+		topLeft.y += itemH;
 	}
 }
 
@@ -164,12 +179,10 @@ Texture Selector::drawItem(int idx) {
 	Texture tex = UI::assets().createTexture(itemW, itemH);
 	UI::setRenderTarget(tex.get());
 	UI::assets().rect(NULL, BLACK);
-	UI::assets().drawTexture(PLAY_IMG, buttonPlay, NULL);
-	UI::assets().drawTexture(DELETE_IMG, buttonDelete, NULL);
 
 	itemText.text = files[idx];
-	Rect r(0, 0, itemW - buttonPlay.w, itemH);
-	UI::assets().drawText(itemText, &r);
+	UI::assets().drawText(itemText,
+		Rect(0, 0, itemW - playButton.getRect().w, itemH));
 
 	UI::resetRenderTarget();
 	return tex;

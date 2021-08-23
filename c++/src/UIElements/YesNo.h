@@ -9,13 +9,14 @@
 #include "../Definitions.h"
 #include "../UIs/UI.h"
 #include "UIElement.h"
+#include "Button.h"
 #include "../Utils/Utils.h"
 #include "../Utils/Rect.h"
 #include "../Utils/AssetManager.h"
 
 class YesNo : public UIElement {
 public:
-	YesNo() = default;
+	YesNo();
 	YesNo(std::string _prompt) : prompt(_prompt) {}
 	~YesNo() = default;
 
@@ -31,8 +32,8 @@ private:
 	bool answer = false;
 	std::string prompt = "No prompt provided";
 	int scroll = 0, maxScroll = 0, scrollAmnt = 1;
-	Rect promptRect, promptRectFull, yesRect, noRect;
-	Texture mTex = makeTexture(), promptTex = makeTexture();
+	TextureData promptTex;
+	Button yesButton, noButton;
 
 	const static std::string YES_IMG, NO_IMG;
 };

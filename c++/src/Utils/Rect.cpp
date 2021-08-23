@@ -9,21 +9,10 @@ Rect::Rect() {
 Rect::Rect(int x, int y, int w, int h) {
     this->x = x;
     this->y = y;
-    this->w = abs(w);
-    this->h = abs(h);
+    this->w = w;
+    this->h = h;
 }
-Rect::Rect(const Rect& other) {
-    x = other.x;
-    y = other.y;
-    w = abs(other.w);
-    h = abs(other.h);
-}
-Rect::Rect(const SDL_Rect& other) {
-    x = other.x;
-    y = other.y;
-    w = abs(other.w);
-    h = abs(other.h);
-}
+Rect::Rect(const SDL_Rect& other) : Rect(other.x, other.y, other.w, other.h) {}
 Rect::~Rect() {}
 
 Rect& Rect::operator=(const SDL_Rect& rhs) {
@@ -32,33 +21,33 @@ Rect& Rect::operator=(const SDL_Rect& rhs) {
     w = rhs.w;
     h = rhs.h;
 #ifdef DEBUG
-    std::cout << "Copy Rect: " << rhs << std::endl;
-    std::cout << "    New Rect: " << *this << std::endl;
+    std::cerr << "Copy Rect: " << rhs << std::endl;
+    std::cerr << "    New Rect: " << *this << std::endl;
 #endif
     return *this;
 }
 
 void Rect::shift(int dX, int dY) {
 #ifdef DEBUG
-    std::cout << "\033[92mMoving Rectangle\033[0m" << std::endl;
-    std::cout << "Before: " << *this << std::endl;
+    std::cerr << "\033[92mMoving Rectangle\033[0m" << std::endl;
+    std::cerr << "Before: " << *this << std::endl;
 #endif
     x += dX;
     y += dY;
 #ifdef DEBUG
-    std::cout << "After: " << *this << std::endl;
+    std::cerr << "After: " << *this << std::endl;
 #endif
 }
 
 void Rect::setPos(int nX, int nY) {
 #ifdef DEBUG
-    std::cout << "\033[92mMoving Rectangle\033[0m" << std::endl;
-    std::cout << "Before: " << *this << std::endl;
+    std::cerr << "\033[92mMoving Rectangle\033[0m" << std::endl;
+    std::cerr << "Before: " << *this << std::endl;
 #endif
     x = nX;
     y = nY;
 #ifdef DEBUG
-    std::cout << "After: " << *this << std::endl;
+    std::cerr << "After: " << *this << std::endl;
 #endif
 }
 
@@ -73,8 +62,8 @@ void Rect::setCenter(const SDL_Point& pos) {
 
 void Rect::resize(int nW, int nH, bool center) {
 #ifdef DEBUG
-    std::cout << "\033[92mResizing Rectangle\033[0m" << std::endl;
-    std::cout << "Before: " << *this << std::endl;
+    std::cerr << "\033[92mResizing Rectangle\033[0m" << std::endl;
+    std::cerr << "Before: " << *this << std::endl;
 #endif
     double oldCX = cX(), oldCY = cY();
     w = abs(nW);
@@ -84,7 +73,7 @@ void Rect::resize(int nW, int nH, bool center) {
         y = (int)(oldCY - h / 2);
     }
 #ifdef DEBUG
-    std::cout << "After: " << *this << std::endl;
+    std::cerr << "After: " << *this << std::endl;
 #endif
 }
 
@@ -99,7 +88,7 @@ Rect Rect::getMinRect(SDL_Texture* tex, int maxW, int maxH) {
     }
     Rect r = getMinRect(imgW, imgH, maxW, maxH);
 #ifdef DEBUG
-    std::cout << "Got " << r <<
+    std::cerr << "Got " << r <<
         " from image with size " << imgW << " x " << imgH << std::endl;
 #endif
     return r;

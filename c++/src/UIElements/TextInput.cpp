@@ -32,7 +32,7 @@ void TextInput::draw() {
 
 	TextData::PosType horizAlign = textData.xMode;
 	if (w <= mRect.w && horizAlign == TextData::PosType::topleft) {
-		UI::assets().drawText(textData, &mRect);
+		UI::assets().drawText(textData, mRect);
 	} else {
 		// Set left
 		textData.xMode = TextData::PosType::topleft;
@@ -42,7 +42,7 @@ void TextInput::draw() {
 			textData.x = mRect.x2() - w;
 		}
 		// Draw
-		UI::assets().drawText(textData, &mRect);
+		UI::assets().drawText(textData, mRect);
 		// Reset alignment
 		textData.xMode = horizAlign;
 		textData.getPosFromRect(mRect);

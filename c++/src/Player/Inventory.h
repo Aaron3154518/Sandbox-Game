@@ -21,11 +21,16 @@ public:
 	Inventory(SDL_Point _dim);
 	~Inventory() = default;
 
-	void draw(SDL_Point parentPos);
-	void drawInventory();
+	virtual void draw(SDL_Point parentPos);
+	virtual void drawInventory();
+
+	virtual bool leftClick(SDL_Point mouse) { return false; }
+	virtual bool rightClick(SDL_Point mouse) { return true; }
+	virtual bool pickUpItem(const ItemInfo& item) { return false; }
 
 	// Getters/Setters
-	void setPos(SDL_Point pos) { mRect.setTopLeft(pos); }
+	void setPos(int x, int y) { setPos(SDL_Point{ x,y }); }
+	void setPos(SDL_Point pos);
 	Rect getRect() const { return mRect; }
 	void setMaxStack(size_t val) { maxStack = val; }
 	size_t getMaxStack() const { return maxStack; }
@@ -44,6 +49,7 @@ public:
 	void write(IO& io) const;
 
 	static SDL_Point toInvPos(SDL_Point pos);
+	static SDL_Point toPxPos(SDL_Point pos);
 
 protected:
 	void updateItem(SDL_Point loc);
@@ -66,8 +72,8 @@ protected:
 	bool whiteList = true;
 
 	Rect mRect;
+	TextureData mTex;
 	TextData td;
-	SharedTexture mTex;
 	// How long we've been holding right click (ms)
 	size_t holdingR = 0;
 

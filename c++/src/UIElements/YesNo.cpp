@@ -3,15 +3,20 @@
 const std::string YesNo::YES_IMG = gameVals::images() + "confirm.png";
 const std::string YesNo::NO_IMG = gameVals::images() + "cancel.png";
 
+YesNo::YesNo() {
+	yesButton = Button(YES_IMG, 200);
+	noButton = Button(NO_IMG, 200);
+}
+
 bool YesNo::handleEvents(Event& e) {
-	SDL_Point pos = e.mouse - mRect.topLeft();
 	if (e.clicked(e.left)) {
 		if (SDL_PointInRect(&e.mouse, &mRect)) {
-			if (SDL_PointInRect(&pos, &yesRect)) {
+			SDL_Point mouse = e.mouse - mRect.topLeft();
+			if (yesButton.clicked(mouse)) {
 				answer = true;
 				mActive = false;
 				return true;
-			} else if (SDL_PointInRect(&pos, &noRect)) {
+			} else if (noButton.clicked(mouse)) {
 				answer = mActive = false;
 				return true;
 			}
@@ -20,7 +25,7 @@ bool YesNo::handleEvents(Event& e) {
 			return true;
 		}
 	}
-	if (e.scroll != 0 && SDL_PointInRect(&e.mouse, &promptRect)) {
+	if (e.scroll != 0 && SDL_PointInRect(&e.mouse, &promptTex.dest)) {
 		scroll = std::max(0, std::min(maxScroll, scroll + e.scroll * scrollAmnt));
 	}
 	if (e.keyReleased(SDLK_ESCAPE)) {
@@ -31,9 +36,14 @@ bool YesNo::handleEvents(Event& e) {
 }
 
 void YesNo::draw() {
-	UI::assets().drawTexture(mTex.get(), mRect);
-	Rect r = promptRectFull - SDL_Point{ 0, scroll };
-	UI::assets().drawTexture(promptTex.get(), r, &promptRect);
+	UI::assets().rect(&mRect, GRAY);
+	UI::assets().thickRect(promptTex.boundary, 3,
+		AssetManager::BorderType::outside, BLACK);
+	yesButton.draw(mRect.topLeft());
+	noButton.draw(mRect.topLeft());
+	promptTex.dest.setTopLeft(
+		promptTex.boundary.topLeft() - SDL_Point{ 0,scroll });
+	UI::assets().drawTexture(promptTex);
 }
 
 void YesNo::setRect(Rect rect) {
@@ -46,29 +56,23 @@ void YesNo::setRect(Rect rect) {
 	int marginY = (int)(lineH / 3);
 	scrollAmnt = (int)(lineH / 3);
 
-	promptRect = Rect(marginX, marginY, lineW, lineH * 3);
-	yesRect = Rect(marginX, promptRect.y2() + marginY, lineH, lineH);
-	noRect = Rect(mRect.w - lineH - marginX, yesRect.y, lineH, lineH);
-	// Render the main texture
-	mTex = UI::assets().createTexture(mRect.w, mRect.h);
-	UI::setRenderTarget(mTex.get());
-	UI::assets().rect(NULL, GRAY);
-	UI::assets().thickRect(promptRect, 3, AssetManager::BorderType::outside, BLACK);
-	UI::assets().drawTexture(YES_IMG, yesRect);
-	UI::assets().drawTexture(NO_IMG, noRect);
-	UI::resetRenderTarget();
+	promptTex.boundary = Rect(marginX, marginY, lineW, lineH * 3);
+	yesButton.setRect(Rect(marginX, promptTex.boundary.y2() + marginY,
+		lineH, lineH));
+	noButton.setRect(Rect(mRect.w - lineH - marginX, yesButton.getRect().y,
+		lineH, lineH));
 
 	// Render the prompt
 	TextData td;
 	td.w = lineW;
 	td.text = prompt;
-	td.font = UI::assets().createFont(gameVals::fontFile(), -1, (int)(lineH / 2));
-	promptTex = UI::assets().renderTextWrapped(td, promptRectFull);
-	promptRect += mRect.topLeft();
-	promptRectFull += promptRect.topLeft();
+	td.font = UI::assets().createFont(gameVals::fontFile(),
+		-1, (int)(lineH / 2));
+	promptTex.texture = UI::assets().renderTextWrapped(td, promptTex.dest);
+	promptTex.boundary += mRect.topLeft();
 
 	// Update scrolling
 	int oldMax = maxScroll;
-	maxScroll = std::max(0, promptRectFull.h - promptRect.h);
+	maxScroll = std::max(0, promptTex.dest.h - promptTex.boundary.h);
 	scroll = oldMax == 0 ? 0 : (int)(scroll * maxScroll / oldMax);
 }

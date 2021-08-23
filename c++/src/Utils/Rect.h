@@ -11,7 +11,6 @@ class Rect : public SDL_Rect {
 public:
     Rect();
     Rect(int x, int y, int w, int h);
-    Rect(const Rect& other);
     Rect(const SDL_Rect& other);
     ~Rect();
 
@@ -26,6 +25,8 @@ public:
     SDL_Point bottomLeft() const { return SDL_Point{ x, y + h }; }
     SDL_Point bottomRight() const { return SDL_Point{ x + w, y + h }; }
     SDL_Point center() const { return SDL_Point{ x + w / 2, y + h / 2 }; }
+    bool empty() const { return w == 0 || h == 0; }
+    bool invalid() const { return w < 0 || h < 0; }
 
     void shift(int dX, int dY);
     void setPos(int nX, int nY);
@@ -43,7 +44,7 @@ public:
     static Rect getMinRect(SDL_Texture* tex, int maxW, int maxH);
     static Rect getMinRect(int w, int h, int maxW, int maxH);
 
-    operator bool() { return w != 0 && h != 0; }
+    operator bool() { return !empty() && !invalid(); }
     friend std::ostream& operator <<(std::ostream& os, const Rect& rhs);
     friend Rect& operator +=(Rect& lhs, const SDL_Point& rhs);
     friend Rect operator +(Rect lhs, const SDL_Point& rhs);

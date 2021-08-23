@@ -1,13 +1,14 @@
 #include "Inventory.h"
 #include "../GameObjects.h"
 
-const SDL_Color Inventory::BKGRND{ 0, 255, 0, 64 };
+const SDL_Color Inventory::BKGRND{ 0, 255, 0, 150 };
 const ItemInfo Inventory::NO_ITEM;
 
 SDL_Point Inventory::toInvPos(SDL_Point pos) {
-	pos -= SDL_Point{ gameVals::INV_MARGIN(), gameVals::INV_MARGIN() };
-	pos /= gameVals::INV_W();
-	return pos;
+	return (pos - gameVals::INV_MARGIN()) / gameVals::INV_W();
+}
+SDL_Point Inventory::toPxPos(SDL_Point pos) {
+	return (pos * gameVals::INV_W()) + gameVals::INV_MARGIN();
 }
 
 // Inventory
@@ -16,37 +17,50 @@ Inventory::Inventory(SDL_Point _dim) : dim(_dim) {
 	items.resize(dim.y, row);
 
 	td.fontId = gameVals::INV_FONT();
-	td.color = BLACK;
+	td.color = WHITE;
 	td.yMode = td.xMode = TextData::PosType::botright;
-	td.w = td.h = gameVals::INV_W();
+	td.w = td.h = gameVals::INV_FONT_W();
 
 	mRect = Rect(0, 0, dim.x * gameVals::INV_W() + 2 * gameVals::INV_MARGIN(),
 		dim.y * gameVals::INV_W() + 2 * gameVals::INV_MARGIN());
-	mTex = UI::assets().createTexture(mRect.w, mRect.h);
+	mTex.texture = UI::assets().createTexture(mRect.w, mRect.h);
 	drawInventory();
 }
 
 void Inventory::draw(SDL_Point parentPos) {
-	SDL_Point mouse;
-	SDL_GetMouseState(&mouse.x, &mouse.y);
-	Rect r = mRect + parentPos;
-	UI::assets().drawTexture(mTex.get(), r);
-	if (SDL_PointInRect(&mouse, &r)) {
-		mouse -= mRect.topLeft();
-		drawHoverItem(toInvPos(mouse));
+	SDL_Point mouse = UI::mouse();
+	mTex.dest = mRect + parentPos;
+	UI::assets().drawTexture(mTex);
+	if (SDL_PointInRect(&mouse, &mTex.dest)) {
+		drawHoverItem(toInvPos(mouse - mRect.topLeft()));
 	}
 }
 
 void Inventory::drawInventory() {
-	UI::setRenderTarget(mTex.get());
-	UI::assets().rect(NULL, BLACK);
+	UI::setRenderTarget(mTex.texture.get());
+	UI::assets().rect(NULL, BKGRND, SDL_BLENDMODE_BLEND);
+	UI::assets().thickRect(Rect(0, 0, mRect.w, mRect.h),
+		gameVals::INV_MARGIN(), AssetManager::BorderType::inside, BLACK);
 	UI::resetRenderTarget();
 	SDL_Point loc;
+	Rect r(0, 0, gameVals::INV_W(), gameVals::INV_W());
+	r.setTopLeft(toPxPos(SDL_Point{ 0,0 }));
 	for (loc.y = 0; loc.y < dim.y; loc.y++) {
 		for (loc.x = 0; loc.x < dim.x; loc.x++) {
 			updateItem(loc);
+			UI::setRenderTarget(mTex.texture.get());
+			UI::assets().thickRect(r, gameVals::INV_MARGIN(),
+				AssetManager::BorderType::inside, BLACK);
+			UI::resetRenderTarget();
+			r.x += gameVals::INV_W();
 		}
+		r.x = gameVals::INV_MARGIN();
+		r.y += gameVals::INV_W();
 	}
+}
+
+void Inventory::setPos(SDL_Point pos) {
+	mRect.setTopLeft(pos);
 }
 
 void Inventory::setItemList(std::set<item::Id>& list, bool isWhiteList) {
@@ -120,20 +134,22 @@ void Inventory::updateItem(SDL_Point loc) {
 	Rect r(0, 0, gameVals::INV_IMG_W(), gameVals::INV_IMG_W());
 	r.setCX(((double)loc.x + .5) * gameVals::INV_W());
 	r.setCY(((double)loc.y + .5) * gameVals::INV_W());
-	r.x += gameVals::INV_MARGIN(); r.y += gameVals::INV_MARGIN();
+	r += toPxPos(SDL_Point{ 0,0 });
 
 	AssetManager& assets = UI::assets();
-	UI::setRenderTarget(mTex.get());
+	UI::setRenderTarget(mTex.texture.get());
 	assets.rect(&r, BKGRND);
 	if (item.isItem()) {
-		SharedTexture itemTex = item.getImage();
-		Rect texRect = Rect::getMinRect(itemTex.get(),
+		TextureData itemTex;
+		itemTex.texture = item.getImage();
+		itemTex.dest = Rect::getMinRect(itemTex.texture.get(),
 			gameVals::INV_IMG_W(), gameVals::INV_IMG_W());
-		texRect.setCenter(r.cX(), r.cY());
-		assets.drawTexture(itemTex.get(), texRect, &mRect);
+		itemTex.dest.setCenter(r.cX(), r.cY());
+		itemTex.boundary = mRect;
+		assets.drawTexture(itemTex);
 		td.text = std::to_string(item.amnt);
 		td.x = r.x2(); td.y = r.y2();
-		assets.drawText(td, &mRect);
+		assets.drawText(td, r);
 	}
 	UI::resetRenderTarget();
 }

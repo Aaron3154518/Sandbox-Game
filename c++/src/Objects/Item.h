@@ -67,6 +67,7 @@ public:
 	Texture drawDescription();
 
 	// Getters/Setters
+	double getUseTime() const { return useTime; }
 	typedef std::initializer_list<ItemData> DataKeys;
 	bool getItemData(ItemData idx) const { return data[idx]; }
 	std::map<ItemData, bool> getItemData(const DataKeys& keys) const;
@@ -74,8 +75,11 @@ public:
 	void setItemData(const DataKeys& keys, bool val);
 	tile::Id getBlockId() const { return blockId; }
 
-	virtual int id() { return Item::ID; }
-	static int Id() { return ID; }
+	// Operator oveerloading
+	bool operator[](ItemData idx) const { return data[idx]; }
+
+	virtual item::Id id() { return Item::ID; }
+	static item::Id Id() { return ID; }
 	static ItemPtr getItem(item::Id id);
 
 protected:
@@ -138,8 +142,8 @@ friend class Item; \
 TYPE(); \
 const static item::Id ID; \
 public: \
-int id() { return TYPE::ID; } \
-static int Id() { return ID; }
+item::Id id() { return TYPE::ID; } \
+static item::Id Id() { return ID; }
 
 #define ADD_ITEM(TYPE, ITEM_ID) \
 const item::Id TYPE::ID = \
