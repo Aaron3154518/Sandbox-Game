@@ -27,7 +27,6 @@ Player::Player() {
 
 // Update functions
 void Player::tick(Event& e) {
-	if (e.resize) { inventory.drawInventory(); }
 	// If we are dead, update respawn counter
 	if (respawnCtr > 0) {
 		respawnCtr -= e.dt.milliseconds();
