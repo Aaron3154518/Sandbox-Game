@@ -20,7 +20,7 @@ void Game::tickUI(Event& e) {
 }
 void Game::handleEvents(Event& e) {
 #ifdef DEBUG_GAME
-    std::cout << "Events" << std::endl;
+    std::cerr << "Events" << std::endl;
 #endif
     if (e.quit) {
         // TODO: Exit button
@@ -33,12 +33,12 @@ void Game::handleEvents(Event& e) {
 }
 void Game::update() {
 #ifdef DEBUG_GAME
-    std::cout << "Update" << std::endl;
+    std::cerr << "Update" << std::endl;
 #endif
 }
 void Game::render() {
 #ifdef DEBUG_GAME
-    std::cout << "Render" << std::endl;
+    std::cerr << "Render" << std::endl;
 #endif
     GameObjects::world().draw(GameObjects::player().getCPos());
     GameObjects::player().draw();

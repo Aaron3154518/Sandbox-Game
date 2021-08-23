@@ -47,7 +47,7 @@ void UI::init() {
     // Initialize main SDL module
     int flags = SDL_WINDOW_RESIZABLE;
     if (SDL_Init(SDL_INIT_EVERYTHING) == 0) {
-        std::cout << "SDL Initialized" << std::endl;
+        std::cerr << "SDL Initialized" << std::endl;
         // Use opengl
         SDL_SetHint(SDL_HINT_RENDER_DRIVER, "opengl");
 
@@ -58,7 +58,7 @@ void UI::init() {
         w = gameVals::MIN_W(); h = gameVals::MIN_H();
         mWindow = SDL_CreateWindow("Sandbox Game", SDL_WINDOWPOS_CENTERED,
             SDL_WINDOWPOS_CENTERED, w, h, flags);
-        std::cout << "Window Dimensions: " << w << " X " << h << std::endl;
+        std::cerr << "Window Dimensions: " << w << " X " << h << std::endl;
 
         mRenderer = SDL_CreateRenderer(mWindow, -1, 0);
         if (renderer) {
@@ -70,7 +70,7 @@ void UI::init() {
 
     // Initialize SDL fonts module
     if (TTF_Init() == 0) {
-        std::cout << "SDL_TTF Initialized" << std::endl;
+        std::cerr << "SDL_TTF Initialized" << std::endl;
         UI::mAssetManager.loadFont(gameVals::LARGE_FONT(),
             gameVals::fontFile(), -1, gameVals::MIN_H() / 10);
         UI::mAssetManager.loadFont(gameVals::SMALL_FONT(),
@@ -87,7 +87,7 @@ void UI::clean() {
     SDL_DestroyRenderer(mRenderer);
     SDL_Quit();
     initialized = false;
-    std::cout << "SDL Uninitialized" << std::endl;
+    std::cerr << "SDL Uninitialized" << std::endl;
 }
 
 void UI::run() {
@@ -132,7 +132,7 @@ void UI::resetDrawColor() {
 }
 void UI::setRenderTarget(SDL_Texture* tex) {
     if (SDL_SetRenderTarget(mRenderer, tex) != 0) {
-        std::cout << "Unable to set render target" << std::endl;
+        std::cerr << "Unable to set render target" << std::endl;
     }
 }
 void UI::resetRenderTarget() {
