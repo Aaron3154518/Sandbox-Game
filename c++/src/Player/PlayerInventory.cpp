@@ -4,8 +4,6 @@
 const SDL_Point ArmorInventory::DIM{ 1,4 };
 const SDL_Point PlayerInventory::DIM{ 10,5 };
 
-const SDL_Color PlayerInventory::SELECT_COLOR{ 128,128,0,255 };
-const SDL_Color PlayerInventory::HOVER_COLOR{ 200,200,200,120 };
 const int PlayerInventory::BUTTON_W = gameVals::INV_W() / 2;
 const std::string PlayerInventory::CRAFT_TOGGLE =
 gameVals::images() + "crafting_toggle.png";
@@ -52,6 +50,7 @@ void PlayerInventory::drawInventory() {
 	bool doToggle = !open;
 	if (doToggle) { toggleOpen(); }
 	Inventory::drawInventory();
+	selectPos(SDL_Point{ hotbarItem,0 });
 	if (doToggle) { toggleOpen(); }
 	armorInv.drawInventory();
 }
@@ -89,25 +88,17 @@ void PlayerInventory::autoMoveItem(SDL_Point loc) {}
 
 void PlayerInventory::onChangeHeld() {}
 
-void PlayerInventory::selectHotbar(unsigned int pos) {
+void PlayerInventory::selectHotbar(int pos) {
 	if (pos != hotbarItem && pos < dim.x) {
-		UI::setRenderTarget(mTex.texture.get());
-		Rect r(hotbarItem * gameVals::INV_W(), 0,
-			gameVals::INV_W(), gameVals::INV_W());
-		r += toPxPos(SDL_Point{ 0,0 });
-		UI::assets().thickRect(r, gameVals::INV_MARGIN(),
-			AssetManager::BorderType::inside, BLACK);
+		unselectPos(SDL_Point{ hotbarItem,0 });
 		hotbarItem = pos;
-		r = Rect(hotbarItem * gameVals::INV_W(), 0,
-			gameVals::INV_W(), gameVals::INV_W());
-		UI::assets().thickRect(r, gameVals::INV_MARGIN(),
-			AssetManager::BorderType::inside, SELECT_COLOR);
-		UI::resetRenderTarget();
+		selectPos(SDL_Point{ hotbarItem,0 });
 	}
 }
 
 void PlayerInventory::scrollHotbar(bool up) {
-	if (up && hotbarItem > 0) { selectHotbar(--hotbarItem); } else if (!up && hotbarItem < dim.x - 1) { selectHotbar(++hotbarItem); }
+	if (up && hotbarItem < dim.x - 1) { selectHotbar(hotbarItem + 1); }
+	else if (!up && hotbarItem > 0) { selectHotbar(hotbarItem - 1); }
 }
 
 void PlayerInventory::useItem() {
@@ -127,11 +118,11 @@ void PlayerInventory::dropItem() {
 	}
 }
 
-void PlayerInventory::keyPressed(SDL_KeyCode key) {
-	if (key == SDLK_ESCAPE) { toggleOpen(); } else {
-		auto it = gameVals::KEY_NUMS().find(key);
-		if (it != gameVals::KEY_NUMS().end()) {
-			selectHotbar(it->second);
+void PlayerInventory::keyPresses(Event& e) {
+	for (const auto& pair : gameVals::KEY_NUMS()) {
+		if (e.keyPressed(pair.first)) {
+			selectHotbar((pair.second + 9) % 10);
+			break;
 		}
 	}
 }

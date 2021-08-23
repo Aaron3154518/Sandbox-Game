@@ -2,6 +2,7 @@
 #include "../GameObjects.h"
 
 const SDL_Color Inventory::BKGRND{ 0, 255, 0, 150 };
+const SDL_Color Inventory::SELECT_COLOR{ 175,175,0,255 };
 const ItemInfo Inventory::NO_ITEM;
 
 SDL_Point Inventory::toInvPos(SDL_Point pos) {
@@ -9,6 +10,9 @@ SDL_Point Inventory::toInvPos(SDL_Point pos) {
 }
 SDL_Point Inventory::toPxPos(SDL_Point pos) {
 	return (pos * gameVals::INV_W()) + gameVals::INV_MARGIN();
+}
+Rect Inventory::getInvRect(SDL_Point pos) {
+	return Rect(0, 0, gameVals::INV_W(), gameVals::INV_W()) + toPxPos(pos);
 }
 
 // Inventory
@@ -24,7 +28,6 @@ Inventory::Inventory(SDL_Point _dim) : dim(_dim) {
 	mRect = Rect(0, 0, dim.x * gameVals::INV_W() + 2 * gameVals::INV_MARGIN(),
 		dim.y * gameVals::INV_W() + 2 * gameVals::INV_MARGIN());
 	mTex.texture = UI::assets().createTexture(mRect.w, mRect.h);
-	drawInventory();
 }
 
 void Inventory::draw(SDL_Point parentPos) {
@@ -43,19 +46,32 @@ void Inventory::drawInventory() {
 		gameVals::INV_MARGIN(), AssetManager::BorderType::inside, BLACK);
 	UI::resetRenderTarget();
 	SDL_Point loc;
-	Rect r(0, 0, gameVals::INV_W(), gameVals::INV_W());
-	r.setTopLeft(toPxPos(SDL_Point{ 0,0 }));
 	for (loc.y = 0; loc.y < dim.y; loc.y++) {
 		for (loc.x = 0; loc.x < dim.x; loc.x++) {
 			updateItem(loc);
 			UI::setRenderTarget(mTex.texture.get());
-			UI::assets().thickRect(r, gameVals::INV_MARGIN(),
+			UI::assets().thickRect(getInvRect(loc), gameVals::INV_MARGIN(),
 				AssetManager::BorderType::inside, BLACK);
 			UI::resetRenderTarget();
-			r.x += gameVals::INV_W();
 		}
-		r.x = gameVals::INV_MARGIN();
-		r.y += gameVals::INV_W();
+	}
+}
+
+void Inventory::selectPos(SDL_Point pos) {
+	if (validPos(pos)) {
+		UI::setRenderTarget(mTex.texture.get());
+		UI::assets().thickRect(getInvRect(pos), 2 * gameVals::INV_MARGIN(),
+			AssetManager::BorderType::middle, SELECT_COLOR);
+		UI::resetRenderTarget();
+	}
+}
+
+void Inventory::unselectPos(SDL_Point pos) {
+	if (validPos(pos)) {
+		UI::setRenderTarget(mTex.texture.get());
+		UI::assets().thickRect(getInvRect(pos), 2 * gameVals::INV_MARGIN(),
+			AssetManager::BorderType::middle, BLACK);
+		UI::resetRenderTarget();
 	}
 }
 
@@ -111,8 +127,7 @@ void Inventory::read(IO& io) {
 	ItemInfo tmp;
 	for (int y = 0; y < readDim.y; y++) {
 		for (int x = 0; x < readDim.x; x++) {
-			if (x < dim.x && y < dim.y) { items[y][x].read(io); }
-			else { tmp.read(io); }
+			if (x < dim.x && y < dim.y) { items[y][x].read(io); } 			else { tmp.read(io); }
 		}
 	}
 }

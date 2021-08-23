@@ -22,6 +22,7 @@ Player::Player() {
 	a.y = 10;
 
 	// Setup inventory
+	inventory.drawInventory();
 	inventory.setPos(SDL_Point{ 0,0 });
 }
 
@@ -50,10 +51,9 @@ void Player::tick(Event& e) {
 
 		// Check events
 		if (useTime <= 0 && e.scroll != 0) {
-			// Scroll the hotbar
-			std::cerr << "Scroll Hotbar" << std::endl;
-			//inventory.scroll(e.scroll > 0);
-		} else if (e.right.clicked &&
+			// Scroll the hotbar===
+			inventory.scrollHotbar(e.scroll > 0);
+		} else if (e.right.pressed &&
 			(e.keyDown(SDLK_LSHIFT) || e.keyDown(SDLK_RSHIFT))) {
 			std::cerr << "Start Dragging UI" << std::endl;
 			/*if (activeUI && activeUI.canDrag &&
@@ -103,9 +103,9 @@ void Player::tick(Event& e) {
 
 		// If using an item, let it deal with use time
 		if (itemUsed != item::Id::numItems) {
-/*			ItemPtr = Item::getItem(itemUsed);
-			ItemPtr->onTick();
-			if (useTime <= 0) { itemUsed = item::Id::numItems; }*/
+			ItemPtr item = Item::getItem(itemUsed);
+			item->tick();
+			if (useTime <= 0) { itemUsed = item::Id::numItems; }
 		// Otherwise handle use time ourselves
 		} else if (useTime >= 0) {
 			useTime -= e.dt.milliseconds();
@@ -127,6 +127,9 @@ void Player::tick(Event& e) {
 			}
 			move(e.dt);
 		}
+
+		// Handle inventory key events
+		inventory.keyPresses(e);
 
 		if (immunity > 0) { immunity -= e.dt.milliseconds(); }
 	}

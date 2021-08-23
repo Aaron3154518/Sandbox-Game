@@ -14,6 +14,7 @@
 #include "../UIElements/Button.h"
 #include "../Utils/AssetManager.h"
 #include "../Utils/Rect.h"
+#include "../Utils/Utils.h"
 
 // Forward declaration
 class PlayerInventory;
@@ -45,13 +46,13 @@ public:
 	void autoMoveItem(SDL_Point loc);
 	void onChangeHeld();
 
-	void selectHotbar(unsigned int pos);
+	void selectHotbar(int pos);
 	void scrollHotbar(bool up);
 
 	void useItem();
 	void dropItem();
 
-	void keyPressed(SDL_KeyCode key);
+	void keyPresses(Event& e);
 
 	bool isOpen() const { return open; }
 	void toggleOpen();
@@ -74,12 +75,11 @@ private:
 	// Currently held item
 	ItemInfo heldItem;
 	// Hot bar index
-	unsigned int hotbarItem = 0;
+	int hotbarItem = 0;
 	// Is the inventory open
 	bool open;
 
 	static const SDL_Point DIM;
-	static const SDL_Color SELECT_COLOR, HOVER_COLOR;
 	static const int BUTTON_W;
 	static const std::string CRAFT_TOGGLE;
 };

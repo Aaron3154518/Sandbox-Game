@@ -28,6 +28,9 @@ public:
 	virtual bool rightClick(SDL_Point mouse) { return true; }
 	virtual bool pickUpItem(const ItemInfo& item) { return false; }
 
+	void selectPos(SDL_Point pos);
+	void unselectPos(SDL_Point pos);
+
 	// Getters/Setters
 	void setPos(int x, int y) { setPos(SDL_Point{ x,y }); }
 	void setPos(SDL_Point pos);
@@ -50,6 +53,7 @@ public:
 
 	static SDL_Point toInvPos(SDL_Point pos);
 	static SDL_Point toPxPos(SDL_Point pos);
+	static Rect getInvRect(SDL_Point pos);
 
 protected:
 	void updateItem(SDL_Point loc);
@@ -77,7 +81,7 @@ protected:
 	// How long we've been holding right click (ms)
 	size_t holdingR = 0;
 
-	const static SDL_Color BKGRND;
+	const static SDL_Color BKGRND, SELECT_COLOR;
 	const static ItemInfo NO_ITEM;
 
 private:
