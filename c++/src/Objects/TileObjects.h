@@ -2,8 +2,8 @@
 #define TILE_OBJECTS_H
 
 #include "Tile.h"
-#include "../ID/Tiles.h"
 #include "../ID/Items.h"
+#include "../ID/Tiles.h"
 
 namespace tile {
 	// @param Type - the type whose class is being declared

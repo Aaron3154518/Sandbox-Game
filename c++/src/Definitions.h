@@ -2,10 +2,10 @@
 #define DEFINITIONS
 //#define DEBUG
 
-#include <iostream>
-#include <string>
-#include <map>
 #include <initializer_list>
+#include <iostream>
+#include <map>
+#include <string>
 
 #include <SDL.h>
 

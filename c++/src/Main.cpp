@@ -4,8 +4,8 @@
 
 #include <SDL.h>
 
-#include "UIs/UI.h"
 #include "UIs/PlayerSelector.h"
+#include "UIs/UI.h"
 
 int main(int argc, char* argv[]) {
 

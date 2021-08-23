@@ -1,24 +1,23 @@
 #ifndef WORLD_H
 #define WORLD_H
 
+#include <cmath>
+#include <fstream>
 #include <iomanip>
 #include <vector>
-#include <fstream>
-#include <cmath>
 
 #include <SDL.h>
 
 #include "../Definitions.h"
-//#include "Chunk.h"
 #include "../ID/Tiles.h"
+#include "../Objects/DroppedItem.h"
 #include "../Objects/Tile.h"
 #include "../Objects/TileObjects.h"
-#include "../Objects/DroppedItem.h"
-#include "../Utils/Utils.h"
-#include "../Utils/Rect.h"
-#include "../Utils/Point.h"
-#include "../Utils/FileIO.h"
 #include "../Utils/AssetManager.h"
+#include "../Utils/FileIO.h"
+#include "../Utils/Point.h"
+#include "../Utils/Rect.h"
+#include "../Utils/Utils.h"
 
 struct Block {
 	tile::Id id = tile::Id::AIR;

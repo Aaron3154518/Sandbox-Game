@@ -1,8 +1,8 @@
 #ifndef GAME_OBJECTS_H
 #define GAME_OBJECTS_H
 
-#include "Player/PlayerInventory.h"
 #include "Player/Player.h"
+#include "Player/PlayerInventory.h"
 #include "World/World.h"
 
 namespace GameObjects {

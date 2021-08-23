@@ -1,13 +1,13 @@
 #ifndef DATA_IO_H
 #define DATA_IO_H
 
-#include <iostream>
-#include <set>
-#include <vector>
-#include <list>
 #include <cstring>
 #include <fstream>
+#include <iostream>
+#include <list>
+#include <set>
 #include <sstream>
+#include <vector>
 
 #include <SDL.h>
 

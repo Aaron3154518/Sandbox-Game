@@ -1,25 +1,25 @@
 #ifndef UTILS_H
 #define UTILS_H
 
-#include <iostream>
-#include <sstream>
-#include <fstream>
-#include <vector>
-#include <set>
-#include <map>
+#include <algorithm>
+#include <cmath>
 #include <cstdint>
 #include <cstring>
-#include <cmath>
-#include <algorithm>
 #include <fcntl.h>
-#include <unistd.h>
+#include <fstream>
+#include <iostream>
+#include <map>
+#include <set>
+#include <sstream>
 #include <sys/stat.h>
+#include <vector>
+#include <unistd.h>
 
 #include <dirent.h>
 #include <SDL.h>
 
-#include "../Definitions.h"
 #include "Rect.h"
+#include "../Definitions.h"
 
 // TODO: fix
 struct Animation;

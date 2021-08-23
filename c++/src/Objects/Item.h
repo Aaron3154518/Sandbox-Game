@@ -1,12 +1,12 @@
 #ifndef ITEM_H
 #define ITEM_H
 
-#include <iostream>
-#include <utility>
 #include <forward_list>
+#include <iostream>
 #include <map>
 #include <typeindex>
 #include <typeinfo>
+#include <utility>
 
 #include <SDL.h>
 
@@ -15,10 +15,10 @@
 #include "../ID/Items.h"
 #include "../ID/Tiles.h"
 #include "../UIs/UI.h"
-#include "../Utils/Utils.h"
-#include "../Utils/Rect.h"
-#include "../Utils/FileIO.h"
 #include "../Utils/AssetManager.h"
+#include "../Utils/FileIO.h"
+#include "../Utils/Rect.h"
+#include "../Utils/Utils.h"
 
 // TODO: fix
 struct Animation;

@@ -4,11 +4,11 @@
 #include <sstream>
 #include <functional>
 
-#include "../Definitions.h"
 #include "UIElement.h"
-#include "../Utils/Utils.h"
-#include "../Utils/Rect.h"
+#include "../Definitions.h"
 #include "../Utils/AssetManager.h"
+#include "../Utils/Rect.h"
+#include "../Utils/Utils.h"
 
 class TextInput : public UIElement {
 public:

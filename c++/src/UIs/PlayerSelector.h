@@ -1,18 +1,18 @@
 #ifndef PLAYER_SELECTOR_H
 #define PLAYER_SELECTOR_H
 
-#include <vector>
-#include <sstream>
 #include <fstream>
+#include <sstream>
+#include <vector>
 
 #include <SDL.h>
 
-#include "../Definitions.h"
-#include "Selector.h"
 #include "Game.h"
-#include "../Utils/Utils.h"
-#include "../Utils/Rect.h"
+#include "Selector.h"
+#include "../Definitions.h"
 #include "../Utils/AssetManager.h"
+#include "../Utils/Rect.h"
+#include "../Utils/Utils.h"
 
 class PlayerSelector : public Selector {
 public:

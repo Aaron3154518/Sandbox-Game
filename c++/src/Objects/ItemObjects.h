@@ -2,8 +2,8 @@
 #define ITEM_OBJECTS_H
 
 #include "Item.h"
-#include "../ID/Tiles.h"
 #include "../ID/Items.h"
+#include "../ID/Tiles.h"
 
 namespace item {
 	// @param Type - the type whose class is being declared

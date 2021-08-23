@@ -1,10 +1,10 @@
 #ifndef UI_H
 #define UI_H
 
-#include <iostream>
-#include <vector>
 #include <deque>
+#include <iostream>
 #include <memory>
+#include <vector>
 
 #include <SDL.h>
 

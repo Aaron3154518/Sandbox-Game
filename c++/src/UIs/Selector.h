@@ -3,14 +3,14 @@
 
 #include <SDL.h>
 
-#include "../Definitions.h"
 #include "UI.h"
+#include "../Definitions.h"
+#include "../UIElements/Button.h"
 #include "../UIElements/TextInput.h"
 #include "../UIElements/YesNo.h"
-#include "../UIElements/Button.h"
-#include "../Utils/Utils.h"
-#include "../Utils/Rect.h"
 #include "../Utils/AssetManager.h"
+#include "../Utils/Rect.h"
+#include "../Utils/Utils.h"
 
 class Selector : public UI {
 public:

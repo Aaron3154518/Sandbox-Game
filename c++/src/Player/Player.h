@@ -3,15 +3,16 @@
 
 #include <SDL.h>
 
-#include "../Definitions.h"
 #include "PlayerInventory.h"
-#include "../UIs/UI.h"
-#include "../Utils/Rect.h"
-#include "../Utils/Point.h"
-#include "../Utils/AssetManager.h"
-#include "../ID/Tiles.h"
+#include "../Definitions.h"
 #include "../ID/Items.h"
+#include "../ID/Tiles.h"
 #include "../Objects/DroppedItem.h"
+#include "../UIs/UI.h"
+#include "../Utils/AssetManager.h"
+#include "../Utils/FileIO.h"
+#include "../Utils/Point.h"
+#include "../Utils/Rect.h"
 
 class Player {
 	friend class Game;

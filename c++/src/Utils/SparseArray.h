@@ -2,9 +2,8 @@
 #define SPARSE_ARRAY_H
 
 #include <iostream>
-#include <pair>
 #include <map>
-#include <list>
+#include <pair>
 
 // Good for single element access
 namespace singleAccess {

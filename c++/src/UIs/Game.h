@@ -2,23 +2,23 @@
 #define GAME_H
 
 #include <cmath>
-#include <vector>
 #include <fstream>
 #include <stack>
-#include <unordered_map>
 #include <sys/stat.h>
+#include <vector>
+#include <unordered_map>
 
 #include "dirent.h"
 #include <SDL.h>
 #include <SDL_image.h>
 #include <SDL_ttf.h>
 
-#include "../Definitions.h"
 #include "UI.h"
+#include "../Definitions.h"
+#include "../GameObjects.h"
+#include "../Utils/AssetManager.h"
 #include "../Utils/Utils.h"
 #include "../Utils/Rect.h"
-#include "../Utils/AssetManager.h"
-#include "../GameObjects.h"
 
 // Game class
 class Game : public UI {

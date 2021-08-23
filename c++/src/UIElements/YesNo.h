@@ -1,18 +1,16 @@
 #ifndef YES_NO_H
 #define YES_NO_H
 
-#include <type_traits>
-
 #include <SDL.h>
 #include <SDL_ttf.h>
 
+#include "Button.h"
+#include "UIElement.h"
 #include "../Definitions.h"
 #include "../UIs/UI.h"
-#include "UIElement.h"
-#include "Button.h"
-#include "../Utils/Utils.h"
-#include "../Utils/Rect.h"
 #include "../Utils/AssetManager.h"
+#include "../Utils/Rect.h"
+#include "../Utils/Utils.h"
 
 class YesNo : public UIElement {
 public:

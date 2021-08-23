@@ -3,11 +3,11 @@
 
 #include <SDL.h>
 
-#include "../Definitions.h"
 #include "UIElement.h"
+#include "../Definitions.h"
 #include "../UIs/UI.h"
-#include "../Utils/Rect.h"
 #include "../Utils/AssetManager.h"
+#include "../Utils/Rect.h"
 
 class Button : public UIElement {
 public:

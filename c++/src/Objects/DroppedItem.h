@@ -5,11 +5,11 @@
 
 #include <SDL.h>
 
-#include "../Definitions.h"
 #include "Item.h"
-#include "../Utils/Utils.h"
-#include "../Utils/Rect.h"
+#include "../Definitions.h"
 #include "../Utils/Point.h"
+#include "../Utils/Rect.h"
+#include "../Utils/Utils.h"
 
 class DroppedItem {
 public:

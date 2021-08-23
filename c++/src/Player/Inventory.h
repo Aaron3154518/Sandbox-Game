@@ -1,8 +1,8 @@
 #ifndef INVENTORY_H
 #define INVENTORY_H
 
-#include <set>
 #include <cmath>
+#include <set>
 
 #include <SDL.h>
 
@@ -10,10 +10,10 @@
 #include "../ID/Items.h"
 #include "../Objects/Item.h"
 #include "../UIs/UI.h"
-#include "../Utils/Utils.h"
-#include "../Utils/Rect.h"
-#include "../Utils/FileIO.h"
 #include "../Utils/AssetManager.h"
+#include "../Utils/FileIO.h"
+#include "../Utils/Rect.h"
+#include "../Utils/Utils.h"
 
 class Inventory {
 public:

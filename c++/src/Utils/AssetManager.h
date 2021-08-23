@@ -1,19 +1,19 @@
 #ifndef ASSET_MANAGER_H
 #define ASSET_MANAGER_H
 
+#include <cmath>
+#include <map>
+#include <memory>
 #include <sstream>
 #include <string>
-#include <map>
-#include <cmath>
-#include <memory>
 #include <sys/stat.h>
 
 #include <SDL.h>
 #include <SDL_ttf.h>
 
+#include "Rect.h"
 #include "../Definitions.h"
 #include "../UIs/UI.h"
-#include "Rect.h"
 
 // ARGB masks for creating surfaces and colors
 #if SDL_BYTEORDER == SDL_BIG_ENDIAN

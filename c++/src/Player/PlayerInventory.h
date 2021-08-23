@@ -1,19 +1,19 @@
 #ifndef PLAYER_INVENTORY_H
 #define PLAYER_INVENTORY_H
 
+#include <cmath>
 #include <iostream>
 #include <map>
-#include <cmath>
 
 #include <SDL.h>
 
-#include "../Definitions.h"
 #include "Inventory.h"
-#include "../UIElements/Button.h"
-#include "../Objects/Item.h"
+#include "../Definitions.h"
 #include "../Objects/DroppedItem.h"
-#include "../Utils/Rect.h"
+#include "../Objects/Item.h"
+#include "../UIElements/Button.h"
 #include "../Utils/AssetManager.h"
+#include "../Utils/Rect.h"
 
 // Forward declaration
 class PlayerInventory;

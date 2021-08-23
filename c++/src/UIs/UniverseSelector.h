@@ -6,9 +6,9 @@
 
 #include <SDL.h>
 
-#include "../Definitions.h"
-#include "Selector.h"
 #include "Game.h"
+#include "Selector.h"
+#include "../Definitions.h"
 #include "../Utils/Rect.h"
 
 class UniverseSelector : public Selector {
