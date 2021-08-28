@@ -9,6 +9,7 @@
 #include <SDL.h>
 
 #include "../Definitions.h"
+#include "../Utils/Event.h"
 #include "../Utils/Utils.h"
 
 // Forward Declarations

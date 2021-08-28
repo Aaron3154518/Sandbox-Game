@@ -1,6 +1,11 @@
 #include "Item.h"
 
 // Item Info
+const ItemInfo& ItemInfo::NO_ITEM() {
+	const static ItemInfo _NO_ITEM;
+	return _NO_ITEM;
+}
+
 ItemInfo::ItemInfo(item::Id id, size_t _amnt) :
 	itemId(id), amnt(_amnt), data(Item::getItem(id)->newItemData()) {}
 
@@ -21,13 +26,50 @@ void ItemInfo::print() {
 		<< "Data: " << (data.empty() ? "No" : "Yes") << std::endl;
 }
 
+bool ItemInfo::isItem() const {
+	return amnt > 0 && itemId != item::Id::numItems;
+}
+ItemPtr ItemInfo::getItem() const {
+	return Item::getItem(isItem() ? itemId : item::Id::numItems);
+}
+int ItemInfo::maxStack() const {
+	return getItem()->maxStack;
+}
+int ItemInfo::maxStack(int mMaxStack) const {
+	return std::min(maxStack(), mMaxStack);
+}
+int ItemInfo::useTime() const {
+	return getItem()->useTime;
+}
+SharedTexture ItemInfo::getImage() const {
+	return getItem()->getImage(data);
+}
+bool ItemInfo::operator[](Item::ItemData idx) const {
+	return (*getItem())[idx];
+}
+
 bool ItemInfo::sameAs(const ItemInfo& other) const {
-	return itemId == other.itemId && data == other.data && amnt > 0;
+	return itemId == other.itemId && data == other.data;
+}
+
+bool ItemInfo::equals(const ItemInfo& other) const {
+	return isItem() == other.isItem() && (!isItem() || *this == other);
+}
+
+bool ItemInfo::operator==(const ItemInfo& other) const {
+	return itemId == other.itemId && amnt == other.amnt
+		&& data == other.data;
 }
 
 // Item
 std::vector<ItemPtr>& Item::getItems() {
-	static std::vector<ItemPtr> items(item::Id::numItems + 1);
+	static std::vector<ItemPtr> items;
+	if (items.empty()) {
+		ItemPtr emptyHand = std::make_shared<Item>();
+		emptyHand->setItemData(ItemData::autoUse | ItemData::breaker
+			| ItemData::leftClick, true);
+		items.resize(item::Id::numItems + 1, emptyHand);
+	}
 	return items;
 }
 
@@ -53,7 +95,9 @@ SharedTexture Item::getImage() const {
 	return makeSharedTexture(NULL);
 }
 
-void Item::tick() {}
+int Item::tick(int useTime, int dt) {
+	return useTime - dt;
+}
 
 std::string Item::getFullDescription() {
 	return getDescription();
@@ -63,12 +107,9 @@ Texture Item::drawDescription() {
 	return makeTexture();
 }
 
-std::map<Item::ItemData, bool> Item::getItemData(const DataKeys& keys) const {
-	std::map<ItemData, bool> result;
-	for (ItemData key : keys) { result[key] = data[key]; }
-	return result;
+bool Item::getItemData(uint32_t bits) const {
+	return (data & bits) == bits;
 }
-
-void Item::setItemData(const DataKeys& keys, bool val) {
-	for (ItemData key : keys) { data[key] = val; }
+void Item::setItemData(uint32_t bits, bool val) {
+	if (val) { data |= bits; } else { data &= !bits; }
 }

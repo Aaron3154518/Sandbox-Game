@@ -1,6 +1,8 @@
 #ifndef PLAYER_H
 #define PLAYER_H
 
+#define PLAYER_DEBUG
+
 #include <SDL.h>
 
 #include "PlayerInventory.h"
@@ -10,18 +12,20 @@
 #include "../Objects/DroppedItem.h"
 #include "../UIs/UI.h"
 #include "../Utils/AssetManager.h"
+#include "../Utils/Event.h"
 #include "../Utils/FileIO.h"
 #include "../Utils/Point.h"
 #include "../Utils/Rect.h"
 
 class Player {
-	friend class Game;
 public:
 	Player();
 	~Player() = default;
 	Player(const Player&) = delete;
 	Player& operator =(const Player&) = delete;
 
+	// Returns true if the drop was completely picked up
+	// and should be destroyed
 	bool pickUp(DroppedItem& drop);
 
 	void hit(int damage, int centerX, int kbPower);
@@ -31,22 +35,20 @@ public:
 	Point<double> getCPosf() const;
 	Point<double> getPos() const { return pos; }
 	void setPos(const Point<double>& newP);
+	PlayerInventory& getInventory() { return inventory; }
 
-	bool pointInPlayerBlock(SDL_Point blockPos) const;
+	bool collidesPlayer(Rect blockRect) const;
+
+	bool placeBlock(SDL_Point worldPos, tile::Id tileId);
+	bool breakBlock(SDL_Point worldPos);
 
 protected:
-	void tick(Event& e);
+	void handleEvents(Event& e);
 	void draw();
 
 private:
 	void move(Timestep dt);
 	void drawUI();
-
-	void leftClick(SDL_Point mouse);
-	void rightClick(SDL_Point mouse);
-
-	bool placeBlock(SDL_Point loc, tile::Id tileId);
-	bool breakBlock(SDL_Point loc);
 
 	void respawn();
 
@@ -64,13 +66,13 @@ private:
 	Map map;
 	*/
 
-	// Item begin used
+	/* Item begin used
 	item::Id itemUsed = item::Id::numItems;
 	double useTime = 0;
-	bool usedLeft = true, firstSwing = true;
+	bool usedLeft = true, firstSwing = true;*/
 
 	// Player image
-	TextureData mTex;
+	TextureData mTex, cursorTex;
 	Rect mRect, spriteRect, armRect;
 	Point<double> dim;
 

@@ -8,7 +8,8 @@ namespace item {
 	// - assignes Id to Type::ID
 	// - defines constructor (must end with ';' or '{ code }')
 
-#define PLACEABLE setItemData({ItemData::consumable, ItemData::autoUse, ItemData::swing, ItemData::placer}, true)
+#define PLACEABLE setItemData(ItemData::consumable | ItemData::autoUse \
+	| ItemData::swing | ItemData::placer | ItemData::leftClick, true)
 
 	ADD_ITEM(Dirt, DIRT) {
 		name = "Dirt";

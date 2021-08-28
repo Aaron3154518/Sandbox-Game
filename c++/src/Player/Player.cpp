@@ -1,8 +1,6 @@
 #include "Player.h"
 #include "../GameObjects.h"
 
-#define DEBUG_RANGES
-
 const double Player::PICKUP_DX = 1.5, Player::PICKUP_DY = 1.5;
 const double Player::PLACE_DX = 2.5, Player::PLACE_DY = 2;
 const std::string Player::IMG = gameVals::entities() + "player_pig.png";
@@ -10,6 +8,7 @@ const std::string Player::IMG = gameVals::entities() + "player_pig.png";
 Player::Player() {
 	// Setup rectangles
 	mTex.textureId = IMG;
+	cursorTex.dest = Rect(0, 0, gameVals::ITEM_W(), gameVals::ITEM_W());
 	SharedTexture tex = UI::assets().getAsset(IMG);
 	mRect = Rect::getMinRect(tex.get(), (int)(gameVals::BLOCK_W() * 3 / 2), 0);
 	dim = { (double)mRect.w / gameVals::BLOCK_W(),
@@ -27,12 +26,20 @@ Player::Player() {
 }
 
 // Update functions
-void Player::tick(Event& e) {
+void Player::handleEvents(Event& e) {
 	// If we are dead, update respawn counter
 	if (respawnCtr > 0) {
 		respawnCtr -= e.dt.milliseconds();
 		if (respawnCtr <= 0) { respawn(); }
 	// Otherwise handle events
+	} else if (mapOpen) {
+		e.nextUI(Rect(0, 0, UI::width(), UI::height()), true);
+		if (e.checkAndHandleKey(SDLK_m, Event::ButtonStatus::RELEASED)) {
+			std::cerr << "Close Map" << std::endl;
+			mapOpen = false;
+			// map.setCenter(mRect.cX() / gameVals::BLOCK_W(), mRect.cY() / gameVals::BLOCK_W());
+			// map.zoom = 1;
+		}
 	} else {
 		/*// When we open the inventory, check if crafting should open as well
 		if (inventory.open && craftingOpen) {
@@ -42,73 +49,53 @@ void Player::tick(Event& e) {
 		// Otherwise make sure crafting is closed
 		} else if (activeUI == craftingUI) { clearActiveUI(); }*/
 
-		/*// Send events to the active ui
+		// Check active ui
+		/*
+		// Send events to the active ui
 		if (activeUI) {
 			activeUI.tick();
 			// TODO: Dragging
 			activeUI.handleEvents(e);
-		}*/
-
-		// Check events
-		if (useTime <= 0 && e.scroll != 0) {
-			// Scroll the hotbar===
-			inventory.scrollHotbar(e.scroll > 0);
-		} else if (e.right.pressed &&
+		}
+		// Drag active ui
+		if (e.right.pressed &&
 			(e.keyDown(SDLK_LSHIFT) || e.keyDown(SDLK_RSHIFT))) {
 			std::cerr << "Start Dragging UI" << std::endl;
-			/*if (activeUI && activeUI.canDrag &&
+			if (activeUI && activeUI.canDrag &&
 				SDL_PointInRect(&pos, &activeUI.rect)) {
 				// dragging = true
-			}*/
-		} else if (e.keyPressed(SDLK_ESCAPE)) {
-			/* if (activeUI && activeUI != craftingUI) {
-				activeUI.onExit();
-				resetActiveUI();
-			   } else {
-			}*/
-			inventory.toggleOpen();
-			// }
-		} else if (e.keyReleased(SDLK_m)) {
+			}
+		}
+		*/
+
+		// Check crafting ui
+
+		// Inventory
+		e.nextUI(Rect(0, 0, UI::width(), UI::height()), false);
+		inventory.handleEvents(e);
+
+		// Player
+		e.nextUI(Rect(0, 0, UI::width(), UI::height()), false);
+
+		// Map Toggle
+		if (e.checkAndHandleKey(SDLK_m, Event::ButtonStatus::RELEASED)) {
+			std::cerr << "Open Map" << std::endl;
 			mapOpen = true;
 			// map.setCenter(mRect.cX() / gameVals::BLOCK_W(), mRect.cY() / gameVals::BLOCK_W());
 			// map.zoom = 1;
 		}
-
-		// Check map zoom
-		if (e.keyDown(SDLK_RIGHT)) {
+		// Minimap zoom
+		if (e.checkAndHandleKey(SDLK_EQUALS, Event::ButtonStatus::HELD)) {
+			std::cerr << "Minimap Zoom In" << std::endl;
 			/* map.zoom += e.dt.milliseconds * 10;
 			if(map.zoom > 5) { map.zoom = 5; }
 			*/
 		}
-		if (e.keyDown(SDLK_LEFT)) {
+		if (e.checkAndHandleKey(SDLK_MINUS, Event::ButtonStatus::HELD)) {
+			std::cerr << "Minimap Zoom Out" << std::endl;
 			/* map.zoom -= e.dt.milliseconds * 10;
 			if(map.zoom < 1) { map.zoom = 1; }
 			*/
-		}
-
-		// Check for using an item
-		if (useTime <= 0) {// &&
-			//(!activeUI || !SDL_PointInRect(&e.mouse, &actievUI.rect))) {
-			if (e.left.clicked) {
-				leftClick(e.mouse);
-			} else {
-				firstSwing = true;
-				if (e.right.clicked) {
-					rightClick(e.mouse);
-				} else {
-					//inventory.holdingR = 0;
-				}
-			}
-		}
-
-		// If using an item, let it deal with use time
-		if (itemUsed != item::Id::numItems) {
-			ItemPtr item = Item::getItem(itemUsed);
-			item->tick();
-			if (useTime <= 0) { itemUsed = item::Id::numItems; }
-		// Otherwise handle use time ourselves
-		} else if (useTime >= 0) {
-			useTime -= e.dt.milliseconds();
 		}
 
 		// Handle movement
@@ -116,20 +103,19 @@ void Player::tick(Event& e) {
 			// acc = stats.getStat("acceleration");
 			double acc = 3;
 			a.x = 0;
-			if (e.keyDown(SDLK_a)) { a.x -= acc; }
-			if (e.keyDown(SDLK_d)) { a.x += acc; }
-			// If both keys are pressed, don't change acceleration
-			//if (e.keyDown(SDLK_a) && !e.keyDown(SDLK_d)) { a.x = -acc; }
-			//if (e.keyDown(SDLK_d) && !e.keyDown(SDLK_a)) { a.x = acc; }
+			if (e.checkAndHandleKey(SDLK_a, Event::ButtonStatus::HELD)) {
+				a.x -= acc;
+			}
+			if (e.checkAndHandleKey(SDLK_d, Event::ButtonStatus::HELD)) {
+				a.x += acc;
+			}
 			// Check for jump
-			if (e.keyDown(SDLK_SPACE) && collided.y == CollideType::botRight) {
-				v.y = -6;// -stats.getStat("jump_speed");
+			if (collided.y == CollideType::botRight
+				&& e.checkAndHandleKey(SDLK_SPACE, Event::ButtonStatus::HELD)) {
+				v.y = -6; // -stats.getStat("jump_speed");
 			}
 			move(e.dt);
 		}
-
-		// Handle inventory key events
-		inventory.keyPresses(e);
 
 		if (immunity > 0) { immunity -= e.dt.milliseconds(); }
 	}
@@ -174,7 +160,6 @@ void Player::move(Timestep dt) {
 				CollideType::botRight : CollideType::topLeft;
 		// Didn't move, get collision based on accelleration
 		} else if (d[_d] == 0 && prevD[_d] == 0 && a[_d] != 0) {
-			std::cerr << "Here" << std::endl;
 			if (GameObjects::world().touchingBlocks(
 				pos, dim, _d == Dim::x, a[_d] < 0)) {
 				collided[_d] = a[_d] < 0 ? CollideType::topLeft :
@@ -210,7 +195,7 @@ void Player::draw() {
 	mTex.dest = mRect - shift;
 	assets.drawTexture(mTex);
 
-#ifdef DEBUG_RANGES
+#ifdef PLAYER_DEBUG
 	assets.thickRect(pickUpRange - shift, 1,
 		AssetManager::BorderType::outside, GREEN);
 	assets.thickRect(placementRange - shift, 1,
@@ -221,6 +206,14 @@ void Player::draw() {
 	inventory.draw();
 
 	drawUI();
+
+	// Draw held item
+	ItemInfo mouseItem = inventory.getHeldItem();
+	if (mouseItem.isItem()) {
+		cursorTex.texture = mouseItem.getImage();
+		cursorTex.dest.setCenter(UI::mouse());
+		UI::assets().drawTexture(cursorTex);
+	}
 }
 
 void Player::drawUI() {
@@ -228,12 +221,12 @@ void Player::drawUI() {
 }
 
 // Event functions
-void Player::leftClick(SDL_Point mouse) {
+/*void Player::leftClick(SDL_Point mouse) {
 	if (!inventory.leftClick(mouse)) {
 		SDL_Point worldMouse = GameObjects::world().getWorldMousePos(mouse, mRect.center(), false);
-		ItemInfo item = inventory.getCurrentItem();
+		ItemInfo& item = inventory.getCurrentItemRef();
 		if (item.isItem()) {
-			ItemPtr itemPtr = Item::getItem(item.itemId);
+			ItemPtr itemPtr = item.getItem();
 			usedLeft = worldMouse.x < mRect.cX();
 			if ((*itemPtr)[Item::ItemData::left] &&
 				(firstSwing || (*itemPtr)[Item::ItemData::autoUse])) {
@@ -243,10 +236,6 @@ void Player::leftClick(SDL_Point mouse) {
 				itemUsed = itemPtr->id();
 				useTime = itemPtr->getUseTime();
 			}
-		} else {
-			SDL_Point loc = worldMouse / gameVals::BLOCK_W();
-			if (SDL_PointInRect(&worldMouse, &placementRange)) { breakBlock(loc); }
-			useTime = 500;
 		}
 	}
 }
@@ -261,24 +250,35 @@ void Player::rightClick(SDL_Point mouse) {
 			if (tile != tile::Id::numTiles) { placeBlock(loc, tile); }
 		}
 	}
+}*/
+
+bool Player::placeBlock(SDL_Point worldPos, tile::Id tileId) {
+	SDL_Point loc = GameObjects::world().toBlockPos(worldPos);
+	TilePtr tile = Tile::getTile(tileId);
+	Point<uint8_t> tDim = tile->getDim();
+	// Can't place block over player
+	if (SDL_PointInRect(&worldPos, &placementRange)
+		&& !collidesPlayer(Rect(loc.x, loc.y, tDim.x, tDim.y))) {
+		// Check if we can place the block
+		return GameObjects::world().placeBlock(loc, tileId);
+	}
+	return false;
 }
 
-bool Player::placeBlock(SDL_Point loc, tile::Id tileId) {
-	// Check if we can place the block
-	return GameObjects::world().placeBlock(loc, tileId);
-}
-
-bool Player::breakBlock(SDL_Point loc) {
+bool Player::breakBlock(SDL_Point worldPos) {
+	SDL_Point loc = GameObjects::world().toBlockPos(worldPos);
 	WorldAccess& world = GameObjects::world();
 	// Make sure we aren't hitting air
 	loc = world.getBlockSrc(loc);
-	const Block& block = world.getBlock(loc);	if (block.id == tile::Id::AIR) { return false; }
+	const Block& block = world.getBlock(loc);
+	if (block.id == tile::Id::AIR) { return false; }
 	TilePtr tile = Tile::getTile(block.id);
 	// Make sure this block doesn't have an open UI
 	//if (activeUI && activeUI.blockPos == loc) { return false; }
 	// Make sure this block is in range and check if we destroyed it
 	int power = 1; // stats.getStat("power");
-	if (tile->hit(loc, power)) {
+	if (SDL_PointInRect(&worldPos, &placementRange)
+		&& tile->hit(loc, power)) {
 		return world.breakBlock(loc);
 	}
 	return false;
@@ -288,13 +288,11 @@ bool Player::breakBlock(SDL_Point loc) {
 bool Player::pickUp(DroppedItem& drop) {
 	drop.setPulled(false);
 	if (rectsOverlap(drop.getRect(), pickUpRange)) {
-		// TODO: Get inventory space
-		std::vector<int> space = { 0 };
-		if (!space.empty()) {
+		ItemInfo& item = drop.getInfo();
+		if (inventory.isSpaceForItem(item)) {
 			drop.attract(Point<double>{mRect.cX(), mRect.cY()});
 			if (distance(mRect.center(), drop.getRect().center()) <= 1) {
-				inventory.setItem(0, 0, drop.getInfo());
-				return true;// inventory.pickUpItem(drop.getInfo(), space);
+				return inventory.pickUpItem(item);
 			}
 		}
 	}
@@ -317,9 +315,9 @@ void Player::setPos(const Point<double>& newPos) {
 	placementRange.setCenter(mRect.center());
 }
 
-bool Player::pointInPlayerBlock(SDL_Point blockPos) const {
+bool Player::collidesPlayer(Rect blockRect) const {
 	Rect r = toBlockRect(mRect);
-	return SDL_PointInRect(&blockPos, &r);
+	return rectsOverlap(r, blockRect);
 }
 
 void Player::hit(int damage, int centerX, int kbPower) {

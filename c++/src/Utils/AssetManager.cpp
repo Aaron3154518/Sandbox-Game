@@ -323,6 +323,10 @@ Texture AssetManager::renderTextWrapped(TextData& data, Rect& rect,
 
 // Functions to draw a texture
 void AssetManager::drawTexture(const TextureData& data) {
+	SDL_Texture* target = SDL_GetRenderTarget(UI::renderer());
+	Rect renderBounds;
+	if (!target) { renderBounds.resize(UI::width(), UI::height(), false); }
+	else { getTextureSize(target, &renderBounds.w, &renderBounds.h); }
 	// Make sure we are actually drawing something
 	if (data.dest.empty() || data.dest.invalid() ||
 		data.area.empty() || data.boundary.empty()) {
@@ -339,15 +343,14 @@ void AssetManager::drawTexture(const TextureData& data) {
 		return;
 #endif
 	}
-	// Get the bouundary rect
-	Rect screen = Rect(0, 0, UI::width(), UI::height());
+	// Get the boundary rect
 	Rect boundary = data.boundary;
 	if (boundary.invalid()) {
-		boundary = screen;
-	} else if (SDL_IntersectRect(&boundary, &screen, &boundary) == SDL_FALSE) {
+		boundary = renderBounds;
+	} else if (SDL_IntersectRect(&boundary, &renderBounds, &boundary) == SDL_FALSE) {
 #ifdef RENDER_DEBUG
 		std::cerr << "Boundary rect " << boundary
-			<< " was out side the screen: " << screen << std::endl;
+			<< " was out side the screen: " << renderBounds << std::endl;
 #endif
 		return;
 	}
@@ -385,7 +388,7 @@ void AssetManager::drawTexture(const TextureData& data) {
 	// Make sure at least one pixel will be drawn
 	if (texRect.empty()) {
 #ifdef RENDER_DEBUG
-		std::cerr << "Can't draw from " << texRect << " to " << drawRect
+		std::cerr << "Can't draw from " << texRect << " to " << destRect
 			<< std::endl;
 #endif
 		return;

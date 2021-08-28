@@ -5,7 +5,7 @@ const int TextInput::CURSOR_DELAY = 500;
 bool TextInput::handleEvents(Event& e) {
 	time += e.dt.milliseconds();
 	time = time % (2 * CURSOR_DELAY);
-	if (e.keyPressed(SDLK_BACKSPACE)) {
+	if (e.checkAndHandleKey(SDLK_BACKSPACE, Event::ButtonStatus::PRESSED)) {
 		std::string str = currInput.str();
 		currInput.str(str.substr(0, str.length() - 1));
 		currInput.seekp(0, std::ios_base::end);

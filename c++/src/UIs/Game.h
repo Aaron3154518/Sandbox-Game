@@ -17,7 +17,7 @@
 #include "../Definitions.h"
 #include "../GameObjects.h"
 #include "../Utils/AssetManager.h"
-#include "../Utils/Utils.h"
+#include "../Utils/Event.h"
 #include "../Utils/Rect.h"
 
 // Game class
@@ -30,10 +30,8 @@ public:
     void tickUI(Event &e);
 private:
     std::string player, universe;
-    SDL_Point playerPos = { 0,0 };
 
     void handleEvents(Event& e);
-    void update();
     void render();
 };
 

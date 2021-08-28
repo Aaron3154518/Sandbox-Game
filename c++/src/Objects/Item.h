@@ -1,6 +1,7 @@
 #ifndef ITEM_H
 #define ITEM_H
 
+#include <cmath>
 #include <forward_list>
 #include <iostream>
 #include <map>
@@ -34,19 +35,17 @@ public:
 	Item() = default;
 	~Item() = default;
 
-	enum ItemData {
-		hasData = 0,	// Item stores data
-		consumable,		// Is consumable (will decrease item amount)
-		hasUi,			// Item brings up a ui when clicked
-		autoUse,		// Will automatically start using again
-		isWeapon,		// Can attack an enemy
-		swing,			// Should swing when used
-		placer,			// Places a block on use
-		breaker,		// Breaks a block on use
-		left,			// Has left click function
-		right,			// Has right click function
-
-		numData
+	enum ItemData : uint32_t {
+		hasData = 0x1,		// Item stores data
+		consumable = 0x2,	// Is consumable (will decrease item amount)
+		hasUi = 0x4,		// Item brings up a ui when clicked
+		autoUse = 0x8,		// Will automatically start using again
+		isWeapon = 0x10,	// Can attack an enemy
+		swing = 0x20,		// Should swing when used
+		placer = 0x40,		// Places a block on use
+		breaker = 0x80,		// Breaks a block on use
+		leftClick = 0x100,	// Has left click function
+		rightClick = 0x200,	// Has right click function
 	};
 
 	virtual void useAnim(double timeUsed, void* arm, bool left,
@@ -59,7 +58,7 @@ public:
 	virtual void onLeftClick() {}
 	virtual void onRightClick() {}
 
-	virtual void tick();
+	virtual int tick(int useTime, int dt);
 
 	virtual std::string getDescription() { return ""; }
 	virtual std::string getFullDescription();
@@ -68,15 +67,12 @@ public:
 
 	// Getters/Setters
 	double getUseTime() const { return useTime; }
-	typedef std::initializer_list<ItemData> DataKeys;
-	bool getItemData(ItemData idx) const { return data[idx]; }
-	std::map<ItemData, bool> getItemData(const DataKeys& keys) const;
-	void setItemData(ItemData idx, bool val) { data[idx] = val; }
-	void setItemData(const DataKeys& keys, bool val);
+	bool getItemData(uint32_t bits) const;
+	void setItemData(uint32_t bits, bool val);
 	tile::Id getBlockId() const { return blockId; }
 
 	// Operator oveerloading
-	bool operator[](ItemData idx) const { return data[idx]; }
+	bool operator[](uint32_t bits) const { return getItemData(bits); }
 
 	virtual item::Id id() { return Item::ID; }
 	static item::Id Id() { return ID; }
@@ -91,7 +87,7 @@ protected:
 	std::string img = "";
 
 	// Max stack
-	size_t maxStack = 999;
+	int maxStack = 999;
 
 	// Use time (seconds)
 	double useTime = .3;
@@ -101,8 +97,8 @@ protected:
 	// Magic value of item for sacrificing
 	int magicVal = 0;
 
-	// Information booleans
-	bool data[ItemData::numData] = { false };
+	// Information bits
+	uint32_t data = 0;
 
 	// TODO: placeable class
 	tile::Id blockId = tile::Id::numTiles;
@@ -121,12 +117,16 @@ struct ItemInfo {
 	~ItemInfo() = default;
 
 	item::Id itemId = item::Id::numItems;
-	size_t amnt = 0;
+	int amnt = 0;
 	ByteArray data;
 
-	bool isItem() const { return amnt > 0 && itemId != item::Id::numItems; }
-	int max_stack() const { return Item::getItem(itemId)->maxStack; }
-	SharedTexture getImage() const { return Item::getItem(itemId)->getImage(data); }
+	bool isItem() const;
+	ItemPtr getItem() const;
+	int maxStack() const;
+	int maxStack(int mMaxStack) const;
+	int useTime() const;
+	SharedTexture getImage() const;
+	bool operator[](Item::ItemData idx) const;
 
 	void read(IO& io);
 	void write(IO& io) const;
@@ -134,6 +134,10 @@ struct ItemInfo {
 	void print();
 
 	bool sameAs(const ItemInfo& other) const;
+	bool equals(const ItemInfo& other) const;
+	bool operator==(const ItemInfo& other) const;
+
+	static const ItemInfo& NO_ITEM();
 };
 
 #define NEW_ITEM(TYPE) \

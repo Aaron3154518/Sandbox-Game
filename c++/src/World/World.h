@@ -39,6 +39,7 @@ public:
 	// Visual functions
 	SDL_Point getWorldMousePos(SDL_Point mouse, SDL_Point center,
 		bool blocks = false) const;
+	SDL_Point getWorldMousePos(SDL_Point mouse,	bool blocks = false) const;
 	Rect getScreenRect(SDL_Point center) const;
 
 	// Functions involving the world blocks
@@ -87,6 +88,7 @@ public:
 	// Static functions
 	static const Block& airBlock();
 	static Block createBlock(tile::Id tileId, uint8_t dx = 0, uint8_t dy = 0);
+	static SDL_Point toBlockPos(SDL_Point p);
 	// Constants
 	static constexpr int SEC_PER_DAY = 60 * 24;
 	static constexpr int MS_PER_DAY = SEC_PER_DAY * 1000;
@@ -111,7 +113,7 @@ protected:
 
 	void saveWorld();
 
-	void drawDroppedItems(const Rect& worldRect) const;
+	void drawDroppedItems(const Rect& worldRect);
 
 private:
 	// Loads world

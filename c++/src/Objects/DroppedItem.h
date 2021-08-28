@@ -23,7 +23,7 @@ public:
 	void drop(Point<double> p, DropDir dropDir);
 	void attract(Point<double> p);
 
-	const ItemInfo& getInfo() const { return info; }
+	ItemInfo& getInfo() { return info; }
 	Rect getRect() const { return mRect; }
 	bool pickUpImmune() const { return pickUpImmunity > 0; }
 	bool beingPulled() const { return pulledIn; }

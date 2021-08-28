@@ -2,6 +2,7 @@
 #define INVENTORY_H
 
 #include <cmath>
+#include <list>
 #include <set>
 
 #include <SDL.h>
@@ -11,6 +12,7 @@
 #include "../Objects/Item.h"
 #include "../UIs/UI.h"
 #include "../Utils/AssetManager.h"
+#include "../Utils/Event.h"
 #include "../Utils/FileIO.h"
 #include "../Utils/Rect.h"
 #include "../Utils/Utils.h"
@@ -21,12 +23,16 @@ public:
 	Inventory(SDL_Point _dim);
 	~Inventory() = default;
 
-	virtual void draw(SDL_Point parentPos);
+	virtual void draw(SDL_Point toplef);
 	virtual void drawInventory();
 
-	virtual bool leftClick(SDL_Point mouse) { return false; }
-	virtual bool rightClick(SDL_Point mouse) { return true; }
-	virtual bool pickUpItem(const ItemInfo& item) { return false; }
+	virtual void handleEvents(Event& e, SDL_Point topLeft);
+	virtual bool leftClickPos(SDL_Point pos);
+	virtual bool rightClickPos(SDL_Point pos);
+	bool isSpaceForItem(const ItemInfo& item) const;
+	// Returns true if the entire item was picked up
+	bool pickUpItem(ItemInfo& item);
+	virtual void autoMoveItem(SDL_Point loc);
 
 	void selectPos(SDL_Point pos);
 	void unselectPos(SDL_Point pos);
@@ -35,7 +41,7 @@ public:
 	void setPos(int x, int y) { setPos(SDL_Point{ x,y }); }
 	void setPos(SDL_Point pos);
 	Rect getRect() const { return mRect; }
-	void setMaxStack(size_t val) { maxStack = val; }
+	void setMaxStack(int val) { maxStack = val; }
 	size_t getMaxStack() const { return maxStack; }
 	void setItemList(std::set<item::Id>& list, bool isWhiteList);
 	// Get/set item
@@ -56,7 +62,9 @@ public:
 	static Rect getInvRect(SDL_Point pos);
 
 protected:
-	void updateItem(SDL_Point loc);
+	std::list<SDL_Point> getSpaceForItem(const ItemInfo& item) const;
+
+	void updatePos(SDL_Point loc);
 	// pos is relative to the parent of Inventory
 	// (i.e. pos - mRect.topleft() -> pos relative to topleft of mRect)
 	void drawHoverItem(SDL_Point pos);
@@ -65,7 +73,7 @@ protected:
 
 	SDL_Point dim;
 	// Personal maximum stack limit
-	size_t maxStack = 999;
+	int maxStack = 999;
 
 	// Items
 	std::vector<std::vector<ItemInfo>> items;
@@ -79,10 +87,11 @@ protected:
 	TextureData mTex;
 	TextData td;
 	// How long we've been holding right click (ms)
-	size_t holdingR = 0;
+	int holdingR = 0;
+	// Should we draw a description
+	bool drawDescription = false;
 
 	const static SDL_Color BKGRND, SELECT_COLOR;
-	const static ItemInfo NO_ITEM;
 
 private:
 };

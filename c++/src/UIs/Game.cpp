@@ -15,7 +15,6 @@ void Game::initUI() {
 
 void Game::tickUI(Event& e) {
     handleEvents(e);
-    update();
     render();
 }
 void Game::handleEvents(Event& e) {
@@ -29,12 +28,7 @@ void Game::handleEvents(Event& e) {
         return;
     }
     GameObjects::world().tick(e.dt);
-    GameObjects::player().tick(e);
-}
-void Game::update() {
-#ifdef DEBUG_GAME
-    std::cerr << "Update" << std::endl;
-#endif
+    GameObjects::player().handleEvents(e);
 }
 void Game::render() {
 #ifdef DEBUG_GAME

@@ -23,7 +23,6 @@ void World::setFile(std::string fName) {
 		saveWorld();
 	}
 	loadWorld();
-	printInfo(true);
 }
 
 void World::newWorld() {
@@ -502,6 +501,10 @@ SDL_Point World::getWorldMousePos(SDL_Point mouse, SDL_Point center,
 	return blocks ? result /= gameVals::BLOCK_W() : result;
 }
 
+SDL_Point World::getWorldMousePos(SDL_Point mouse, bool blocks) const {
+	return getWorldMousePos(mouse, GameObjects::player().getCPos(), blocks);
+}
+
 Rect World::getScreenRect(SDL_Point center) const {
 	int w = UI::width(), h = UI::height();
 	int worldW = width(), worldH = height();
@@ -535,6 +538,13 @@ Block World::createBlock(tile::Id tileId, uint8_t dx, uint8_t dy) {
 	b.setSrc(dx, dy);
 	b.data.reset();
 	return b;
+}
+
+SDL_Point World::toBlockPos(SDL_Point p) {
+	SDL_Point result = p / gameVals::BLOCK_W();
+	if (p.x < 0) { --result.x; }
+	if (p.y < 0) { --result.y; }
+	return result;
 }
 
 // Getters/Setters
@@ -580,10 +590,10 @@ void World::dropItem(const DroppedItem& drop, DroppedItem::DropDir dir,
 	droppedItems.back().drop(pos, dir);
 }
 
-void World::drawDroppedItems(const Rect& worldRect) const {
+void World::drawDroppedItems(const Rect& worldRect) {
 	SDL_Point tl = worldRect.topLeft();
 	AssetManager& assets = UI::assets();
-	for (const DroppedItem& drop : droppedItems) {
+	for (DroppedItem& drop : droppedItems) {
 		TextureData data;
 		data.dest = drop.getRect() + tl;
 		data.texture = drop.getInfo().getImage();
@@ -594,6 +604,7 @@ void World::drawDroppedItems(const Rect& worldRect) const {
 // WorldAccess
 // Update world blocks
 bool WorldAccess::placeBlock(SDL_Point loc, tile::Id tileId) {
+	if (getBlock(loc).id != tile::Id::AIR) { return false; }
 	TilePtr tile = Tile::getTile(tileId);
 	// Calculate block rectangle
 	Point<uint8_t> tDim = tile->getDim();

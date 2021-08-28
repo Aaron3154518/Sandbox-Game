@@ -9,7 +9,7 @@ YesNo::YesNo() {
 }
 
 bool YesNo::handleEvents(Event& e) {
-	if (e.clicked(e.left)) {
+	if (e.checkMouse(Event::Mouse::LEFT, Event::ButtonStatus::CLICKED)) {
 		if (SDL_PointInRect(&e.mouse, &mRect)) {
 			SDL_Point mouse = e.mouse - mRect.topLeft();
 			if (yesButton.clicked(mouse)) {
@@ -25,10 +25,11 @@ bool YesNo::handleEvents(Event& e) {
 			return true;
 		}
 	}
-	if (e.scroll != 0 && SDL_PointInRect(&e.mouse, &promptTex.dest)) {
-		scroll = std::max(0, std::min(maxScroll, scroll + e.scroll * scrollAmnt));
+	if (SDL_PointInRect(&e.mouse, &promptTex.dest) && e.checkScroll()) {
+		scroll = std::max(0,
+			std::min(maxScroll, scroll + e.scroll * scrollAmnt));
 	}
-	if (e.keyReleased(SDLK_ESCAPE)) {
+	if (e.checkAndHandleKey(SDLK_ESCAPE, Event::ButtonStatus::RELEASED)) {
 		answer = mActive = false;
 		return true;
 	}

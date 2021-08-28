@@ -2,11 +2,12 @@
 
 #include "../Utils/AssetManager.h"
 
+// TODO: static init fiasco
 bool UI::initialized = false;
 int UI::maxW = 0, UI::maxH = 0, UI::w = 0, UI::h = 0;
 SDL_Renderer* UI::mRenderer = NULL;
 SDL_Window* UI::mWindow = NULL;
-AssetManager UI::mAssetManager = AssetManager();
+AssetManager UI::mAssetManager;
 
 std::deque<std::shared_ptr<UI>> UI::activeUIs;
 
@@ -21,9 +22,7 @@ void UI::runUI() {
         gameTime += dt.milliseconds();
 
         e.update(dt);
-        if (e.resize) {
-            UI::resize(e.newW, e.newH);
-        }
+        if (e.resize) { UI::resize(e.newW, e.newH); }
 
         SDL_RenderClear(mRenderer);
         tickUI(e);
@@ -119,9 +118,9 @@ int UI::height() { return h; }
 SDL_Renderer* UI::renderer() { return mRenderer; }
 AssetManager& UI::assets() { return mAssetManager; }
 SDL_Point UI::mouse() {
-    SDL_Point p;
-    SDL_GetMouseState(&p.x, &p.y);
-    return p;
+    SDL_Point result;
+    SDL_GetMouseState(&result.x, &result.y);
+    return result;
 }
 
 void UI::setDrawColor(const SDL_Color& c) {

@@ -10,7 +10,6 @@ namespace GameObjects {
 		return PLAYER;
 	}
 	PlayerInventory& playerInv() {
-		static PlayerInventory PLAYER_INV;
-		return PLAYER_INV;
+		return player().getInventory();
 	}
 }

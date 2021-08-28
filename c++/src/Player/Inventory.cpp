@@ -3,10 +3,12 @@
 
 const SDL_Color Inventory::BKGRND{ 0, 255, 0, 150 };
 const SDL_Color Inventory::SELECT_COLOR{ 175,175,0,255 };
-const ItemInfo Inventory::NO_ITEM;
 
 SDL_Point Inventory::toInvPos(SDL_Point pos) {
-	return (pos - gameVals::INV_MARGIN()) / gameVals::INV_W();
+	SDL_Point result = (pos - gameVals::INV_MARGIN()) / gameVals::INV_W();
+	if (pos.x < 0) { --result.x; }
+	if (pos.y < 0) { --result.y; }
+	return result;
 }
 SDL_Point Inventory::toPxPos(SDL_Point pos) {
 	return (pos * gameVals::INV_W()) + gameVals::INV_MARGIN();
@@ -30,12 +32,12 @@ Inventory::Inventory(SDL_Point _dim) : dim(_dim) {
 	mTex.texture = UI::assets().createTexture(mRect.w, mRect.h);
 }
 
-void Inventory::draw(SDL_Point parentPos) {
+void Inventory::draw(SDL_Point topLeft) {
 	SDL_Point mouse = UI::mouse();
-	mTex.dest = mRect + parentPos;
+	mTex.dest = mRect + topLeft;
 	UI::assets().drawTexture(mTex);
-	if (SDL_PointInRect(&mouse, &mTex.dest)) {
-		drawHoverItem(toInvPos(mouse - mRect.topLeft()));
+	if (drawDescription) {
+		drawHoverItem(toInvPos(mouse - mTex.dest.topLeft()));
 	}
 }
 
@@ -48,13 +50,123 @@ void Inventory::drawInventory() {
 	SDL_Point loc;
 	for (loc.y = 0; loc.y < dim.y; loc.y++) {
 		for (loc.x = 0; loc.x < dim.x; loc.x++) {
-			updateItem(loc);
+			updatePos(loc);
 			UI::setRenderTarget(mTex.texture.get());
 			UI::assets().thickRect(getInvRect(loc), gameVals::INV_MARGIN(),
 				AssetManager::BorderType::inside, BLACK);
 			UI::resetRenderTarget();
 		}
 	}
+}
+
+void Inventory::handleEvents(Event& e, SDL_Point topLeft) {
+	// TODO auto move item
+
+	// Left/right click
+	SDL_Point mouse = toInvPos(e.mouse - topLeft - mRect.topLeft());
+	if (e.checkMouse(Event::Mouse::LEFT, Event::ButtonStatus::CLICKED)) {
+		leftClickPos(mouse);
+	} else if (e.checkMouse(Event::Mouse::RIGHT, Event::ButtonStatus::CLICKED)) {
+		rightClickPos(mouse);
+	}
+	drawDescription = e.checkHover();
+}
+
+bool Inventory::leftClickPos(SDL_Point pos) {
+	if (!validPos(pos)) { return false; }
+	if (SDL_GetModState() & KMOD_SHIFT != 0) {
+		autoMoveItem(pos);
+	} else {
+		ItemInfo& item = items[pos.y][pos.x];
+		item = GameObjects::playerInv()
+			.leftClickItem(item, item.maxStack(maxStack));
+		updatePos(pos);
+		// TODO: ActiveUI on inv update
+	}
+	return true;
+}
+
+bool Inventory::rightClickPos(SDL_Point pos) {
+	if (validPos(pos)) {
+		ItemInfo& item = items[pos.y][pos.x];
+		item = GameObjects::playerInv()
+			.rightClickItem(item, item.maxStack(maxStack));
+		updatePos(pos);
+		// TODO: ActiveUI on inv update
+		return true;
+	}
+	return false;
+}
+
+std::list<SDL_Point> Inventory::getSpaceForItem(const ItemInfo& item) const {
+	// Positions which are neither full nor empty
+	std::list<SDL_Point> notFull, empty;
+	// Make sure we can pick this item up
+	if (!itemAllowed(item.itemId)) { return notFull; }
+	// Get amnt to add and max stack size
+	int amnt = item.amnt;
+	int _maxStack = item.maxStack(maxStack);
+	// Go through the inventory and find valid positions
+	SDL_Point pos;
+	for (pos.y = 0; pos.y < dim.y; pos.y++) {
+		for (pos.x = 0; pos.x < dim.x; pos.x++) {
+			const ItemInfo& invItem = items[pos.y][pos.x];
+			if (!invItem.isItem()) { empty.push_back(pos); }
+			else if (invItem.sameAs(item) && invItem.amnt < maxStack) {
+				notFull.push_back(pos);
+				amnt -= (_maxStack - invItem.amnt);
+				if (amnt <= 0) { return notFull; }
+			}
+		}
+	}
+	for (SDL_Point& pos : empty) {
+		notFull.push_back(pos);
+		if ((amnt -= _maxStack) <= 0) { break; }
+	}
+	return notFull;
+}
+
+bool Inventory::isSpaceForItem(const ItemInfo& item) const {
+	// Make sure we can pick this item up
+	if (!itemAllowed(item.itemId)) { return false; }
+	// Get amnt to add and max stack size
+	int amnt = item.amnt;
+	int _maxStack = item.maxStack(maxStack);
+	// Go through the inventory and find a valid position
+	SDL_Point pos;
+	for (pos.y = 0; pos.y < dim.y; pos.y++) {
+		for (pos.x = 0; pos.x < dim.x; pos.x++) {
+			const ItemInfo& invItem = items[pos.y][pos.x];
+			if (!invItem.isItem() ||
+				(invItem.sameAs(item) && invItem.amnt < _maxStack)) {
+				return true;
+			}
+		}
+	}
+}
+
+bool Inventory::pickUpItem(ItemInfo& item) {
+	auto space = getSpaceForItem(item);
+	int _maxStack = item.maxStack(maxStack);
+	for (SDL_Point& pos : space) {
+		ItemInfo& invItem = items[pos.y][pos.x];
+		if (!invItem.isItem()) {
+			invItem = item;
+			invItem.amnt = 0;
+		}
+		int transferAmnt = std::min(item.amnt, _maxStack - invItem.amnt);
+		invItem.amnt += transferAmnt;
+		item.amnt -= transferAmnt;
+		updatePos(pos);
+		if (item.amnt < 0) {
+			std::cerr << "Inventory::pickUpItem(): Item amnt < 0" << std::endl;
+		} else if (item.amnt == 0) { return true; }
+	}
+	return false;
+}
+
+void Inventory::autoMoveItem(SDL_Point loc) {
+	std::cerr << "Auto move: " << loc << std::endl;
 }
 
 void Inventory::selectPos(SDL_Point pos) {
@@ -88,7 +200,7 @@ const ItemInfo& Inventory::getItem(int x, int y) const {
 	return getItem(SDL_Point{ x, y });
 }
 const ItemInfo& Inventory::getItem(SDL_Point loc) const {
-	return validPos(loc) ? items[loc.y][loc.x] : NO_ITEM;
+	return validPos(loc) ? items[loc.y][loc.x] : ItemInfo::NO_ITEM();
 }
 
 void Inventory::setItem(int x, int y, const ItemInfo& item) {
@@ -97,7 +209,7 @@ void Inventory::setItem(int x, int y, const ItemInfo& item) {
 void Inventory::setItem(SDL_Point loc, const ItemInfo& item) {
 	if (validPos(loc)) {
 		items[loc.y][loc.x] = item;
-		updateItem(loc);
+		updatePos(loc);
 	}
 }
 
@@ -117,7 +229,7 @@ bool Inventory::itemAllowed(item::Id id) const {
 }
 
 bool Inventory::validPos(SDL_Point loc) const {
-	return loc.x >= 0 && loc.y >= 0 && loc.x < dim.x&& loc.y < dim.y;
+	return loc.x >= 0 && loc.y >= 0 && loc.x < dim.x && loc.y < dim.y;
 }
 
 void Inventory::read(IO& io) {
@@ -142,7 +254,7 @@ void Inventory::write(IO& io) const {
 	}
 }
 
-void Inventory::updateItem(SDL_Point loc) {
+void Inventory::updatePos(SDL_Point loc) {
 	if (!validPos(loc)) { return; }
 
 	const ItemInfo& item = getItem(loc);
@@ -160,7 +272,7 @@ void Inventory::updateItem(SDL_Point loc) {
 		itemTex.dest = Rect::getMinRect(itemTex.texture.get(),
 			gameVals::INV_IMG_W(), gameVals::INV_IMG_W());
 		itemTex.dest.setCenter(r.cX(), r.cY());
-		itemTex.boundary = mRect;
+		itemTex.boundary = Rect(0, 0, mRect.w, mRect.h);
 		assets.drawTexture(itemTex);
 		td.text = std::to_string(item.amnt);
 		td.x = r.x2(); td.y = r.y2();

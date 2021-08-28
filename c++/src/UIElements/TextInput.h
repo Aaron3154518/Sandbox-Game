@@ -7,6 +7,7 @@
 #include "UIElement.h"
 #include "../Definitions.h"
 #include "../Utils/AssetManager.h"
+#include "../Utils/Event.h"
 #include "../Utils/Rect.h"
 #include "../Utils/Utils.h"
 

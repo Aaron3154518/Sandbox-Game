@@ -13,13 +13,12 @@
 #include "../Objects/Item.h"
 #include "../UIElements/Button.h"
 #include "../Utils/AssetManager.h"
+#include "../Utils/Event.h"
 #include "../Utils/Rect.h"
 #include "../Utils/Utils.h"
 
-// Forward declaration
-class PlayerInventory;
-
 class ArmorInventory : public Inventory {
+	friend class PlayerInventory;
 public:
 	ArmorInventory();
 	~ArmorInventory() = default;
@@ -30,32 +29,50 @@ private:
 	static const SDL_Point DIM;
 };
 
+struct UseItem {
+	friend class PlayerInventory;
+public:
+	ItemInfo item() const { return info; }
+	bool isItem() const { return info.isItem(); }
+	bool inUse() const { return useTime > 0; }
+	bool left() const { return usedLeft; }
+
+private:
+	void tick(int ms);
+	bool leftClick(ItemInfo& item);
+	bool rightClick(ItemInfo& item);
+	void setUseTime(int ms) { useTime = ms; if (!inUse()) { info.itemId = item::Id::numItems; } }
+	void decUseTime(int ms) { setUseTime(useTime - ms); }
+
+	ItemInfo info;
+	int useTime = 0;
+	bool usedLeft, firstSwing = false;
+};
+
 class PlayerInventory : public Inventory {
 public:
 	PlayerInventory();
 	~PlayerInventory() = default;
 
-	// parentPos is assumed to be based on (0,0) as the topleft of the screen
-	void draw(SDL_Point parentPos = SDL_Point{ 0,0 });
-	void drawInventory();
+	void draw(); //Player
+	void drawInventory(); //Player
 
-	// Mouse is assumed to use the same topleft as mRect
-	bool leftClick(SDL_Point mouse);
-	bool rightClick(SDL_Point mouse);
+	void handleEvents(Event& e);
+	bool leftClickPos(SDL_Point pos);
+	bool rightClickPos(SDL_Point pos);
 
+	ItemInfo leftClickItem(ItemInfo item, int itemMaxStack);
+	ItemInfo rightClickItem(ItemInfo item, int itemMaxStack);
 	void autoMoveItem(SDL_Point loc);
-	void onChangeHeld();
+	void onChangeHeld(); //Private
 
-	void selectHotbar(int pos);
-	void scrollHotbar(bool up);
+	void selectHotbar(int pos); //Private
 
-	void useItem();
-	void dropItem();
-
-	void keyPresses(Event& e);
+	void useItem(); //Player
+	void dropItem(); //Player
 
 	bool isOpen() const { return open; }
-	void toggleOpen();
+	void toggleOpen(); //Player
 
 	// Current held item (excluding hotbar)
 	const ItemInfo& getHeldItem() const { return heldItem; }
@@ -74,10 +91,14 @@ private:
 
 	// Currently held item
 	ItemInfo heldItem;
-	// Hot bar index
 	int hotbarItem = 0;
 	// Is the inventory open
 	bool open;
+	// Item transfer for right click
+	double amntTransferred = 0.;
+
+	// Item begin used
+	UseItem itemUsed;
 
 	static const SDL_Point DIM;
 	static const int BUTTON_W;

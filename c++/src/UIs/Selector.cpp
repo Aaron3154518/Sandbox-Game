@@ -107,7 +107,7 @@ void Selector::handleEvents(Event& e) {
 		scroll = std::max(0,
 			std::min(maxScroll, scroll + e.scroll * scrollAmnt));
 		// Left click in scroll window
-		if (e.clicked(e.left)) {
+		if (e.checkMouse(Event::Mouse::LEFT, Event::ButtonStatus::CLICKED)) { 
 			SDL_Point mouse = e.mouse - scrollRect.topLeft();
 			mouse.y += scroll;
 			int idx = (int)(mouse.y / itemH);
@@ -129,11 +129,16 @@ void Selector::handleEvents(Event& e) {
 				}
 			}
 		}
-	} else if (input.active() && e.clicked(e.left) && newButton.clicked(e.mouse)) {
-		if (newItem()) { onNewItem(); }
+	} else if (input.active()
+		&& e.checkMouse(Event::Mouse::LEFT, Event::ButtonStatus::CLICKED)
+		&& newButton.clicked(e.mouse) && newItem()) {
+		onNewItem();
 	}
 	if (input.active()) {
-		if (e.keyReleased(SDLK_RETURN) && newItem()) { onNewItem(); }
+		if (e.checkKey(SDLK_RETURN, Event::ButtonStatus::RELEASED)
+			&& newItem()) {
+			onNewItem();
+		}
 		input.handleEvents(e);
 	}
 }
