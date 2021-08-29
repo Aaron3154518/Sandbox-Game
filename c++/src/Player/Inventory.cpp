@@ -239,12 +239,14 @@ void Inventory::read(IO& io) {
 	ItemInfo tmp;
 	for (int y = 0; y < readDim.y; y++) {
 		for (int x = 0; x < readDim.x; x++) {
-			if (x < dim.x && y < dim.y) { items[y][x].read(io); } 			else { tmp.read(io); }
+			if (x < dim.x && y < dim.y) { items[y][x].read(io); }
+			else { tmp.read(io); }
 		}
 	}
+	drawInventory();
 }
 
-void Inventory::write(IO& io) const {
+void Inventory::write(IO& io) {
 	io.write(dim.x);
 	io.write(dim.y);
 	for (auto& row : items) {

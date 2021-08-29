@@ -284,6 +284,62 @@ bool Player::breakBlock(SDL_Point worldPos) {
 	return false;
 }
 
+void Player::setFile(std::string fName) {
+	fr.close(); fw.discard();
+	fileName = fName;
+	if (!isFile(fileName)) { save(); }
+	load();
+}
+
+void Player::load() {
+	std::cerr << "Loading Player" << std::endl;
+	if (fw.isOpen()) {
+		std::cerr << "Player::read(): Cannot open file for reading - "
+			<< "file is currently open for writing" << std::endl;
+		return;
+	}
+	// Open the file
+	fr.close();
+	if (!fr.open(fileName)) {
+		std::cerr << "Player::read(): Unable to open player file for reading" << std::endl;
+		return;
+	}
+
+	// Read inventory
+	inventory.read(fr);
+
+	if (!fr.close()) {
+		std::cerr << "Player::read(): File Close Error" << std::endl;
+	}
+}
+
+void Player::save() {
+	std::cerr << "Saving Player" << std::endl;
+	if (fr.isOpen()) {
+		std::cerr << "Player::write(): Cannot open file for writing - "
+			<< "file is currently open for reading" << std::endl;
+		return;
+	}
+	// Open the file
+	fw.discard();
+	if (!fw.open(fileName)) {
+		std::cerr << "Player::write(): Unable to open player file for writing" << std::endl;
+		return;
+	}
+
+	// Write inventory
+	inventory.write(fw);
+
+	if (!fw.commit()) {
+		std::cerr << "Player::write(): File Close Error" << std::endl;
+	}	
+}
+
+void Player::saveNewPlayer(IO& io) {
+	PlayerInventory inv;
+	inv.write(io);
+}
+
 // Inventory stuff
 bool Player::pickUp(DroppedItem& drop) {
 	drop.setPulled(false);

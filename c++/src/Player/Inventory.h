@@ -54,8 +54,8 @@ public:
 	bool itemAllowed(item::Id id) const;
 	bool validPos(SDL_Point loc) const;
 
-	void read(IO& io);
-	void write(IO& io) const;
+	virtual void read(IO& io);
+	virtual void write(IO& io);
 
 	static SDL_Point toInvPos(SDL_Point pos);
 	static SDL_Point toPxPos(SDL_Point pos);

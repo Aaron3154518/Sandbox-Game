@@ -248,7 +248,7 @@ ItemInfo PlayerInventory::leftClickItem(ItemInfo item, int itemMaxStack) {
 }
 
 ItemInfo PlayerInventory::rightClickItem(ItemInfo item, int itemMaxStack) {
-	if (item.isItem() && (!heldItem.isItem() || item.sameAs(heldItem))) {
+	if (item.isItem() && (!heldItem.isItem() || heldItem.sameAs(item))) {
 		// Time to wait until next item transfer
 		double prev = amntTransferred;
 		// Get tranfer amnt
@@ -257,6 +257,7 @@ ItemInfo PlayerInventory::rightClickItem(ItemInfo item, int itemMaxStack) {
 		int idealGrab = (int)(amntTransferred - prev);
 		int maxGrab = heldItem.maxStack(maxStack) - heldItem.amnt;
 		int transferAmnt = std::min(item.amnt, std::min(idealGrab, maxGrab));
+		if (!heldItem.isItem()) { heldItem = item; heldItem.amnt = 0; }
 		heldItem.amnt += transferAmnt;
 		item.amnt -= transferAmnt;
 	} else { amntTransferred = 0.; }
@@ -305,4 +306,16 @@ const ItemInfo& PlayerInventory::getCurrentItem() const {
 
 ItemInfo& PlayerInventory::getCurrentItemRef() {
 	return heldItem.isItem() ? heldItem : items[0][hotbarItem];
+}
+
+void PlayerInventory::read(IO& io) {
+	Inventory::read(io);
+	armorInv.read(io);
+	heldItem.read(io);
+}
+
+void PlayerInventory::write(IO& io) {
+	Inventory::write(io);
+	armorInv.write(io);
+	heldItem.write(io);
 }

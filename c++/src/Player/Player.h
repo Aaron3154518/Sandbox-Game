@@ -42,9 +42,16 @@ public:
 	bool placeBlock(SDL_Point worldPos, tile::Id tileId);
 	bool breakBlock(SDL_Point worldPos);
 
+	void load();
+	void save();
+
+	static void saveNewPlayer(IO& io);
+
 protected:
 	void handleEvents(Event& e);
 	void draw();
+
+	void setFile(std::string fName);
 
 private:
 	void move(Timestep dt);
@@ -103,7 +110,10 @@ private:
 	bool craftingOpen = false;
 	bool mapOpen = false;
 
+	// File variables
 	std::string fileName;
+	FileRead fr;
+	FileWrite fw;
 
 	const static std::string IMG;
 };

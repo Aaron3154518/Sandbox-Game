@@ -10,6 +10,7 @@
 #include "Game.h"
 #include "Selector.h"
 #include "../Definitions.h"
+#include "../Player/Player.h"
 #include "../Utils/AssetManager.h"
 #include "../Utils/Rect.h"
 #include "../Utils/Utils.h"

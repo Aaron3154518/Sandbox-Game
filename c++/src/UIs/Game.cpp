@@ -11,6 +11,7 @@ void Game::initUI() {
     fr.open(infoFile);
     fr.close();
     GameObjects::world().setFile(gameVals::worldFile(universe, "world"));
+    GameObjects::player().setFile(gameVals::playerFile(player));
 }
 
 void Game::tickUI(Event& e) {

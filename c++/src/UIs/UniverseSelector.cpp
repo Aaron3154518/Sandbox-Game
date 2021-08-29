@@ -43,7 +43,7 @@ void UniverseSelector::selectItem(int idx) {
 	if (idx < 0 || idx >= files.size()) { return; }
 	std::string file = toFileName(files[idx]);
 	if (player.empty()) {
-		nextUIs.push_back(std::make_shared<PlayerSelector>(file));
+		subUIs.push_back(std::make_shared<PlayerSelector>(file));
 	} else {
 		nextUIs.push_back(std::make_shared<Game>(player, file));
 	}

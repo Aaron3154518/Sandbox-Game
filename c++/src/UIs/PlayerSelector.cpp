@@ -33,8 +33,7 @@ bool PlayerSelector::newItem() {
 			std::cerr << "Could not open player file" << std::endl;
 			return false;
 		}
-		std::string text = "Fuck Yeah";
-		fw.write(text);
+		Player::saveNewPlayer(fw);
 		if (!fw.commit()) {
 			std::cerr << "Failed to write to player file" << std::endl;
 			return false;
@@ -61,7 +60,7 @@ void PlayerSelector::selectItem(int idx) {
 	if (idx < 0 || idx >= files.size()) { return; }
 	std::string file = toFileName(files[idx]);
 	if (universe.empty()) {
-		nextUIs.push_back(std::make_shared<UniverseSelector>(file));
+		subUIs.push_back(std::make_shared<UniverseSelector>(file));
 	} else {
 		nextUIs.push_back(std::make_shared<Game>(file, universe));
 	}

@@ -79,6 +79,9 @@ public:
 	// Current selected item (held or in hotbar)
 	const ItemInfo& getCurrentItem() const;
 
+	void read(IO& io);
+	void write(IO& io);
+
 private:
 	// Current selected item (held or in hotbar)
 	ItemInfo& getCurrentItemRef();

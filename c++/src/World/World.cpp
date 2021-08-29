@@ -95,9 +95,11 @@ void World::loadWorld() {
 		std::cerr << "World::loadWorld(): Unable to open world file for reading" << std::endl;
 		return;
 	}
+
 	loadInfo();
 	loadBlocks(0., dim.y);
 	drawWorld(0.);
+
 	if (!fr.close()) {
 		std::cerr << "World::loadWorld(): File Close Error" << std::endl;
 	}
@@ -280,16 +282,18 @@ void World::saveWorld() {
 		std::cerr << "World::saveWorld(): Unable to open world file for writing" << std::endl;
 		return;
 	}
+
 	applyBlockChanges();
 	// Save world info
 	saveInfo();
 	saveBlocks(0., dim.y);
 	saveMap(0.);
+
 	if (!fw.commit()) {
 		std::cerr << "World::saveWorld(): File Close Error" << std::endl;
 	}
+
 	applyBlockChanges();
-	std::cerr << "Successfully Saved" << std::endl;
 }
 
 double World::saveWorld(double progress) {
@@ -325,6 +329,8 @@ double World::saveWorld(double progress) {
 
 // TODO: Verion info
 void World::saveInfo() {
+	// Save the player
+	GameObjects::player().save();
 	if (!fw.isOpen()) {
 		std::cerr << "World::saveInfo(): File not open" << std::endl;
 		return;
