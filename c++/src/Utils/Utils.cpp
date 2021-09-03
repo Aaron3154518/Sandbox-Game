@@ -119,3 +119,9 @@ bool rectsOverlap(Rect r1, Rect r2) {
     Rect res;
     return SDL_IntersectRect(&r1, &r2, &res) == SDL_TRUE;
 }
+
+SDL_Point mousePos() {
+    SDL_Point result;
+    SDL_GetMouseState(&result.x, &result.y);
+    return result;
+}

@@ -39,11 +39,6 @@ namespace gameVals {
 	int FPS();
 	int FRAME_DELAY();
 
-	// Fonts
-	const char* SMALL_FONT();
-	const char* LARGE_FONT();
-	const char* INV_FONT();
-
 	// Game constants
 	float FLOAT_ERR();
 	double DOUBLE_ERR();

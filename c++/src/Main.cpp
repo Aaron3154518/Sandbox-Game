@@ -5,16 +5,12 @@
 #include <SDL.h>
 
 #include "UIs/PlayerSelector.h"
-#include "UIs/UI.h"
+#include "Window.h"
 
 int main(int argc, char* argv[]) {
 
-    UI::init();
-
-    UI::activeUIs.push_back(std::make_shared<PlayerSelector>());
-    UI::run();
-
-    UI::clean();
+    Window::Get().activeUIs.push_back(std::make_shared<PlayerSelector>());
+    Window::Get().run();
 
     return 0;
 }

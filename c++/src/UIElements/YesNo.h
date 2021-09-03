@@ -7,7 +7,6 @@
 #include "Button.h"
 #include "UIElement.h"
 #include "../Definitions.h"
-#include "../UIs/UI.h"
 #include "../Utils/AssetManager.h"
 #include "../Utils/Rect.h"
 #include "../Utils/Utils.h"

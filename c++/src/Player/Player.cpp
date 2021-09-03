@@ -9,7 +9,7 @@ Player::Player() {
 	// Setup rectangles
 	mTex.textureId = IMG;
 	cursorTex.dest = Rect(0, 0, gameVals::ITEM_W(), gameVals::ITEM_W());
-	SharedTexture tex = UI::assets().getAsset(IMG);
+	SharedTexture tex = Window::Get().assets().getAsset(IMG);
 	mRect = Rect::getMinRect(tex.get(), (int)(gameVals::BLOCK_W() * 3 / 2), 0);
 	dim = { (double)mRect.w / gameVals::BLOCK_W(),
 		(double)mRect.h / gameVals::BLOCK_W() };
@@ -27,13 +27,15 @@ Player::Player() {
 
 // Update functions
 void Player::handleEvents(Event& e) {
+	SDL_Point dim = Window::Get().screenDim();
+	Rect screenR(0, 0, dim.x, dim.y);
 	// If we are dead, update respawn counter
 	if (respawnCtr > 0) {
 		respawnCtr -= e.dt.milliseconds();
 		if (respawnCtr <= 0) { respawn(); }
 	// Otherwise handle events
 	} else if (mapOpen) {
-		e.nextUI(Rect(0, 0, UI::width(), UI::height()), true);
+		e.nextUI(screenR, true);
 		if (e.checkAndHandleKey(SDLK_m, Event::ButtonStatus::RELEASED)) {
 			std::cerr << "Close Map" << std::endl;
 			mapOpen = false;
@@ -71,11 +73,11 @@ void Player::handleEvents(Event& e) {
 		// Check crafting ui
 
 		// Inventory
-		e.nextUI(Rect(0, 0, UI::width(), UI::height()), false);
+		e.nextUI(screenR, false);
 		inventory.handleEvents(e);
 
 		// Player
-		e.nextUI(Rect(0, 0, UI::width(), UI::height()), false);
+		e.nextUI(screenR, false);
 
 		// Map Toggle
 		if (e.checkAndHandleKey(SDLK_m, Event::ButtonStatus::RELEASED)) {
@@ -189,7 +191,7 @@ void Player::move(Timestep dt) {
 void Player::draw() {
 	Rect r = GameObjects::world().getScreenRect(mRect.center());
 	SDL_Point shift = r.topLeft();
-	AssetManager& assets = UI::assets();
+	AssetManager& assets = Window::Get().assets();
 
 	// Player image
 	mTex.dest = mRect - shift;
@@ -211,46 +213,14 @@ void Player::draw() {
 	ItemInfo mouseItem = inventory.getHeldItem();
 	if (mouseItem.isItem()) {
 		cursorTex.texture = mouseItem.getImage();
-		cursorTex.dest.setCenter(UI::mouse());
-		UI::assets().drawTexture(cursorTex);
+		cursorTex.dest.setCenter(mousePos());
+		assets.drawTexture(cursorTex);
 	}
 }
 
 void Player::drawUI() {
 
 }
-
-// Event functions
-/*void Player::leftClick(SDL_Point mouse) {
-	if (!inventory.leftClick(mouse)) {
-		SDL_Point worldMouse = GameObjects::world().getWorldMousePos(mouse, mRect.center(), false);
-		ItemInfo& item = inventory.getCurrentItemRef();
-		if (item.isItem()) {
-			ItemPtr itemPtr = item.getItem();
-			usedLeft = worldMouse.x < mRect.cX();
-			if ((*itemPtr)[Item::ItemData::left] &&
-				(firstSwing || (*itemPtr)[Item::ItemData::autoUse])) {
-				firstSwing = false;
-				// Use item
-				itemPtr->onLeftClick();
-				itemUsed = itemPtr->id();
-				useTime = itemPtr->getUseTime();
-			}
-		}
-	}
-}
-
-void Player::rightClick(SDL_Point mouse) {
-	SDL_Point worldMouse = GameObjects::world().getWorldMousePos(mouse, mRect.center(), false);
-	SDL_Point loc = worldMouse / gameVals::BLOCK_W();
-	if (SDL_PointInRect(&worldMouse, &placementRange) && !pointInPlayerBlock(loc)) {
-		auto item = inventory.getItem(0, 0);
-		if (item.isItem()) {
-			tile::Id tile = Item::getItem(item.itemId)->getBlockId();
-			if (tile != tile::Id::numTiles) { placeBlock(loc, tile); }
-		}
-	}
-}*/
 
 bool Player::placeBlock(SDL_Point worldPos, tile::Id tileId) {
 	SDL_Point loc = GameObjects::world().toBlockPos(worldPos);

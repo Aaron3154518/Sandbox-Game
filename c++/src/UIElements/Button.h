@@ -5,9 +5,10 @@
 
 #include "UIElement.h"
 #include "../Definitions.h"
-#include "../UIs/UI.h"
 #include "../Utils/AssetManager.h"
 #include "../Utils/Rect.h"
+#include "../Utils/Utils.h"
+#include "../Window.h"
 
 class Button : public UIElement {
 public:
@@ -19,7 +20,7 @@ public:
 	void draw(SDL_Point parentPos, Rect boundary = TextureData::NO_RECT());
 
 private:
-	std::string imgId, hoverId;
+	std::string imgId;
 
 	TextureData data;
 };

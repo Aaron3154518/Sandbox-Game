@@ -10,12 +10,12 @@
 #include "../Definitions.h"
 #include "../ID/Items.h"
 #include "../Objects/Item.h"
-#include "../UIs/UI.h"
 #include "../Utils/AssetManager.h"
 #include "../Utils/Event.h"
 #include "../Utils/FileIO.h"
 #include "../Utils/Rect.h"
 #include "../Utils/Utils.h"
+#include "../Window.h"
 
 class Inventory {
 public:
@@ -92,6 +92,7 @@ protected:
 	bool drawDescription = false;
 
 	const static SDL_Color BKGRND, SELECT_COLOR;
+	const static std::string FONT_ID;
 
 private:
 };

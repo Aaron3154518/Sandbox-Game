@@ -10,6 +10,7 @@
 #include "../Utils/Event.h"
 #include "../Utils/Rect.h"
 #include "../Utils/Utils.h"
+#include "../Window.h"
 
 class TextInput : public UIElement {
 public:

@@ -96,7 +96,7 @@ void Item::useAnim(double timeUsed, void* arm, bool left,
 	std::pair<int, int> playerCenter, Rect& rect) {}
 
 SharedTexture Item::getImage() const {
-	AssetManager& assets = UI::assets();
+	AssetManager& assets = Window::Get().assets();
 	if (animIdx == -1) {
 		return assets.getAsset(gameVals::items() + img);
 	} else {

@@ -11,15 +11,16 @@
 
 #include <SDL.h>
 
-#include "../Definitions.h"
-#include "Item.h"
 #include "DroppedItem.h"
+#include "Item.h"
+#include "../Definitions.h"
+#include "../ID/Items.h"
+#include "../ID/Tiles.h"
+#include "../Utils/AssetManager.h"
+#include "../Utils/Event.h"
 #include "../Utils/Utils.h"
 #include "../Utils/Point.h"
-#include "../ID/Tiles.h"
-#include "../ID/Items.h"
-#include "../UIs/UI.h"
-#include "../Utils/AssetManager.h"
+#include "../Window.h"
 
 class Tile;
 typedef std::shared_ptr<Tile> TilePtr;

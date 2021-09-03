@@ -500,7 +500,7 @@ SDL_Color World::skyColor() const {
 // Visual functions
 SDL_Point World::getWorldMousePos(SDL_Point mouse, SDL_Point center,
 	bool blocks) const {
-	SDL_Point screenC = { (int)(UI::width() / 2), (int)(UI::height() / 2) };
+	SDL_Point screenC = Window::Get().screenDim() / 2;
 	SDL_Point worldC = getScreenRect(center).center();
 	SDL_Point result = { mouse.x - screenC.x + worldC.x,
 		mouse.y - screenC.y + worldC.y };
@@ -512,22 +512,22 @@ SDL_Point World::getWorldMousePos(SDL_Point mouse, bool blocks) const {
 }
 
 Rect World::getScreenRect(SDL_Point center) const {
-	int w = UI::width(), h = UI::height();
+	SDL_Point dim = Window::Get().screenDim();
 	int worldW = width(), worldH = height();
-	Rect r(0, 0, w, h);
-	if (worldW >= w) {
+	Rect r(0, 0, dim.x, dim.y);
+	if (worldW >= dim.x) {
 		r.setCX(center.x);
 		if (r.x < 0) { r.x = 0; }
 		else if (r.x2() > worldW) { r.setX2(worldW); }
 	} else {
-		r.x = (int)((worldW - w) / 2);
+		r.x = (int)((worldW - dim.x) / 2);
 	}
-	if (worldH >= h) {
+	if (worldH >= dim.y) {
 		r.setCY(center.y);
 		if (r.y < 0) { r.y = 0; }
 		else if (r.y2() > worldH) { r.setY2(worldH); }
 	} else {
-		r.y = (int)((worldH - h) / 2);
+		r.y = (int)((worldH - dim.y) / 2);
 	}
 	return r;
 }
@@ -598,12 +598,11 @@ void World::dropItem(const DroppedItem& drop, DroppedItem::DropDir dir,
 
 void World::drawDroppedItems(const Rect& worldRect) {
 	SDL_Point tl = worldRect.topLeft();
-	AssetManager& assets = UI::assets();
 	for (DroppedItem& drop : droppedItems) {
 		TextureData data;
 		data.dest = drop.getRect() + tl;
 		data.texture = drop.getInfo().getImage();
-		assets.drawTexture(data);
+		Window::Get().assets().drawTexture(data);
 	}
 }
 
@@ -664,7 +663,7 @@ bool WorldAccess::breakBlock(SDL_Point loc) {
 }
 
 void WorldAccess::draw(SDL_Point center) {
-	AssetManager& assets = UI::assets();
+	AssetManager& assets = Window::Get().assets();
 
 	int worldW = width(), worldH = height();
 	Rect screen = getScreenRect(center);
@@ -700,7 +699,7 @@ void WorldAccess::draw(SDL_Point center) {
 	// Draw player
 	data.clearTexture();
 	data.textureId = gameVals::entities() + "player_pig.png";
-	data.dest = UI::assets().getMinRect(data.textureId,
+	data.dest = assets.getMinRect(data.textureId,
 		gameVals::BLOCK_W(), gameVals::BLOCK_W() * 2);
 	data.dest.setCenter(center - screen.topLeft());
 	assets.drawTexture(data);

@@ -10,12 +10,12 @@
 #include "../ID/Items.h"
 #include "../ID/Tiles.h"
 #include "../Objects/DroppedItem.h"
-#include "../UIs/UI.h"
 #include "../Utils/AssetManager.h"
 #include "../Utils/Event.h"
 #include "../Utils/FileIO.h"
 #include "../Utils/Point.h"
 #include "../Utils/Rect.h"
+#include "../Window.h"
 
 class Player {
 public:

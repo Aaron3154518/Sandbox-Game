@@ -23,7 +23,7 @@ bool Tile::isCrafter(tile::Id id) {
 void Tile::tick(int x, int y, Timestep dt) {}
 
 SharedTexture Tile::getImage(SDL_Point pos) const {
-	AssetManager& assets = UI::assets();
+	AssetManager& assets = Window::Get().assets();
 	if (animIdx == -1) {
 		return assets.getAsset(gameVals::items() + img);
 	} else {

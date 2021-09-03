@@ -16,11 +16,12 @@ bool TextInput::handleEvents(Event& e) {
 }
 
 void TextInput::draw() {
-	UI::setDrawColor(bkgrnd);
-	SDL_RenderFillRect(UI::renderer(), &mRect);
-	UI::resetDrawColor();
+	AssetManager& assets = Window::Get().assets();
+	assets.setDrawColor(bkgrnd);
+	SDL_RenderFillRect(assets.renderer(), &mRect);
+	assets.resetDrawColor();
 
-	SharedFont font = UI::assets().getFont(textData);
+	SharedFont font = assets.getFont(textData);
 	if (!font) { return; }
 	bool cursor = time >= CURSOR_DELAY;
 	std::string text = currInput.str();
@@ -32,7 +33,7 @@ void TextInput::draw() {
 
 	TextData::PosType horizAlign = textData.xMode;
 	if (w <= mRect.w && horizAlign == TextData::PosType::topleft) {
-		UI::assets().drawText(textData, mRect);
+		assets.drawText(textData);
 	} else {
 		// Set left
 		textData.xMode = TextData::PosType::topleft;
@@ -42,7 +43,7 @@ void TextInput::draw() {
 			textData.x = mRect.x2() - w;
 		}
 		// Draw
-		UI::assets().drawText(textData, mRect);
+		assets.drawText(textData);
 		// Reset alignment
 		textData.xMode = horizAlign;
 		textData.getPosFromRect(mRect);

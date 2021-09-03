@@ -14,10 +14,12 @@
 #include "../Objects/Tile.h"
 #include "../Objects/TileObjects.h"
 #include "../Utils/AssetManager.h"
+#include "../Utils/Event.h"
 #include "../Utils/FileIO.h"
 #include "../Utils/Point.h"
 #include "../Utils/Rect.h"
 #include "../Utils/Utils.h"
+#include "../Window.h"
 
 struct Block {
 	tile::Id id = tile::Id::AIR;

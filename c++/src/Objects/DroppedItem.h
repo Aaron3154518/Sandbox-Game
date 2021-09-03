@@ -7,6 +7,7 @@
 
 #include "Item.h"
 #include "../Definitions.h"
+#include "../Utils/Event.h"
 #include "../Utils/Point.h"
 #include "../Utils/Rect.h"
 #include "../Utils/Utils.h"

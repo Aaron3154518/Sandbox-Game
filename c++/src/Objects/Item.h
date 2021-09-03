@@ -15,11 +15,12 @@
 #include "../Definitions.h"
 #include "../ID/Items.h"
 #include "../ID/Tiles.h"
-#include "../UIs/UI.h"
 #include "../Utils/AssetManager.h"
+#include "../Utils/Event.h"
 #include "../Utils/FileIO.h"
 #include "../Utils/Rect.h"
 #include "../Utils/Utils.h"
+#include "../Window.h"
 
 // TODO: fix
 struct Animation;

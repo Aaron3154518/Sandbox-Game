@@ -25,6 +25,7 @@ public:
     SDL_Point bottomLeft() const { return SDL_Point{ x, y + h }; }
     SDL_Point bottomRight() const { return SDL_Point{ x + w, y + h }; }
     SDL_Point center() const { return SDL_Point{ x + w / 2, y + h / 2 }; }
+    SDL_Point dim() const { return SDL_Point{ w,h }; }
     bool empty() const { return w == 0 || h == 0; }
     bool invalid() const { return w < 0 || h < 0; }
 

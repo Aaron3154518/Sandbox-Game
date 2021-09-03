@@ -59,4 +59,6 @@ Rect toBlockRect(Rect r);
 
 bool rectsOverlap(Rect r1, Rect r2);
 
+SDL_Point mousePos();
+
 #endif

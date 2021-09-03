@@ -91,11 +91,6 @@ namespace gameVals {
 		return _FRAME_DELAY;
 	}
 
-	// Fonts
-	const char* SMALL_FONT() { "smallfont"; }
-	const char* LARGE_FONT() { return "largefont"; }
-	const char* INV_FONT() { return "invfont"; }
-
 	// Game constants
 	float FLOAT_ERR() { return 1e-5; }
 	double DOUBLE_ERR() { return 1e-10; }

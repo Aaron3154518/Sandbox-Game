@@ -11,12 +11,13 @@
 #include "../Utils/AssetManager.h"
 #include "../Utils/Rect.h"
 #include "../Utils/Utils.h"
+#include "../Window.h"
 
 class Selector : public UI {
 public:
 	Selector() : Selector(false) {}
 	Selector(bool allowTextInput);
-	~Selector() = default;
+	~Selector();
 
 	virtual void initUI();
 	virtual void tickUI(Event& e);

@@ -28,7 +28,7 @@ bool UseItem::leftClick(ItemInfo& item) {
 		&& (firstSwing || item[Item::ItemData::autoUse])) {
 		SDL_Point pPos = GameObjects::player().getCPos();
 		SDL_Point worldMouse = GameObjects::world()
-			.getWorldMousePos(UI::mouse(), pPos, false);
+			.getWorldMousePos(mousePos(), pPos, false);
 		usedLeft = worldMouse.x < pPos.x;
 		firstSwing = false;
 		// Use item
@@ -57,7 +57,7 @@ bool UseItem::rightClick(ItemInfo& item) {
 		&& (firstSwing || item[Item::ItemData::autoUse])) {
 		SDL_Point pPos = GameObjects::player().getCPos();
 		SDL_Point worldMouse = GameObjects::world()
-			.getWorldMousePos(UI::mouse(), pPos, false);
+			.getWorldMousePos(mousePos(), pPos, false);
 		usedLeft = worldMouse.x < pPos.x;
 		firstSwing = false;
 		// Use item
@@ -82,7 +82,7 @@ PlayerInventory::PlayerInventory() : Inventory(DIM) {
 	Rect armorRect = armorInv.getRect();
 
 	craftToggle = Button(CRAFT_TOGGLE, 75);
-	SharedTexture cTex = UI::assets().getAsset(CRAFT_TOGGLE);
+	SharedTexture cTex = Window::Get().assets().getAsset(CRAFT_TOGGLE);
 	Rect craftR = Rect::getMinRect(cTex.get(), BUTTON_W, BUTTON_W);
 	craftR.setCX(armorRect.cX());
 	craftR.y = armorRect.y2() + BUTTON_W / 4;
@@ -95,19 +95,14 @@ PlayerInventory::PlayerInventory() : Inventory(DIM) {
 void PlayerInventory::draw() {
 	mTex.dest = mRect;
 	// TODO: only draw part, draw data
-	UI::assets().drawTexture(mTex);
-	SDL_Point mouse = UI::mouse();
+	Window::Get().assets().drawTexture(mTex);
 	if (open) {
 		SDL_Point p{ 0,0 };
 		armorInv.draw(p);
 		craftToggle.draw(p);
-		//craftToggle.dest = craftR + parentPos;
-		//craftToggle.textureId = SDL_PointInRect(&mouse, &craftToggle.dest) ?
-		//	CRAFT_TOGGLE_HOVER : CRAFT_TOGGLE;
-		//UI::assets().drawTexture(craftToggle);
 	}
 	if (drawDescription) {
-		drawHoverItem(toInvPos(mouse - mTex.dest.topLeft()));
+		drawHoverItem(toInvPos(mousePos() - mTex.dest.topLeft()));
 	}
 
 #ifdef PLAYER_DEBUG
@@ -115,7 +110,7 @@ void PlayerInventory::draw() {
 		TextureData td;
 		td.textureId = gameVals::images() + "pause.png";
 		td.dest = Rect(0, 0, gameVals::INV_W(), gameVals::INV_W());
-		UI::assets().drawTexture(td);
+		Window::Get().assets().drawTexture(td);
 	}
 #endif
 }
@@ -175,7 +170,7 @@ void PlayerInventory::handleEvents(Event& e) {
 			if (heldItem.isItem()) {
 				SDL_Point pPos = GameObjects::player().getCPos();
 				SDL_Point worldMouse = GameObjects::world()
-					.getWorldMousePos(UI::mouse(), pPos, false);
+					.getWorldMousePos(mousePos(), pPos, false);
 				// Drop Item
 				GameObjects::world().dropItem(DroppedItem(heldItem),
 					worldMouse.x < pPos.x ? DroppedItem::DropDir::left

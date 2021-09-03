@@ -2,8 +2,10 @@
 #define ASSET_MANAGER_H
 
 #include <cmath>
+#include <cstdlib>
 #include <map>
 #include <memory>
+#include <random>
 #include <sstream>
 #include <string>
 #include <sys/stat.h>
@@ -13,7 +15,6 @@
 
 #include "Rect.h"
 #include "../Definitions.h"
-#include "../UIs/UI.h"
 
 // ARGB masks for creating surfaces and colors
 #if SDL_BYTEORDER == SDL_BIG_ENDIAN
@@ -64,19 +65,24 @@ typedef std::shared_ptr<TTF_Font> SharedFont;
 Font makeFont(TTF_Font* font = NULL);
 SharedFont makeSharedFont(TTF_Font* font = NULL);
 
+struct FontData {
+	int w = -1, h = -1;
+	std::string fileName = gameVals::fontFile();
+};
+
 struct TextData {
 	enum PosType : uint8_t {
 		topleft = 0, center, botright
 	};
 
 	SharedFont font = makeSharedFont();
-	std::string fontId = "", text = "";
+	std::string text = "", fontId = "";
 	SDL_Color color = BLACK;
 	double x = 0., y = 0.;
 	PosType xMode = PosType::topleft, yMode = PosType::topleft;
 	int w = 0, h = 0; // <= 0 for unbounded
 
-	void setRectPos(Rect& r);
+	void setRectPos(Rect& r) const;
 	void getPosFromRect(const Rect& r);
 	void constrainToRect(const Rect& r);
 };
@@ -93,55 +99,84 @@ struct TextureData {
 
 class AssetManager {
 public:
+	typedef std::unique_ptr<SDL_Renderer, void(*)(SDL_Renderer*)> RendererPtr;
+
 	AssetManager() = default;
 	~AssetManager() = default;
 
+	// Init functions
+	void initAssets(RendererPtr& r);
+	void initFonts();
+
+	// Renderer functions
+	SDL_Renderer* renderer();
+	SDL_Point getRenderSize() const;
+	void setDrawColor(const SDL_Color& c);
+	void resetDrawColor();
+	void setRenderTarget(SDL_Texture* tex);
+	void resetRenderTarget();
+	void setRenderBlendMode(SDL_BlendMode mode);
+	void resetRenderBlendMode();
+
+	// Texture/font size
 	static bool getTextureSize(SDL_Texture* tex, int* w, int* h);
 	static void getFontSize(std::string fileName, int size, int* w, int* h);
-	static Texture createTexture(int w, int h, SDL_Color bkgrnd = TRANSPARENT);
-	// TODO: Make me a Texture
-	static SharedTexture loadImage(std::string fileName);
-	static Font createFont(std::string fileName, int w, int h);
+	// Create texture/font
+	static Font createFont(const FontData& data);
+	Texture createTexture(int w, int h, SDL_Color bkgrnd = TRANSPARENT);
+	Texture loadImage(std::string fileName);
 
 	bool assetExists(std::string id) const;
 	bool fontExists(std::string id) const;
 
-	SharedTexture addAsset(std::string id, const SharedTexture& tex);
-	SharedFont addFont(std::string id, const SharedFont& font);
+	bool loadAsset(std::string fileName);
 
-	SharedTexture loadAsset(std::string fileName);
-	SharedFont loadFont(std::string id, std::string fileName, int w, int h);
+	std::string addAsset(const SharedTexture& tex);
+	std::string addFont(const FontData& data);
+
+	void updateAsset(std::string id, const SharedTexture& tex);
+	void updateFont(std::string id, const FontData& data);
+
+	void removeAsset(std::string id);
+	void removeFont(std::string id);
 
 	SharedTexture getAsset(std::string id);
-	SharedTexture getAsset(const TextureData& td);
-	SharedFont getFont(std::string id) const;
-	SharedFont getFont(std::string id, std::string fileName, int w, int h);
-	SharedFont getFont(const TextData& td) const;
+	SharedTexture getAsset(const TextureData& data);
 
-	Texture renderText(TextData& data, Rect& rect) const;
-	Texture renderTextWrapped(TextData& data, Rect& rect,
+	SharedFont getFont(std::string id) const;
+	SharedFont getFont(const TextData& data) const;
+
+	// Move to Window
+	TextureData renderText(const TextData& data) const;
+	TextureData renderTextWrapped(const TextData& data,
 		Uint32 bkgrnd = -1) const;
 
 	void drawTexture(const TextureData& data);
-	void drawText(TextData& data, const Rect& boundary);
-	void drawTextWrapped(TextData& data, const Rect& boundary,
-		Uint32 bkgrnd = -1);
+	void drawText(const TextData& data);
+	void drawTextWrapped(const TextData& data, Uint32 bkgrnd = -1);
+
+	Rect getMinRect(std::string id, int maxW, int maxH);
 
 	enum BorderType : uint8_t { outside = 0, middle, inside };
-	static void rect(Rect* r, const SDL_Color& color,
+	void rect(Rect* r, const SDL_Color& color,
 		SDL_BlendMode mode = SDL_BLENDMODE_NONE);
-	static void thickRect(Rect r, int thickness, BorderType border,
+	void thickRect(Rect r, int thickness, BorderType border,
 		const SDL_Color& color);
 
-	Rect getMinRect(std::string fileName, int maxW, int maxH);
-
-	static SharedTexture brightenTexture(SharedTexture src, Uint8 val);
+	SharedTexture brightenTexture(SharedTexture src, Uint8 val);
+	SharedTexture brightenTexture(std::string id, Uint8 val);
 
 	//void drawProgressBar(Number amnt, Number cap, Rect& rect, SDL_Color color, SDL_Color bkgrnd) const;
 	//void drawProgressBarLog(Number amnt, Number cap, Rect& rect, SDL_Color color, SDL_Color bkgrnd) const;
 private:
+	RendererPtr mRenderer = RendererPtr(NULL, SDL_DestroyRenderer);
+
 	std::map<std::string, SharedTexture> assets;
 	std::map<std::string, SharedFont> fonts;
+
+	// Used for static assets/fonts that need to wait until init to be created
+	std::vector<std::string> queuedAssets;
+	std::vector<std::pair<std::string, FontData>> queuedFonts;
 };
 //}
 

@@ -16,6 +16,7 @@
 #include "../Utils/Event.h"
 #include "../Utils/Rect.h"
 #include "../Utils/Utils.h"
+#include "../Window.h"
 
 class ArmorInventory : public Inventory {
 	friend class PlayerInventory;

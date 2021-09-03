@@ -37,14 +37,15 @@ bool YesNo::handleEvents(Event& e) {
 }
 
 void YesNo::draw() {
-	UI::assets().rect(&mRect, GRAY);
-	UI::assets().thickRect(promptTex.boundary, 3,
+	Window& w = Window::Get();
+	w.assets().rect(&mRect, GRAY);
+	w.assets().thickRect(promptTex.boundary, 3,
 		AssetManager::BorderType::outside, BLACK);
 	yesButton.draw(mRect.topLeft());
 	noButton.draw(mRect.topLeft());
 	promptTex.dest.setTopLeft(
 		promptTex.boundary.topLeft() - SDL_Point{ 0,scroll });
-	UI::assets().drawTexture(promptTex);
+	w.assets().drawTexture(promptTex);
 }
 
 void YesNo::setRect(Rect rect) {
@@ -57,20 +58,20 @@ void YesNo::setRect(Rect rect) {
 	int marginY = (int)(lineH / 3);
 	scrollAmnt = (int)(lineH / 3);
 
-	promptTex.boundary = Rect(marginX, marginY, lineW, lineH * 3);
+	promptTex.boundary = Rect(marginX, marginY, lineW, lineH * 3)
+		+ mRect.topLeft();
 	yesButton.setRect(Rect(marginX, promptTex.boundary.y2() + marginY,
 		lineH, lineH));
 	noButton.setRect(Rect(mRect.w - lineH - marginX, yesButton.getRect().y,
 		lineH, lineH));
 
 	// Render the prompt
+	AssetManager& assets = Window::Get().assets();
 	TextData td;
 	td.w = lineW;
 	td.text = prompt;
-	td.font = UI::assets().createFont(gameVals::fontFile(),
-		-1, (int)(lineH / 2));
-	promptTex.texture = UI::assets().renderTextWrapped(td, promptTex.dest);
-	promptTex.boundary += mRect.topLeft();
+	td.font = assets.createFont(FontData{ -1, lineH / 2 });
+	promptTex = assets.renderTextWrapped(td);
 
 	// Update scrolling
 	int oldMax = maxScroll;
