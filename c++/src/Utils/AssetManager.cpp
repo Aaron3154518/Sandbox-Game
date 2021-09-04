@@ -529,8 +529,10 @@ void AssetManager::drawTexture(const TextureData& data) {
 		destRect.h * (1. - topFrac - botFrac));
 	int w, h;
 	if (!getTextureSize(tex.get(), &w, &h)) {
+#ifdef RENDER_DEBUG
 		std::cerr << "drawTexture(): Unable to query texture size: "
 			<< SDL_GetError() << std::endl;
+#endif
 		return;
 	}
 	Rect areaRect = data.area.invalid() ? Rect(0, 0, w, h) : data.area;

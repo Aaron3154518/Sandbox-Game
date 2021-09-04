@@ -1,6 +1,8 @@
 #include "World.h"
 #include "../UIs/Game.h"
 
+//#define DEBUG_WORLD
+
 // For testing write during save
 //int cntr = 600;
 
@@ -99,7 +101,9 @@ void World::reset() {
 void World::loadWorld() {
 	reset();
 
+#ifdef DEBUG_WORLD
 	std::cerr << "Loading World" << std::endl;
+#endif
 	if (fw.isOpen()) {
 		std::cerr << "World::loadWorld(): Cannot open file for reading - "
 			<< "file is currently open for writing" << std::endl;
@@ -125,7 +129,9 @@ double World::loadWorld(double progress) {
 	if (progress == 0) {
 		reset();
 
+#ifdef DEBUG_WORLD
 		std::cerr << "Loading World" << std::endl;
+#endif
 		if (fw.isOpen()) {
 			std::cerr << "World::loadWorld(): Cannot open file for reading - "
 				<< "file is currently open for writing" << std::endl;
@@ -288,7 +294,9 @@ double World::drawWorld(double progress) {
 }
 
 void World::saveWorld() {
+#ifdef DEBUG_WORLD
 	std::cerr << "Saving World" << std::endl;
+#endif
 	if (fr.isOpen()) {
 		std::cerr << "World::saveWorld(): Cannot open file for writing - "
 			<< "file is currently open for reading" << std::endl;
@@ -316,7 +324,9 @@ void World::saveWorld() {
 
 double World::saveWorld(double progress) {
 	if (progress == 0) {
+#ifdef DEBUG_WORLD
 		std::cerr << "Saving World" << std::endl;
+#endif
 		if (fr.isOpen()) {
 			std::cerr << "World::saveWorld(): Cannot open file for writing - "
 				<< "file is currently open for reading" << std::endl;

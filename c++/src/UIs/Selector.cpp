@@ -1,11 +1,12 @@
 #include "Selector.h"
 
-const SDL_Color Selector::BKGRND{ 128,128,128,255 };
-const SDL_Color Selector::SCROLL_BKGRND{ 0,0,128 };
+constexpr SDL_Color BKGRND{ 128,128,128,255 };
+constexpr SDL_Color SCROLL_BKGRND{ 0,0,128,255 };
 
-const std::string Selector::PLAY_IMG = gameVals::images() + "play.png";
-const std::string Selector::DELETE_IMG = gameVals::images() + "delete.png";
-const std::string Selector::ADD_IMG = gameVals::images() + "add.png";
+const std::string PLAY_IMG = gameVals::images() + "play.png";
+const std::string DELETE_IMG = gameVals::images() + "delete.png";
+const std::string ADD_IMG = gameVals::images() + "add.png";
+const std::string EXIT_IMG = gameVals::images() + "exit.png";
 
 Selector::Selector() :
 	ITEM_FONT(Window::Get().assets().addFont(FontData{})) {
@@ -25,6 +26,7 @@ Selector::Selector() :
 	newButton = Button(ADD_IMG, 200);
 	playButton = Button(PLAY_IMG, 200);
 	deleteButton = Button(DELETE_IMG, 200);
+	exitButton = Button(EXIT_IMG, 100);
 }
 
 Selector::~Selector() {
@@ -73,6 +75,7 @@ void Selector::resize(Rect* rect) {
 	Rect playRect = Rect(itemW - half, 0, half, half);
 	playButton.setRect(playRect);
 	deleteButton.setRect(Rect(playRect.x, playRect.y2(), half, half));
+	exitButton.setRect(Rect(0, 0, half + quarter, half + quarter));
 
 	itemRect = Rect(0, 0, titleRect.w - playRect.w, titleRect.h);
 
@@ -99,11 +102,19 @@ void Selector::handleEvents(Event& e) {
 		return;
 	}
 
-	if (SDL_PointInRect(&e.mouse, &scrollRect)) {
+	bool leftClicked = e.checkMouse(Event::Mouse::LEFT,
+		Event::ButtonStatus::CLICKED);
+
+	if (leftClicked && exitButton.clicked(e.mouse)) {
+		if (exit()) {
+			running = false;
+			return;
+		}
+	} else if (SDL_PointInRect(&e.mouse, &scrollRect)) {
 		scroll = std::max(0,
 			std::min(maxScroll, scroll + e.scroll * scrollAmnt));
 		// Left click in scroll window
-		if (e.checkMouse(Event::Mouse::LEFT, Event::ButtonStatus::CLICKED)) { 
+		if (leftClicked) { 
 			SDL_Point mouse = e.mouse - scrollRect.topLeft();
 			mouse.y += scroll;
 			int idx = (int)(mouse.y / itemH);
@@ -125,8 +136,7 @@ void Selector::handleEvents(Event& e) {
 				}
 			}
 		}
-	} else if (input.active()
-		&& e.checkMouse(Event::Mouse::LEFT, Event::ButtonStatus::CLICKED)
+	} else if (input.active() && leftClicked
 		&& newButton.clicked(e.mouse) && newItem()) {
 		onNewItem();
 	}
@@ -163,6 +173,7 @@ void Selector::draw() {
 	if (deletePrompt.active()) {
 		deletePrompt.draw();
 	}
+	exitButton.draw(mRect.topLeft());
 }
 
 void Selector::drawScroll() {

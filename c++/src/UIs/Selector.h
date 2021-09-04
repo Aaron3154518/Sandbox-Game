@@ -33,6 +33,7 @@ protected:
 	bool allowNewItems(bool val);
 
 	void onNewItem();
+	virtual bool exit() { return true; }
 	virtual bool newItem() { return false; }
 	virtual bool deleteItem(int idx) { return false; }
 	virtual void selectItem(int idx) = 0;
@@ -43,7 +44,7 @@ protected:
 	std::string title = "Select <item>";
 	int scroll = 0, maxScroll = 0;
 	Rect mRect, scrollRect, itemRect, titleRect;
-	Button newButton, playButton, deleteButton;
+	Button newButton, playButton, deleteButton, exitButton;
 	TextData itemText;
 
 	Rect inputName;
@@ -52,19 +53,12 @@ protected:
 	int deleteIdx = 0;
 	YesNo deletePrompt;
 
-	// Constants
-	static const SDL_Color BKGRND;
-	static const SDL_Color SCROLL_BKGRND;
 	// Dimensions
 	int itemW = (int)(gameVals::MIN_W()/ 2);
 	int itemH = (int)(gameVals::MIN_W() / 10);
 	int scrollAmnt = (int)(itemH / 3);
 	// Font resources
 	const std::string ITEM_FONT;
-	// Image resources
-	static const std::string PLAY_IMG;
-	static const std::string DELETE_IMG;
-	static const std::string ADD_IMG;
 };
 
 #endif

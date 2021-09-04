@@ -1,8 +1,6 @@
 #ifndef PLAYER_H
 #define PLAYER_H
 
-#define PLAYER_DEBUG
-
 #include <SDL.h>
 
 #include "PlayerInventory.h"

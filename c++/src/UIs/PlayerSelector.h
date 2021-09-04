@@ -21,6 +21,7 @@ public:
 	PlayerSelector(std::string univ);
 	~PlayerSelector() = default;
 private:
+	bool exit();
 	bool newItem();
 	bool deleteItem(int idx);
 	void selectItem(int idx);

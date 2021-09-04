@@ -17,6 +17,7 @@ public:
 	UniverseSelector(std::string _player);
 	~UniverseSelector() = default;
 private:
+	bool exit();
 	bool newItem();
 	bool deleteItem(int idx);
 	void selectItem(int idx);

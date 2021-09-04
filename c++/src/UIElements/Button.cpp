@@ -18,6 +18,8 @@ void Button::draw(SDL_Point parentPos, Rect boundary) {
 }
 
 void Button::setRect(const Rect& rect) {
-	mRect = Rect::getMinRect(data.texture.get(), rect.w, rect.h);
-	mRect.setCenter(rect.cX(), rect.cY());
+	if (data.texture) {
+		mRect = Rect::getMinRect(data.texture.get(), rect.w, rect.h);
+		mRect.setCenter(rect.cX(), rect.cY());
+	} else { mRect = rect; }
 }

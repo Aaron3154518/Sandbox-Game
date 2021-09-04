@@ -1,8 +1,12 @@
 #include "UI.h"
 #include "../Window.h"
 
+//#define DEBUG_UI
+
 void UI::runUI() {
+#ifdef DEBUG_UI
     std::cerr << "Running" << std::endl;
+#endif
     // Create/use a copy in case textInput is changed
     bool _textInput = textInput;
     if (_textInput) { SDL_StartTextInput(); }

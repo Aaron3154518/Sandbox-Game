@@ -1,6 +1,9 @@
 #include "Player.h"
 #include "../UIs/Game.h"
 
+//#define DEBUG_PLAYER
+#define DEBUG_PLAYER_VISUAL
+
 const double Player::PICKUP_DX = 1.5, Player::PICKUP_DY = 1.5;
 const double Player::PLACE_DX = 2.5, Player::PLACE_DY = 2;
 const std::string Player::IMG = gameVals::entities() + "player_pig.png";
@@ -197,7 +200,7 @@ void Player::draw() {
 	mTex.dest = mRect - shift;
 	assets.drawTexture(mTex);
 
-#ifdef PLAYER_DEBUG
+#ifdef DEBUG_PLAYER_VISUAL
 	assets.thickRect(pickUpRange - shift, 1,
 		AssetManager::BorderType::outside, GREEN);
 	assets.thickRect(placementRange - shift, 1,
@@ -273,7 +276,9 @@ void Player::load() {
 	// Reset the player
 	reset();
 
+#ifdef DEBUG_PLAYER
 	std::cerr << "Loading Player" << std::endl;
+#endif
 	if (fw.isOpen()) {
 		std::cerr << "Player::read(): Cannot open file for reading - "
 			<< "file is currently open for writing" << std::endl;
@@ -295,7 +300,9 @@ void Player::load() {
 }
 
 void Player::save() {
+#ifdef DEBUG_PLAYER
 	std::cerr << "Saving Player" << std::endl;
+#endif
 	if (fr.isOpen()) {
 		std::cerr << "Player::write(): Cannot open file for writing - "
 			<< "file is currently open for reading" << std::endl;

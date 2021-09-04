@@ -11,6 +11,13 @@ PlayerSelector::PlayerSelector(std::string univ) : PlayerSelector() {
 	universe = univ;
 }
 
+bool PlayerSelector::exit() {
+	if (!universe.empty()) {
+		nextUIs.push_back(std::make_shared<UniverseSelector>());
+	}
+	return true;
+}
+
 void PlayerSelector::loadFiles() {
 	files.clear();
 	for (const auto& file : getDirContents(gameVals::players().c_str())) {
@@ -64,7 +71,7 @@ void PlayerSelector::selectItem(int idx) {
 	if (idx < 0 || idx >= files.size()) { return; }
 	std::string file = toFileName(files[idx]);
 	if (universe.empty()) {
-		subUIs.push_back(std::make_shared<UniverseSelector>(file));
+		nextUIs.push_back(std::make_shared<UniverseSelector>(file));
 	} else {
 		nextUIs.push_back(std::make_shared<Game>(file, universe));
 	}

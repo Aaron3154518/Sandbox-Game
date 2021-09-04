@@ -2,91 +2,6 @@
 
 //#define DEBUG_EVENT
 
-/*
-uint32_t EventData::quadruple(const uint8_t& val) {
-    uint32_t num = val;
-    return num | (num << 8) | (num << 16) | (num << 24);
-}
-
-bool EventStatus::operator[](uint8_t val) const {
-    // All flags must be true
-    if (val & Mouse::ANY == 0) {
-        return mMouseHandled & val != val;
-    // Any flag must be true
-    } else {
-        return mMouseHandled & val == 0;
-    }
-    return false;
-}
-bool EventStatus::operator[](SDL_KeyCode key) const {
-    return !mKeyboardHandled && mKeysHandled.find(key) == mKeysHandled.end();
-}
-
-bool EventStatus::getAndHandle(uint8_t val) {
-    bool result = (*this)[e];
-    handle(val);
-    return result;
-}
-bool EventStatus::getAndHandle(SDL_KeyCode key) {
-    bool result = (*this)[key];
-    handle(key);
-    return result;
-}
-bool EventStatus::getAndHandleKeyboard() {
-    bool result = mKeyboardHandled;
-    handleKeyboard();
-    return result;
-}
-// Event
-bool EventData::checkMouse(uint32_t mouse, uint8_t mode, uint8_t opts) {
-    uint32_t data = quadruple(mode) & mouse;
-    bool result = opts & ModeOpts::any ? data & mouseState != data
-        : data & mouseState == 0);
-    if (opts & ModeOpts::handle) { handleMouse(mouse); }
-    return result;
-}
-
-const EventData::handleMouse(Mouse mouse) {
-    mouseState |= quadruple(Mode::handled) & mouse;
-}
-
-bool EventData::checkKey(SDL_KeyCode key, uint8_t mode, uint8_t opts) {
-    uint32_t data = quadruple(mode) & mouse;
-    bool result = opts & ModeOpts::any ? data & mouseState != data
-        : data & mouseState == 0);
-        if (opts & ModeOpts::handle) { handleMouse(mouse); }
-        return result;
-}
-
-const EventData::handleMouse(Mouse mouse) {
-    mouseState |= quadruple(Mode::handled) & mouse;
-}
-
-bool EventData::keyDown(SDL_Keycode key) const {
-    return down.find(key) != down.end();
-}
-
-bool EventData::keyDown(SDL_Keycode key, Timestep& ts) const {
-    auto it = down.find(key);
-    if (it != down.end()) { ts = it->second; return true; }
-    return false;
-}
-
-bool EventData::keyPressed(SDL_Keycode key) const {
-    return pressed.find(key) != pressed.end();
-}
-
-bool EventData::keyReleased(SDL_Keycode key) const {
-    return released.find(key) != released.end();
-}
-
-bool EventData::clicked(const EventButton& button) const {
-    return button.clicked &&
-        distance(button.clickPos, mouse) < MAX_CLICK_DIFF;
-}
-*/
-
-
 void Event::nextUI(Rect r, bool textInput) {
     if (mouseStatus == HandledStatus::ACTIVE) {
         mouseStatus = HandledStatus::HANDLED;
@@ -174,7 +89,9 @@ void Event::update(Timestep ts) {
     while (SDL_PollEvent(&e)) {
         switch (e.type) {
             case SDL_QUIT:
+#ifdef DEBUG_EVENT
                 std::cerr << "Quit" << std::endl;
+#endif
                 quit = true;
                 break;
             case SDL_WINDOWEVENT:

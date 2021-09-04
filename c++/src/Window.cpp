@@ -37,6 +37,7 @@ Window::~Window() {
     mAssetManager.quit();
     mWindow.reset();
     TTF_Quit();
+    std::cerr << "SDL_TTF Uninitialized" << std::endl;
     SDL_Quit();
     std::cerr << "SDL Uninitialized" << std::endl;
 }
