@@ -50,7 +50,7 @@ SharedFont makeSharedFont(TTF_Font* font) {
 #endif
 
 // TextData
-void TextData::setRectPos(Rect& r) const {
+void TextData::adjustRect(Rect& r) const {
 	switch (xMode) {
 		case PosType::topleft: r.x = x; break;
 		case PosType::center: r.setCX(x); break;
@@ -65,7 +65,7 @@ void TextData::setRectPos(Rect& r) const {
 	}
 }
 
-void TextData::getPosFromRect(const Rect& r) {
+void TextData::setPos(const Rect& r) {
 	switch (xMode) {
 		case PosType::topleft: x = r.x; break;
 		case PosType::center: x = r.cX(); break;
@@ -81,7 +81,7 @@ void TextData::getPosFromRect(const Rect& r) {
 }
 
 void TextData::constrainToRect(const Rect& r) {
-	getPosFromRect(r);
+	setPos(r);
 	w = r.w; h = r.h;
 }
 
@@ -421,7 +421,7 @@ TextureData AssetManager::renderText(const TextData& data) const {
 	SDL_FreeSurface(surface);
 	if (tData.texture) {
 		tData.dest = Rect::getMinRect(tData.texture.get(), data.w, data.h);
-		data.setRectPos(tData.dest);
+		data.adjustRect(tData.dest);
 	}
 	return tData;
 }
@@ -465,7 +465,7 @@ TextureData AssetManager::renderTextWrapped(const TextData& data,
 		SDL_CreateTextureFromSurface(mRenderer.get(), surf)));
 	SDL_FreeSurface(surf);
 	tData.dest = Rect(0, 0, w, h);
-	data.setRectPos(tData.dest);
+	data.adjustRect(tData.dest);
 	return tData;
 }
 

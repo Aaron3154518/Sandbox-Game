@@ -26,9 +26,13 @@ bool TextInput::handleEvents(Event& e) {
 void TextInput::draw() {
 	AssetManager& assets = Window::Get().assets();
 	assets.rect(&mRect, bkgrnd);
-	std::string text = currInput.str();
 
-	if (text.empty() && !hintText.empty()) {
+	SharedFont font = assets.getFont(textData);
+	if (!font) { return; }
+
+	textData.text = currInput.str();
+
+	if (textData.text.empty() && !hintText.empty()) {
 		Uint8 prevA = textData.color.a;
 		textData.color.a = 128;
 		textData.text = hintText;
@@ -41,16 +45,17 @@ void TextInput::draw() {
 		textData.text = "";
 	}
 
-	SharedFont font = assets.getFont(textData);
-	if (!font) { return; }
-
-	// Show cursor
-	if (time >= CURSOR_DELAY) { text.append("|");	textData.text = text; }
-	else { textData.text = text; text.append("|"); }
-	// Width of the text with the cursor
+	// Text dimensions
 	int w = 0, h = 0;
-	TTF_SizeText(font.get(), text.c_str(), &w, &h);
-	w *= (double)textData.h / h;
+	TTF_SizeText(font.get(), textData.text.c_str(), &w, &h);
+	// Cursor dimensions
+	int cW = 0, cH = 0;
+	TTF_SizeText(font.get(), "|", &cW, &cH);
+	// Adjust to real size
+	double factor = (double)textData.h / h;
+	cW *= factor;
+	cH *= factor;
+	w = w * factor + cW;
 
 	if (w <= mRect.w && textData.xMode == TextData::PosType::topleft) {
 		assets.drawText(textData);
@@ -69,14 +74,20 @@ void TextInput::draw() {
 		assets.drawTexture(drawData);
 		// Reset alignment
 		textData.xMode = horizAlign;
-		textData.getPosFromRect(mRect);
+		textData.setPos(mRect);
+	}
+	if (time >= CURSOR_DELAY) {
+		int x = mRect.x + std::min(w, mRect.w) - std::max(cW * 3 / 4, 1);
+		int y = mRect.y + ((mRect.h - cH) / 2);
+		Rect r(x, y, cW / 2, cH);
+		assets.rect(&r, WHITE);
 	}
 }
 
 void TextInput::setRect(Rect rect) {
 	textData.h = rect.h * TEXT_H_FRAC;
 	mRect = rect;
-	textData.getPosFromRect(rect);
+	textData.setPos(rect);
 }
 
 void TextInput::setBackgroundColor(const SDL_Color& c) {

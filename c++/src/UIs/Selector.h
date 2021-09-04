@@ -15,8 +15,7 @@
 
 class Selector : public UI {
 public:
-	Selector() : Selector(false) {}
-	Selector(bool allowTextInput);
+	Selector();
 	~Selector();
 
 	void resize(Rect* rect = nullptr);
@@ -31,7 +30,7 @@ protected:
 	void tickUI(Event& e);
 
 	Texture drawItem(int idx);
-	bool toggleTextInput(bool val);
+	bool allowNewItems(bool val);
 
 	void onNewItem();
 	virtual bool newItem() { return false; }
@@ -41,8 +40,9 @@ protected:
 
 	std::vector<std::string> files;
 
+	std::string title = "Select <item>";
 	int scroll = 0, maxScroll = 0;
-	Rect mRect, scrollRect;
+	Rect mRect, scrollRect, itemRect, titleRect;
 	Button newButton, playButton, deleteButton;
 	TextData itemText;
 

@@ -1,8 +1,10 @@
 #include "PlayerSelector.h"
 #include "UniverseSelector.h"
 
-PlayerSelector::PlayerSelector() : Selector(true) {
+PlayerSelector::PlayerSelector() {
 	input.setHint("Enter Player Name");
+	allowNewItems(true);
+	title = "Select a Player";
 }
 
 PlayerSelector::PlayerSelector(std::string univ) : PlayerSelector() {

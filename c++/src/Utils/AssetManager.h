@@ -85,8 +85,8 @@ struct TextData {
 	PosType xMode = PosType::topleft, yMode = PosType::topleft;
 	int w = 0, h = 0; // <= 0 for unbounded
 
-	void setRectPos(Rect& r) const;
-	void getPosFromRect(const Rect& r);
+	void adjustRect(Rect& r) const;
+	void setPos(const Rect& r);
 	void constrainToRect(const Rect& r);
 
 	void setFont(const SharedFont& newFont);

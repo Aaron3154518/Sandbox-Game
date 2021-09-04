@@ -1,8 +1,10 @@
 #include "UniverseSelector.h"
 #include "PlayerSelector.h"
 
-UniverseSelector::UniverseSelector() : Selector(true) {
+UniverseSelector::UniverseSelector() {
 	input.setHint("Enter Universe Name");
+	allowNewItems(true);
+	title = "Select a Universe";
 }
 
 UniverseSelector::UniverseSelector(std::string _player) : UniverseSelector() {

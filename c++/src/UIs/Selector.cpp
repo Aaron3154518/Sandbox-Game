@@ -7,9 +7,9 @@ const std::string Selector::PLAY_IMG = gameVals::images() + "play.png";
 const std::string Selector::DELETE_IMG = gameVals::images() + "delete.png";
 const std::string Selector::ADD_IMG = gameVals::images() + "add.png";
 
-Selector::Selector(bool allowTextInput) :
+Selector::Selector() :
 	ITEM_FONT(Window::Get().assets().addFont(FontData{})) {
-	textInput = allowTextInput;
+	textInput = true;
 
 	itemText.fontId = ITEM_FONT;
 	itemText.color = WHITE;
@@ -19,7 +19,6 @@ Selector::Selector(bool allowTextInput) :
 	input.setCharConstraint([](const char& ch) {
 		return isalnum(ch) || ch == ' ';
 		});
-	input.setActive(allowTextInput);
 
 	// Setup textures
 	AssetManager& assets = Window::Get().assets();
@@ -49,15 +48,17 @@ void Selector::resize(Rect* rect) {
 	itemH = (int)(mRect.h / 10);
 	scrollAmnt = (int)(itemH / 3);
 
-	scrollRect = Rect((int)((mRect.w - itemW) / 2), itemH,
+	int half = (int)(itemH / 2);
+	int quarter = (int)(itemH / 4);
+	int eighth = (int)(itemH / 8);
+
+	titleRect = Rect((int)((mRect.w - itemW) / 2), 0, itemW, itemH);
+
+	scrollRect = Rect(titleRect.x, titleRect.y2(),
 		itemW, mRect.h - 2 * itemH);
 	scrollRect += mRect.topLeft();
 
 	if (input.active()) { scrollRect.h -= itemH; }
-
-	int half = (int)(itemH / 2);
-	int quarter = (int)(itemH / 4);
-	int eighth = (int)(itemH / 8);
 
 	SDL_Point offset{ scrollRect.x, scrollRect.y2() };
 
@@ -73,15 +74,12 @@ void Selector::resize(Rect* rect) {
 	playButton.setRect(playRect);
 	deleteButton.setRect(Rect(playRect.x, playRect.y2(), half, half));
 
+	itemRect = Rect(0, 0, titleRect.w - playRect.w, titleRect.h);
+
 	maxScroll = std::max(0, (int)files.size() * itemH - scrollRect.h);
 
-	// Set item text location
-	itemText.y = (int)(itemH / 2);
-	itemText.x = (int)((itemW - itemText.y) / 2);
-	itemText.w = itemW - playButton.getRect().w;
 	itemText.h = half + eighth;
-
-	Window::Get().assets().updateFont(ITEM_FONT, FontData{ -1, itemText.h * 2 });
+	Window::Get().assets().updateFont(ITEM_FONT, FontData{ -1, itemText.h });
 }
 
 void Selector::handleEvents(Event& e) {
@@ -142,7 +140,18 @@ void Selector::handleEvents(Event& e) {
 }
 
 void Selector::draw() {
-	Window::Get().assets().rect(&mRect, BKGRND);
+	AssetManager& assets = Window::Get().assets();
+	assets.rect(&mRect, BKGRND);
+
+	// Draw title
+	itemText.text = title;
+	itemText.setPos(titleRect);
+	itemText.color = SCROLL_BKGRND;
+	TextureData texData = assets.renderText(itemText);
+	texData.boundary = titleRect;
+	assets.drawTexture(texData);
+	itemText.color = WHITE;
+
 	drawScroll();
 	if (input.active()) {
 		// Draw current text input
@@ -157,6 +166,9 @@ void Selector::draw() {
 }
 
 void Selector::drawScroll() {
+	// Set item text location
+	itemText.setPos(itemRect);
+
 	Window::Get().assets().rect(&scrollRect, SCROLL_BKGRND);
 	int lb = scroll / itemH, ub = (scroll + scrollRect.h) / itemH;
 	SDL_Point topLeft = mRect.topLeft() + scrollRect.topLeft()
@@ -185,7 +197,9 @@ Texture Selector::drawItem(int idx) {
 	assets.rect(NULL, BLACK);
 
 	itemText.text = files[idx];
-	assets.drawText(itemText);
+	TextureData texData = assets.renderText(itemText);
+	texData.boundary = itemRect;
+	assets.drawTexture(texData);
 
 	assets.resetRenderTarget();
 	return tex;
@@ -198,7 +212,9 @@ void Selector::onNewItem() {
 	input.clearInput();
 }
 
-bool Selector::toggleTextInput(bool val) {
-	input.setActive(val);
-	if (running) { resize(&mRect); }
+bool Selector::allowNewItems(bool val) {
+	if (val != input.active()) {
+		input.setActive(val);
+		if (running) { resize(&mRect); }
+	}
 }
