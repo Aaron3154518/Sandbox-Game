@@ -1,7 +1,9 @@
 #include "UniverseSelector.h"
 #include "PlayerSelector.h"
 
-UniverseSelector::UniverseSelector() : Selector(true) {}
+UniverseSelector::UniverseSelector() : Selector(true) {
+	input.setHint("Enter Universe Name");
+}
 
 UniverseSelector::UniverseSelector(std::string _player) : UniverseSelector() {
 	player = _player;

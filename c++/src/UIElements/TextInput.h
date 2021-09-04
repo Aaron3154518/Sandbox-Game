@@ -23,7 +23,8 @@ public:
 	void setRect(Rect rect);
 	void setBackgroundColor(const SDL_Color& c);
 	void setTextColor(const SDL_Color& c);
-	void setFont(std::string id);
+	void setHint(const std::string& hint);
+	void setFont(const std::string& id);
 	void setFont(SharedFont font);
 	void setXMode(TextData::PosType mode);
 	void setYMode(TextData::PosType mode);
@@ -33,6 +34,7 @@ public:
 	void clearInput() { currInput.str(""); }
 	void addInput(const std::string& str);
 private:
+	std::string hintText = "";
 	TextData textData;
 	SDL_Color bkgrnd = BLACK;
 

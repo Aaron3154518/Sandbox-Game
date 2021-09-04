@@ -26,17 +26,31 @@ bool TextInput::handleEvents(Event& e) {
 void TextInput::draw() {
 	AssetManager& assets = Window::Get().assets();
 	assets.rect(&mRect, bkgrnd);
+	std::string text = currInput.str();
+
+	if (text.empty() && !hintText.empty()) {
+		Uint8 prevA = textData.color.a;
+		textData.color.a = 128;
+		textData.text = hintText;
+
+		TextureData drawData = assets.renderText(textData);
+		drawData.boundary = mRect;
+		assets.drawTexture(drawData);
+
+		textData.color.a = prevA;
+		textData.text = "";
+	}
 
 	SharedFont font = assets.getFont(textData);
 	if (!font) { return; }
-	bool cursor = time >= CURSOR_DELAY;
-	std::string text = currInput.str();
-	if (!cursor) { textData.text = text; }
+
+	// Show cursor
+	if (time >= CURSOR_DELAY) { text.append("|");	textData.text = text; }
+	else { textData.text = text; text.append("|"); }
 	// Width of the text with the cursor
 	int w = 0, h = 0;
-	TTF_SizeText(font.get(), text.append("|").c_str(), &w, &h);
+	TTF_SizeText(font.get(), text.c_str(), &w, &h);
 	w *= (double)textData.h / h;
-	if (cursor) { textData.text = text; }
 
 	if (w <= mRect.w && textData.xMode == TextData::PosType::topleft) {
 		assets.drawText(textData);
@@ -73,7 +87,11 @@ void TextInput::setTextColor(const SDL_Color& c) {
 	textData.color = c;
 }
 
-void TextInput::setFont(std::string id) {
+void TextInput::setHint(const std::string& hint) {
+	hintText = hint;
+}
+
+void TextInput::setFont(const std::string& id) {
 	textData.fontId = id;
 	textData.useFont = false;
 }
