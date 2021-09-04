@@ -31,7 +31,7 @@ Inventory::Inventory(SDL_Point _dim) : dim(_dim) {
 
 	mRect = Rect(0, 0, dim.x * gameVals::INV_W() + 2 * gameVals::INV_MARGIN(),
 		dim.y * gameVals::INV_W() + 2 * gameVals::INV_MARGIN());
-	mTex.texture = Window::Get().assets().createTexture(mRect.w, mRect.h);
+	mTex.setTexture(Window::Get().assets().createTexture(mRect.w, mRect.h));
 }
 
 void Inventory::draw(SDL_Point topLeft) {
@@ -275,7 +275,7 @@ void Inventory::updatePos(SDL_Point loc) {
 	assets.rect(&r, BKGRND);
 	if (item.isItem()) {
 		TextureData itemTex;
-		itemTex.texture = item.getImage();
+		itemTex.setTexture(item.getImage());
 		itemTex.dest = Rect::getMinRect(itemTex.texture.get(),
 			gameVals::INV_IMG_W(), gameVals::INV_IMG_W());
 		itemTex.dest.setCenter(r.cX(), r.cY());

@@ -20,7 +20,7 @@ public:
 	bool handleEvents(Event& e);
 	void draw();
 
-	void setRect(Rect rect);
+	void setRect(const Rect& rect);
 
 	void setPrompt(std::string str) { prompt = str; setRect(mRect); }
 	bool getAnswer() const { return answer; }

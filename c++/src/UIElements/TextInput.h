@@ -14,15 +14,19 @@
 
 class TextInput : public UIElement {
 public:
-	TextInput() = default;
+	TextInput();
 	~TextInput() = default;
 
 	bool handleEvents(Event& e);
 	void draw();
 
 	void setRect(Rect rect);
-	void setBackground(const SDL_Color& c) { bkgrnd = c; }
-	void setTextData(const TextData& data) { textData = data; }
+	void setBackgroundColor(const SDL_Color& c);
+	void setTextColor(const SDL_Color& c);
+	void setFont(std::string id);
+	void setFont(SharedFont font);
+	void setXMode(TextData::PosType mode);
+	void setYMode(TextData::PosType mode);
 	void setCharConstraint(const std::function<bool(const char& ch)>& chFunc);
 
 	std::string getInput() { return currInput.str(); }
@@ -35,8 +39,6 @@ private:
 	Uint32 time;
 	std::ostringstream currInput;
 	std::function<bool(const char& ch)> validChar = [](const char& ch) { return true; };
-
-	static const int CURSOR_DELAY;
 };
 
 #endif

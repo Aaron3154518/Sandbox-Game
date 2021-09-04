@@ -1,6 +1,14 @@
 #include "TextInput.h"
 
-const int TextInput::CURSOR_DELAY = 500;
+constexpr int CURSOR_DELAY = 500;
+constexpr double TEXT_H_FRAC = .8;
+
+TextInput::TextInput() {
+	textData.x = textData.y = textData.w = textData.h = 0;
+	textData.xMode = TextData::PosType::topleft;
+	textData.yMode = TextData::PosType::center;
+	textData.color = WHITE;
+}
 
 bool TextInput::handleEvents(Event& e) {
 	time += e.dt.milliseconds();
@@ -27,15 +35,16 @@ void TextInput::draw() {
 	std::string text = currInput.str();
 	if (!cursor) { textData.text = text; }
 	// Width of the text with the cursor
-	int w = 0;
-	TTF_SizeText(font.get(), text.append("|").c_str(), &w, NULL);
+	int w = 0, h = 0;
+	TTF_SizeText(font.get(), text.append("|").c_str(), &w, &h);
+	w *= (double)textData.h / h;
 	if (cursor) { textData.text = text; }
 
-	TextData::PosType horizAlign = textData.xMode;
-	if (w <= mRect.w && horizAlign == TextData::PosType::topleft) {
+	if (w <= mRect.w && textData.xMode == TextData::PosType::topleft) {
 		assets.drawText(textData);
 	} else {
 		// Set left
+		TextData::PosType horizAlign = textData.xMode;
 		textData.xMode = TextData::PosType::topleft;
 		if (horizAlign == TextData::PosType::center) {
 			textData.x = mRect.cX() - (int)(w / 2);
@@ -43,7 +52,9 @@ void TextInput::draw() {
 			textData.x = mRect.x2() - w;
 		}
 		// Draw
-		assets.drawText(textData);
+		TextureData drawData = assets.renderText(textData);
+		drawData.boundary = mRect;
+		assets.drawTexture(drawData);
 		// Reset alignment
 		textData.xMode = horizAlign;
 		textData.getPosFromRect(mRect);
@@ -51,8 +62,34 @@ void TextInput::draw() {
 }
 
 void TextInput::setRect(Rect rect) {
+	textData.h = rect.h * TEXT_H_FRAC;
 	mRect = rect;
 	textData.getPosFromRect(rect);
+}
+
+void TextInput::setBackgroundColor(const SDL_Color& c) {
+	bkgrnd = c;
+}
+
+void TextInput::setTextColor(const SDL_Color& c) {
+	textData.color = c;
+}
+
+void TextInput::setFont(std::string id) {
+	textData.fontId = id;
+	textData.useFont = false;
+}
+
+void TextInput::setFont(SharedFont font) {
+	textData.setFont(font);
+}
+
+void TextInput::setXMode(TextData::PosType mode) {
+	textData.xMode = mode;
+}
+
+void TextInput::setYMode(TextData::PosType mode) {
+	textData.yMode = mode;
 }
 
 void TextInput::setCharConstraint(

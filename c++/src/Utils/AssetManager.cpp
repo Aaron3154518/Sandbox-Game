@@ -85,15 +85,29 @@ void TextData::constrainToRect(const Rect& r) {
 	w = r.w; h = r.h;
 }
 
+void TextData::setFont(const SharedFont& newFont) {
+	font = newFont;
+	useFont = true;
+}
+
 // TextureData
 const Rect& TextureData::NO_RECT() {
 	static Rect _NO_RECT(0, 0, -1, -1);
 	return _NO_RECT;
 }
 
+void TextureData::setTexture(const SharedTexture& tex) {
+	texture = tex;
+	useTexture = true;
+}
+
 // AssetManager
-void AssetManager::initAssets(RendererPtr& r) {
-	mRenderer.swap(r);
+void AssetManager::initAssets(SDL_Window* w) {
+	if (!w) {
+		std::cerr << "Invalid SDL_Window for initialization" << std::endl;
+		return;
+	}
+	mRenderer.reset(SDL_CreateRenderer(w, -1, 0));
 	resetDrawColor();
 	resetRenderTarget();
 	resetRenderBlendMode();
@@ -107,6 +121,11 @@ void AssetManager::initFonts() {
 		updateFont(pair.first, pair.second);
 	}
 	queuedFonts.clear();
+}
+void AssetManager::quit() {
+	assets.clear();
+	fonts.clear();
+	mRenderer.reset();
 }
 
 SDL_Renderer* AssetManager::renderer() {
@@ -201,7 +220,7 @@ Texture AssetManager::createTexture(int w, int h, SDL_Color bkgrnd) {
 Texture AssetManager::loadImage(std::string fileName) {
 	struct stat buffer;
 	if (stat(fileName.c_str(), &buffer) != 0) {
-		std::cerr << "Could not find " << fileName << std::endl;
+		std::cerr << "Could not find image file: " << fileName << std::endl;
 		return makeTexture();
 	}
 	return makeTexture(IMG_LoadTexture(mRenderer.get(), fileName.c_str()));
@@ -257,7 +276,6 @@ void AssetManager::updateFont(std::string id, const FontData& data) {
 	if (TTF_WasInit()) {
 		fonts[id] = createFont(data);
 	} else {
-		fonts[id] = makeSharedFont();
 		queuedFonts.push_back(std::make_pair(id, data));
 	}
 #ifdef RENDER_DEBUG
@@ -283,7 +301,7 @@ SharedTexture AssetManager::getAsset(std::string id) {
 		makeSharedTexture() : assets[id];
 }
 SharedTexture AssetManager::getAsset(const TextureData& data) {
-	return data.texture ? data.texture : getAsset(data.textureId);
+	return data.useTexture ? data.texture : getAsset(data.textureId);
 }
 
 SharedFont AssetManager::getFont(std::string id) const {
@@ -291,7 +309,101 @@ SharedFont AssetManager::getFont(std::string id) const {
 	return it == fonts.end() ? makeSharedFont() : it->second;
 }
 SharedFont AssetManager::getFont(const TextData& data) const {
-	return data.font ? data.font : getFont(data.fontId);
+	return data.useFont ? data.font : getFont(data.fontId);
+}
+
+std::vector<std::string> AssetManager::splitText(const std::string& text,
+	SharedFont font, int maxW) {
+	std::vector<std::string> lines;
+	if (!font) {
+		return lines;
+	}
+	int maxChW = 0;
+	TTF_SizeText(font.get(), "_", &maxChW, NULL);
+	if (maxW < maxChW) {
+		std::cerr << "splitText(): Specified width is too small. Is: "
+			<< maxW << " Should be at least: " << maxChW << std::endl;
+		return lines;
+	}
+	
+	std::stringstream line_ss, word_ss;
+	int spaceW, dashW;
+	TTF_SizeText(font.get(), " ", &spaceW, NULL);
+	TTF_SizeText(font.get(), "-", &dashW, NULL);
+	int lineW = 0;
+	bool addSpace = false;
+	// Go through each character in the input
+	for (char ch : text + '\n') {
+		// Finished this word
+		if (ch == ' ' || ch == '\n' || ch == '\b') {
+			std::string word = word_ss.str();
+			word_ss.str("");
+			int wordW = 0;
+			TTF_SizeText(font.get(), word.c_str(), &wordW, NULL);
+			// This word does not overflow the line, add it
+			if (lineW + wordW <= maxW) {
+				// Add space if necessary
+				if (addSpace) { line_ss << ' '; }
+				line_ss << word;
+				lineW += wordW;
+				if (ch == ' ') { addSpace = true; lineW += spaceW; }
+				else { addSpace = false; }
+			// This word overflows the line, check solutions
+			} else {
+				int i = 0;
+				// If the word will not fit on its own line, break it up
+				while (wordW > maxW && i < word.size() - 1) {
+					int lb = i;
+					const char* begin = word.data() + lb;
+					char save = word[lb + 1];
+					word[lb + 1] = '\0';
+					int subW = 0;
+					TTF_SizeText(font.get(), begin, &subW, NULL);
+					while (lineW + subW + dashW <= maxW	&& i < word.size() - 2) {
+						++i;
+						word[i] = save;
+						save = word[i + 1];
+						word[i + 1] = '\0';
+						TTF_SizeText(font.get(), begin, &subW, NULL);
+					}
+					// Get remaining word width
+					word[i + 1] = save;
+					TTF_SizeText(font.get(), word.data() + i,
+						&wordW, NULL);
+					// Make sure we actually fit some characters
+					// from the word onto the line (not just the '-')
+					if (i > lb) {
+						// If adding to an existing line, check to add space
+						if (lineW > 0 && addSpace) { line_ss << " "; }
+						line_ss << word.substr(lb, i - lb) << "-";
+					}
+					lines.push_back(line_ss.str());
+					line_ss.str("");
+					lineW = 0;
+				}
+				// Word will fit on its own line
+				if (i == 0) {
+					lines.push_back(line_ss.str());
+					line_ss.str("");
+				}
+				// Add whatever's left
+				line_ss << word.substr(i);
+				lineW = wordW;
+				if (ch == ' ') { addSpace = true; lineW += spaceW; }
+				else { addSpace = false; }
+			}
+			if (ch == '\n') {
+				lines.push_back(line_ss.str());
+				line_ss.str("");
+				lineW = 0;
+				addSpace = false;
+			}
+			// Continue building word
+		} else {
+			word_ss << ch;
+		}
+	}
+	return lines;
 }
 
 // Functions to create a texture
@@ -299,13 +411,13 @@ TextureData AssetManager::renderText(const TextData& data) const {
 	TextureData tData;
 	SharedFont font = getFont(data);
 	if (!font) {
-		std::cerr << "Could not load font" << std::endl;
+		std::cerr << "renderText(): Invalid font" << std::endl;
 		return tData;
 	}
 	SDL_Surface* surface = TTF_RenderText_Blended(font.get(),
 		data.text.c_str(), data.color);
-	tData.texture = makeTexture(
-		SDL_CreateTextureFromSurface(mRenderer.get(), surface));
+	tData.setTexture(makeTexture(
+		SDL_CreateTextureFromSurface(mRenderer.get(), surface)));
 	SDL_FreeSurface(surface);
 	if (tData.texture) {
 		tData.dest = Rect::getMinRect(tData.texture.get(), data.w, data.h);
@@ -319,61 +431,19 @@ TextureData AssetManager::renderTextWrapped(const TextData& data,
 	TextureData tData;
 	SharedFont font = getFont(data);
 	if (!font) {
-		std::cerr << "Could not load font" << std::endl;
+		std::cerr << "renderTextWrapped(): Could not load font" << std::endl;
 		return tData;
 	}
-	if (data.w == 0) {
-		std::cerr << "Cannot render wrapped text with 0 length" << std::endl;
-		return tData;
-	}
-
-	std::vector<std::string> lines;
-	std::stringstream line_ss, word_ss;
-	int spaceW;
-	TTF_SizeText(font.get(), " ", &spaceW, NULL);
-	int width = 0;
-	int maxW = data.w;
-	bool addSpace = false;
-	for (char ch : data.text + '\n') {
-		if (ch == ' ' || ch == '\n' || ch == '\b') {
-			std::string word = word_ss.str();
-			word_ss.str("");
-			int wordW;
-			TTF_SizeText(font.get(), word.c_str(), &wordW, NULL);
-			if (width + wordW < data.w) {
-				if (addSpace) { line_ss << ' '; }
-				line_ss << word;
-				width += wordW;
-				if (ch == ' ') { addSpace = true; width += spaceW; }
-				else { addSpace = false; }
-			} else {
-				if (width != 0) { lines.push_back(line_ss.str()); }
-				line_ss.str("");
-				line_ss << word;
-				width = wordW;
-				if (ch == ' ') { addSpace = true; width += spaceW; }
-				else { addSpace = false; }
-				if (wordW > maxW) { maxW = wordW; }
-			}
-			if (ch == '\n') {
-				lines.push_back(line_ss.str());
-				line_ss.str("");
-				width = 0;
-				addSpace = false;
-			}
-		} else {
-			word_ss << ch;
-		}
-	}
+	std::vector<std::string> lines = splitText(data.text, font, data.w);
+	if (lines.empty()) { return tData; }
 
 	// TODO: Switch to all SDL_Texture* (faster)?
-	TextureData result;
 	int lineH = TTF_FontHeight(font.get());
-	int w = maxW, h = lineH * lines.size();
+	int w = data.w, h = lineH * lines.size();
 	SDL_Surface* surf = SDL_CreateRGBSurface(0, w, h, 32,
 		rmask, gmask, bmask, amask);
 	if (bkgrnd != -1) { SDL_FillRect(surf, NULL, bkgrnd); }
-	int x = maxW / 2, y = lineH / 2;
+	int x = data.w / 2, y = lineH / 2;
 	for (std::string line : lines) {
 		if (line == "") { y += lineH; continue; }
 		SDL_Surface* lineSurf = TTF_RenderText_Blended(font.get(),
@@ -384,14 +454,15 @@ TextureData AssetManager::renderTextWrapped(const TextData& data,
 			SDL_BlitSurface(lineSurf, NULL, surf, &lineRect);
 			SDL_FreeSurface(lineSurf);
 		} else {
+#ifdef RENDER_DEBUG
 			std::cerr << "line '" << line << "' produced a null surface"
 				<< std::endl;
+#endif
 		}
 		y += lineH;
 	}
-	lines.clear();
-	tData.texture = makeTexture(
-		SDL_CreateTextureFromSurface(mRenderer.get(), surf));
+	tData.setTexture(makeTexture(
+		SDL_CreateTextureFromSurface(mRenderer.get(), surf)));
 	SDL_FreeSurface(surf);
 	tData.dest = Rect(0, 0, w, h);
 	data.setRectPos(tData.dest);
@@ -410,7 +481,7 @@ void AssetManager::drawTexture(const TextureData& data) {
 	if (data.dest.empty() || data.dest.invalid() ||
 		data.area.empty() || data.boundary.empty()) {
 #ifdef RENDER_DEBUG
-		std::cerr << "Empty drawing or boundary rect" << std::endl;
+		std::cerr << "drawTexture(): Empty drawing or boundary rect" << std::endl;
 #endif
 		return;
 	}
@@ -418,7 +489,9 @@ void AssetManager::drawTexture(const TextureData& data) {
 	SharedTexture tex = getAsset(data);
 	if (!tex) {
 #ifdef RENDER_DEBUG
-		std::cerr << "Invalid Texture" << std::endl;
+		std::cerr << "drawTexture(): Invalid Texture";
+		if (!data.useTexture) { std::cerr << " - " << data.textureId; }
+		std::cerr << std::endl;
 		return;
 #endif
 	}
@@ -429,7 +502,7 @@ void AssetManager::drawTexture(const TextureData& data) {
 	} else if (SDL_IntersectRect(&boundary, &renderBounds, &boundary)
 		== SDL_FALSE) {
 #ifdef RENDER_DEBUG
-		std::cerr << "Boundary rect " << boundary
+		std::cerr << "drawTexture(): Boundary rect " << boundary
 			<< " was out side the screen: " << renderBounds << std::endl;
 #endif
 		return;
@@ -444,7 +517,7 @@ void AssetManager::drawTexture(const TextureData& data) {
 	// Make sure the rect is actually in the boundary
 	if (leftFrac + rightFrac >= 1 || topFrac + botFrac >= 1) {
 #ifdef RENDER_DEBUG
-		std::cerr << "Rect " << destRect << " was out side the boundary " <<
+		std::cerr << "drawTexture(): Rect " << destRect << " was out side the boundary " <<
 			boundary << std::endl;
 #endif
 		return;
@@ -456,7 +529,7 @@ void AssetManager::drawTexture(const TextureData& data) {
 		destRect.h * (1. - topFrac - botFrac));
 	int w, h;
 	if (!getTextureSize(tex.get(), &w, &h)) {
-		std::cerr << "Unable to query texture size: "
+		std::cerr << "drawTexture(): Unable to query texture size: "
 			<< SDL_GetError() << std::endl;
 		return;
 	}
@@ -468,7 +541,7 @@ void AssetManager::drawTexture(const TextureData& data) {
 	// Make sure at least one pixel will be drawn
 	if (texRect.empty()) {
 #ifdef RENDER_DEBUG
-		std::cerr << "Can't draw from " << texRect << " to " << destRect
+		std::cerr << "drawTexture(): Can't draw from " << texRect << " to " << destRect
 			<< std::endl;
 #endif
 		return;
@@ -538,7 +611,7 @@ SharedTexture AssetManager::brightenTexture(SharedTexture src, Uint8 val) {
 
 		TextureData data;
 		data.dest = Rect(0, 0, w, h);
-		data.texture = src;
+		data.setTexture(src);
 		drawTexture(data);
 
 		setDrawColor(SDL_Color{ val,val,val,255 });
@@ -550,8 +623,10 @@ SharedTexture AssetManager::brightenTexture(SharedTexture src, Uint8 val) {
 
 		return dest;
 	} else {
+#ifdef RENDER_DEBUG
 		std::cerr << "AssetManager::brightenTexture: "
 			<< "could not query source texture" << std::endl;
+#endif
 	}
 	return makeSharedTexture();
 }

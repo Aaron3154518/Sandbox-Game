@@ -9,6 +9,7 @@
 #include <sstream>
 #include <string>
 #include <sys/stat.h>
+#include <vector>
 
 #include <SDL.h>
 #include <SDL_ttf.h>
@@ -75,6 +76,8 @@ struct TextData {
 		topleft = 0, center, botright
 	};
 
+	// True - use font, false - use fontId
+	bool useFont = false;
 	SharedFont font = makeSharedFont();
 	std::string text = "", fontId = "";
 	SDL_Color color = BLACK;
@@ -85,16 +88,20 @@ struct TextData {
 	void setRectPos(Rect& r) const;
 	void getPosFromRect(const Rect& r);
 	void constrainToRect(const Rect& r);
+
+	void setFont(const SharedFont& newFont);
 };
 
 struct TextureData {
 	static const Rect& NO_RECT();
 
+	// True - use texture, false - use textureId
+	bool useTexture = false;
 	SharedTexture texture = makeSharedTexture();
 	std::string textureId = "";
 	Rect dest, area = NO_RECT(), boundary = NO_RECT();
 
-	void clearTexture() { texture = makeSharedTexture(); }
+	void setTexture(const SharedTexture& tex);
 };
 
 class AssetManager {
@@ -104,9 +111,11 @@ public:
 	AssetManager() = default;
 	~AssetManager() = default;
 
+	// TODO: Make private to window
 	// Init functions
-	void initAssets(RendererPtr& r);
+	void initAssets(SDL_Window* w);
 	void initFonts();
+	void quit();
 
 	// Renderer functions
 	SDL_Renderer* renderer();
@@ -146,23 +155,30 @@ public:
 	SharedFont getFont(std::string id) const;
 	SharedFont getFont(const TextData& data) const;
 
-	// Move to Window
+	// Split text
+	static std::vector<std::string> splitText(const std::string& text,
+		SharedFont font, int maxW);
+
+	// Render text
 	TextureData renderText(const TextData& data) const;
 	TextureData renderTextWrapped(const TextData& data,
 		Uint32 bkgrnd = -1) const;
 
+	// Draw textures/text
 	void drawTexture(const TextureData& data);
 	void drawText(const TextData& data);
 	void drawTextWrapped(const TextData& data, Uint32 bkgrnd = -1);
 
 	Rect getMinRect(std::string id, int maxW, int maxH);
 
+	// Draw rectangles
 	enum BorderType : uint8_t { outside = 0, middle, inside };
 	void rect(Rect* r, const SDL_Color& color,
 		SDL_BlendMode mode = SDL_BLENDMODE_NONE);
 	void thickRect(Rect r, int thickness, BorderType border,
 		const SDL_Color& color);
 
+	// Brighten a texture
 	SharedTexture brightenTexture(SharedTexture src, Uint8 val);
 	SharedTexture brightenTexture(std::string id, Uint8 val);
 

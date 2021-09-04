@@ -13,17 +13,13 @@ Selector::Selector(bool allowTextInput) :
 
 	itemText.fontId = ITEM_FONT;
 	itemText.color = WHITE;
-	itemText.xMode = TextData::PosType::topleft;
-	itemText.yMode = TextData::PosType::center;
+	itemText.xMode = itemText.yMode = TextData::PosType::center;
 
-	input.setTextData(itemText);
-	input.setBackground(BLACK);
+	input.setFont(ITEM_FONT);
 	input.setCharConstraint([](const char& ch) {
 		return isalnum(ch) || ch == ' ';
 		});
 	input.setActive(allowTextInput);
-
-	itemText.xMode = TextData::PosType::center;
 
 	// Setup textures
 	AssetManager& assets = Window::Get().assets();
@@ -49,11 +45,8 @@ void Selector::tickUI(Event& e) {
 void Selector::resize(Rect* rect) {
 	SDL_Point dim = Window::Get().screenDim();
 	mRect = rect ? *rect : Rect(0, 0, dim.x, dim.y);
-	//itemW = (int)(std::max(mRect.w, gameVals::MIN_W()) / 2);
 	itemW = (int)(mRect.w / 2);
-	//itemH = (int)(std::max(mRect.h, gameVals::MIN_H()) / 10);
 	itemH = (int)(mRect.h / 10);
-	//buttonW = (int)(itemH / 2);
 	scrollAmnt = (int)(itemH / 3);
 
 	scrollRect = Rect((int)((mRect.w - itemW) / 2), itemH,
@@ -64,14 +57,14 @@ void Selector::resize(Rect* rect) {
 
 	int half = (int)(itemH / 2);
 	int quarter = (int)(itemH / 4);
-	int eigth = (int)(itemH / 8);
+	int eighth = (int)(itemH / 8);
 
 	SDL_Point offset{ scrollRect.x, scrollRect.y2() };
 
 	newButton.setRect(
 		Rect(itemW - half - quarter, quarter, half, half) + offset);
 	input.setRect(
-		Rect(eigth, eigth, itemW - itemH, itemH - quarter) + offset);
+		Rect(eighth, eighth, itemW - itemH, itemH - quarter) + offset);
 
 	Rect promptRect(0, 0, (int)(mRect.w / 3), (int)(mRect.h / 3));
 	promptRect.setCenter(mRect.cX(), mRect.cY());
@@ -86,9 +79,9 @@ void Selector::resize(Rect* rect) {
 	itemText.y = (int)(itemH / 2);
 	itemText.x = (int)((itemW - itemText.y) / 2);
 	itemText.w = itemW - playButton.getRect().w;
-	itemText.h = itemH;
+	itemText.h = half + eighth;
 
-	Window::Get().assets().updateFont(ITEM_FONT, FontData{ -1, half });
+	Window::Get().assets().updateFont(ITEM_FONT, FontData{ -1, itemText.h * 2 });
 }
 
 void Selector::handleEvents(Event& e) {
@@ -127,7 +120,7 @@ void Selector::handleEvents(Event& e) {
 					ss << "Delete " << files[idx] << "?";
 					ss << " I mean, it's a really good question. Who knows what " << files[idx]
 						<< " may contain. Rare shit? Nothing? I dunno. Anyways, make this decision carefully."
-						<< " Deletion is permanent. (Or mabe not, Idk)";
+						<< " Deletion is permanent. (Or maybe not, Idk)";
 					deletePrompt.setPrompt(ss.str());
 					deletePrompt.setActive(true);
 					return;
@@ -170,7 +163,7 @@ void Selector::drawScroll() {
 		+ SDL_Point{ 0,-scroll + lb * itemH };
 	for (int i = lb; i <= ub; i++) {
 		TextureData data;
-		data.texture = drawItem(i);
+		data.setTexture(drawItem(i));
 		if (!data.texture) { continue; }
 		int y = i * itemH - scroll;
 		data.dest = Rect(scrollRect.x, scrollRect.y + y, itemW, itemH);

@@ -1,4 +1,5 @@
 #include "UI.h"
+#include "../Window.h"
 
 void UI::runUI() {
     std::cerr << "Running" << std::endl;

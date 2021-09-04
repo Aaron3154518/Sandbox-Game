@@ -1,5 +1,4 @@
 #include "Window.h"
-#include "UIs/UI.h"
 
 Window& Window::Get() {
     static Window WINDOW;
@@ -24,10 +23,7 @@ Window::Window() {
             SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
             gameVals::MIN_W(), gameVals::MIN_H(), flags));
 
-        AssetManager::RendererPtr renderer(
-            SDL_CreateRenderer(mWindow.get(), -1, 0),
-            SDL_DestroyRenderer);
-        mAssetManager.initAssets(renderer);
+        mAssetManager.initAssets(mWindow.get());
     }
 
     // Initialize SDL fonts module
@@ -38,6 +34,7 @@ Window::Window() {
 }
 
 Window::~Window() {
+    mAssetManager.quit();
     mWindow.reset();
     TTF_Quit();
     SDL_Quit();
@@ -73,25 +70,3 @@ SDL_Point Window::screenDim() const {
 }
 SDL_Renderer* Window::renderer() { return mAssetManager.renderer(); }
 AssetManager& Window::assets() { return mAssetManager; }
-
-/*void Window::setDrawColor(const SDL_Color& c) {
-    SDL_SetRenderDrawColor(mRenderer.get(), c.r, c.g, c.b, c.a);
-}
-void Window::resetDrawColor() {
-    SDL_SetRenderDrawColor(mRenderer.get(), 255, 255, 255, 255);
-}
-void Window::setRenderTarget(SDL_Texture* tex) {
-    if (SDL_SetRenderTarget(mRenderer.get(), tex) != 0) {
-        std::cerr << "Unable to set render target" << std::endl;
-    }
-}
-void Window::resetRenderTarget() {
-    SDL_SetRenderTarget(mRenderer.get(), NULL);
-    resetDrawColor();
-}
-void Window::setRenderBlendMode(SDL_BlendMode mode) {
-    SDL_SetRenderDrawBlendMode(mRenderer.get(), mode);
-}
-void Window::resetRenderBlendMode() {
-    SDL_SetRenderDrawBlendMode(mRenderer.get(), SDL_BLENDMODE_BLEND);
-}*/

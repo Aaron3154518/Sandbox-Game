@@ -17,11 +17,12 @@ public:
 	~Button() = default;
 
 	bool clicked(SDL_Point mouse);
-	void draw(SDL_Point parentPos, Rect boundary = TextureData::NO_RECT());
+	void draw(SDL_Point parentPos = SDL_Point{ 0,0 },
+		Rect boundary = TextureData::NO_RECT());
+
+	virtual void setRect(const Rect& rect);
 
 private:
-	std::string imgId;
-
 	TextureData data;
 };
 

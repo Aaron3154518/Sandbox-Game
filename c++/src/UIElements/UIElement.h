@@ -17,7 +17,7 @@ public:
 	virtual void setActive(bool val) { mActive = val; }
 	bool active() const { return mActive; }
 
-	virtual void setRect(Rect rect) { mRect = rect; }
+	virtual void setRect(const Rect& rect) { mRect = rect; }
 	Rect getRect() const { return mRect; }
 
 protected:

@@ -79,7 +79,7 @@ std::vector<std::string> getDirContents(const std::string& dirName) {
 
 bool validSaveFile(const std::string& fileName) {
     return std::find_if_not(fileName.begin(), fileName.end(),
-        [](const char& ch) { return isalnum(ch) || ch == ' '; }) == fileName.end();
+        [](const char& ch) { return isalnum(ch) || ch == '_'; }) == fileName.end();
 }
 
 std::string toFileName(const std::string& displayName) {

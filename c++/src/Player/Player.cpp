@@ -212,7 +212,7 @@ void Player::draw() {
 	// Draw held item
 	ItemInfo mouseItem = inventory.getHeldItem();
 	if (mouseItem.isItem()) {
-		cursorTex.texture = mouseItem.getImage();
+		cursorTex.setTexture(mouseItem.getImage());
 		cursorTex.dest.setCenter(mousePos());
 		assets.drawTexture(cursorTex);
 	}

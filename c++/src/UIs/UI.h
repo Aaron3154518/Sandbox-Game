@@ -1,7 +1,6 @@
 #ifndef UI_H
 #define UI_H
 
-#include <deque>
 #include <iostream>
 #include <memory>
 #include <vector>
@@ -9,10 +8,7 @@
 #include <SDL.h>
 
 #include "../Definitions.h"
-#include "../Utils/AssetManager.h"
 #include "../Utils/Event.h"
-#include "../Utils/Utils.h"
-#include "../Window.h"
 
 class UI {
 	friend class Window;
