@@ -54,6 +54,8 @@ public:
 	bool itemAllowed(item::Id id) const;
 	bool validPos(SDL_Point loc) const;
 
+	virtual void clear();
+
 	virtual void read(IO& io);
 	virtual void write(IO& io);
 
@@ -62,6 +64,7 @@ public:
 	static Rect getInvRect(SDL_Point pos);
 
 protected:
+
 	std::list<SDL_Point> getSpaceForItem(const ItemInfo& item) const;
 
 	void updatePos(SDL_Point loc);
@@ -69,7 +72,8 @@ protected:
 	// (i.e. pos - mRect.topleft() -> pos relative to topleft of mRect)
 	void drawHoverItem(SDL_Point pos);
 
-	size_t waitTime() const { fmaxf(750000 / (holdingR + 1), 10); }
+	// int holdingR = 0;
+	//size_t waitTime() const { fmaxf(750000 / (holdingR + 1), 10); }
 
 	SDL_Point dim;
 	// Personal maximum stack limit
@@ -86,8 +90,6 @@ protected:
 	Rect mRect;
 	TextureData mTex;
 	TextData td;
-	// How long we've been holding right click (ms)
-	int holdingR = 0;
 	// Should we draw a description
 	bool drawDescription = false;
 

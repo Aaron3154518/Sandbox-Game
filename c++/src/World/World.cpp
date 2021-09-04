@@ -1,5 +1,5 @@
 #include "World.h"
-#include "../GameObjects.h"
+#include "../UIs/Game.h"
 
 // For testing write during save
 //int cntr = 600;
@@ -71,7 +71,7 @@ void World::tick(Timestep& dt) {
 	//manager.tick();
 
 	// Update dropped items
-	PlayerAccess& player = GameObjects::player();
+	PlayerAccess& player = Game::Player();
 	for (auto it = droppedItems.begin(); it != droppedItems.end(); it++) {
 		it->move(dt);
 		if (!it->pickUpImmune() && player.pickUp(*it)) {
@@ -81,8 +81,24 @@ void World::tick(Timestep& dt) {
 	}
 }
 
+void World::reset() {
+	type = WorldType::world;
+	canDelete = false;
+	dim = spawn = { 0,0 };
+	numBlocks = time = 0;
+
+	blocks.clear();
+	blockChanges.clear();
+	droppedItems.clear();
+
+	nextSave = SAVE_DELAY;
+	saveProgress = 0.;
+}
+
 // File saving/loading
 void World::loadWorld() {
+	reset();
+
 	std::cerr << "Loading World" << std::endl;
 	if (fw.isOpen()) {
 		std::cerr << "World::loadWorld(): Cannot open file for reading - "
@@ -107,6 +123,8 @@ void World::loadWorld() {
 
 double World::loadWorld(double progress) {
 	if (progress == 0) {
+		reset();
+
 		std::cerr << "Loading World" << std::endl;
 		if (fw.isOpen()) {
 			std::cerr << "World::loadWorld(): Cannot open file for reading - "
@@ -330,7 +348,7 @@ double World::saveWorld(double progress) {
 // TODO: Verion info
 void World::saveInfo() {
 	// Save the player
-	GameObjects::player().save();
+	Game::Player().save();
 	if (!fw.isOpen()) {
 		std::cerr << "World::saveInfo(): File not open" << std::endl;
 		return;
@@ -508,7 +526,7 @@ SDL_Point World::getWorldMousePos(SDL_Point mouse, SDL_Point center,
 }
 
 SDL_Point World::getWorldMousePos(SDL_Point mouse, bool blocks) const {
-	return getWorldMousePos(mouse, GameObjects::player().getCPos(), blocks);
+	return getWorldMousePos(mouse, Game::Player().getCPos(), blocks);
 }
 
 Rect World::getScreenRect(SDL_Point center) const {
@@ -588,7 +606,7 @@ void World::setBlockData(SDL_Point loc, ByteArray& data) {
 }
 
 void World::dropItem(const DroppedItem& drop, DroppedItem::DropDir dir) {
-	dropItem(drop, dir, GameObjects::player().getCPosf());
+	dropItem(drop, dir, Game::Player().getCPosf());
 }
 void World::dropItem(const DroppedItem& drop, DroppedItem::DropDir dir,
 	Point<double> pos) {

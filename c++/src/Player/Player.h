@@ -54,6 +54,8 @@ protected:
 	void setFile(std::string fName);
 
 private:
+	void reset();
+
 	void move(Timestep dt);
 	void drawUI();
 
@@ -72,11 +74,6 @@ private:
 
 	Map map;
 	*/
-
-	/* Item begin used
-	item::Id itemUsed = item::Id::numItems;
-	double useTime = 0;
-	bool usedLeft = true, firstSwing = true;*/
 
 	// Player image
 	TextureData mTex, cursorTex;

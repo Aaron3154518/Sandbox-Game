@@ -16,6 +16,7 @@ public:
 	UI() = default;
 	~UI() = default;
 
+protected:
 	// Functions for running the UI
 	virtual void runUI();
 	virtual void initUI() {}

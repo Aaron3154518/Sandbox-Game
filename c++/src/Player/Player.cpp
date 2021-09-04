@@ -1,5 +1,5 @@
 #include "Player.h"
-#include "../GameObjects.h"
+#include "../UIs/Game.h"
 
 const double Player::PICKUP_DX = 1.5, Player::PICKUP_DY = 1.5;
 const double Player::PLACE_DX = 2.5, Player::PLACE_DY = 2;
@@ -149,7 +149,7 @@ void Player::move(Timestep dt) {
 
 	Point<double> prevD = d, prevP = pos;
 	// Check for collisions and set new position
-	bool didHit = GameObjects::world().checkCollisions(pos, dim, d);
+	bool didHit = Game::World().checkCollisions(pos, dim, d);
 	setPos(pos);
 
 	// Get actual change in position
@@ -162,7 +162,7 @@ void Player::move(Timestep dt) {
 				CollideType::botRight : CollideType::topLeft;
 		// Didn't move, get collision based on accelleration
 		} else if (d[_d] == 0 && prevD[_d] == 0 && a[_d] != 0) {
-			if (GameObjects::world().touchingBlocks(
+			if (Game::World().touchingBlocks(
 				pos, dim, _d == Dim::x, a[_d] < 0)) {
 				collided[_d] = a[_d] < 0 ? CollideType::topLeft :
 					CollideType::botRight;
@@ -189,7 +189,7 @@ void Player::move(Timestep dt) {
 }
 
 void Player::draw() {
-	Rect r = GameObjects::world().getScreenRect(mRect.center());
+	Rect r = Game::World().getScreenRect(mRect.center());
 	SDL_Point shift = r.topLeft();
 	AssetManager& assets = Window::Get().assets();
 
@@ -223,21 +223,21 @@ void Player::drawUI() {
 }
 
 bool Player::placeBlock(SDL_Point worldPos, tile::Id tileId) {
-	SDL_Point loc = GameObjects::world().toBlockPos(worldPos);
+	SDL_Point loc = Game::World().toBlockPos(worldPos);
 	TilePtr tile = Tile::getTile(tileId);
 	Point<uint8_t> tDim = tile->getDim();
 	// Can't place block over player
 	if (SDL_PointInRect(&worldPos, &placementRange)
 		&& !collidesPlayer(Rect(loc.x, loc.y, tDim.x, tDim.y))) {
 		// Check if we can place the block
-		return GameObjects::world().placeBlock(loc, tileId);
+		return Game::World().placeBlock(loc, tileId);
 	}
 	return false;
 }
 
 bool Player::breakBlock(SDL_Point worldPos) {
-	SDL_Point loc = GameObjects::world().toBlockPos(worldPos);
-	WorldAccess& world = GameObjects::world();
+	SDL_Point loc = Game::World().toBlockPos(worldPos);
+	WorldAccess& world = Game::World();
 	// Make sure we aren't hitting air
 	loc = world.getBlockSrc(loc);
 	const Block& block = world.getBlock(loc);
@@ -261,7 +261,18 @@ void Player::setFile(std::string fName) {
 	load();
 }
 
+void Player::reset() {
+	pos = v = a = { 0.,0. };
+	a.y = 10;
+	collided = { CollideType::none, CollideType::none };
+	fallDist = immunity = respawnCtr = 0;
+	craftingOpen = mapOpen = false;
+}
+
 void Player::load() {
+	// Reset the player
+	reset();
+
 	std::cerr << "Loading Player" << std::endl;
 	if (fw.isOpen()) {
 		std::cerr << "Player::read(): Cannot open file for reading - "

@@ -1,5 +1,5 @@
 #include "Tile.h"
-#include "../GameObjects.h"
+#include "../UIs/Game.h"
 
 std::vector<TilePtr>& Tile::getTiles() {
 	static std::vector<TilePtr> tiles(tile::Id::numTiles + 1);
@@ -57,7 +57,7 @@ bool Tile::onBreak(SDL_Point loc) {
 	Point<double> pos{(double)loc.x * gameVals::BLOCK_W(),
 		(double)loc.y * gameVals::BLOCK_W()};
 	for (ItemInfo& info : generateDrops()) {
-		GameObjects::world().dropItem(DroppedItem(info),
+		Game::World().dropItem(DroppedItem(info),
 			DroppedItem::DropDir::none, pos);
 	}
 	return true;

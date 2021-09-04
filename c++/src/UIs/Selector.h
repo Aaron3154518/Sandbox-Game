@@ -19,21 +19,21 @@ public:
 	Selector(bool allowTextInput);
 	~Selector();
 
-	virtual void initUI();
-	virtual void tickUI(Event& e);
+	void resize(Rect* rect = nullptr);
 
-	virtual void resize(Rect* rect = nullptr);
-
-	virtual void handleEvents(Event& e);
-	virtual void draw();
-	virtual void drawScroll();
+	void handleEvents(Event& e);
+	void draw();
+	void drawScroll();
 
 	Rect getRect() { return mRect; }
 protected:
-	virtual Texture drawItem(int idx);
+	void initUI();
+	void tickUI(Event& e);
+
+	Texture drawItem(int idx);
 	bool toggleTextInput(bool val);
 
-	virtual void onNewItem();
+	void onNewItem();
 	virtual bool newItem() { return false; }
 	virtual bool deleteItem(int idx) { return false; }
 	virtual void selectItem(int idx) = 0;

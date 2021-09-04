@@ -45,6 +45,8 @@ private:
 	void setUseTime(int ms) { useTime = ms; if (!inUse()) { info.itemId = item::Id::numItems; } }
 	void decUseTime(int ms) { setUseTime(useTime - ms); }
 
+	void clear();
+
 	ItemInfo info;
 	int useTime = 0;
 	bool usedLeft, firstSwing = false;
@@ -80,10 +82,14 @@ public:
 	// Current selected item (held or in hotbar)
 	const ItemInfo& getCurrentItem() const;
 
+	void clear();
+
 	void read(IO& io);
 	void write(IO& io);
 
 private:
+	void reset();
+
 	// Current selected item (held or in hotbar)
 	ItemInfo& getCurrentItemRef();
 

@@ -1,5 +1,5 @@
 #include "DroppedItem.h"
-#include "../GameObjects.h"
+#include "../UIs/Game.h"
 
 constexpr double X_SPEED = 15.;
 constexpr double MAX_FALL_SPEED = 10.;
@@ -21,13 +21,13 @@ void DroppedItem::move(Timestep& dt) {
 	if (pulledIn) {
 		pos = { pos.x + d.x, pos.y + d.y };
 		Point<double> pxDim = { (double)mRect.w, (double)mRect.h };
-		GameObjects::world().forceInWorld(pos, pxDim);
+		Game::World().forceInWorld(pos, pxDim);
 	} else {
 		// Update vertical position and velocity
 		v.x = copysignf(fmaxf(fabsf(v.x) - 1, 0), v.x);
 		v.y += MAX_FALL_SPEED * sec / 2;
 		v.y = fminf(v.y, MAX_FALL_SPEED / 2);
-		GameObjects::world().checkCollisions(pos, ratio, d);
+		Game::World().checkCollisions(pos, ratio, d);
 	}
 	mRect.x = (int)pos.x; mRect.y = (int)pos.y;
 }

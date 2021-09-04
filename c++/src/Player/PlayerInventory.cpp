@@ -1,5 +1,5 @@
 #include "PlayerInventory.h"
-#include "../GameObjects.h"
+#include "../UIs/Game.h"
 #include "Player.h"
 
 const SDL_Point ArmorInventory::DIM{ 1,4 };
@@ -26,8 +26,8 @@ bool UseItem::leftClick(ItemInfo& item) {
 	if (!info.equals(item)) { firstSwing = true; }
 	if (item[Item::ItemData::leftClick]
 		&& (firstSwing || item[Item::ItemData::autoUse])) {
-		SDL_Point pPos = GameObjects::player().getCPos();
-		SDL_Point worldMouse = GameObjects::world()
+		SDL_Point pPos = Game::Player().getCPos();
+		SDL_Point worldMouse = Game::World()
 			.getWorldMousePos(mousePos(), pPos, false);
 		usedLeft = worldMouse.x < pPos.x;
 		firstSwing = false;
@@ -35,10 +35,10 @@ bool UseItem::leftClick(ItemInfo& item) {
 		item.getItem()->onLeftClick();
 		// TODO: move to onLeftClick
 		if (item[Item::ItemData::breaker]) {
-			GameObjects::player().breakBlock(worldMouse);
+			Game::Player().breakBlock(worldMouse);
 		} 
 		if (item[Item::ItemData::placer]) {
-			bool success = GameObjects::player().placeBlock(worldMouse,
+			bool success = Game::Player().placeBlock(worldMouse,
 				item.getItem()->getBlockId());
 			if (success && item[Item::ItemData::consumable]) { --item.amnt; }
 		} else if (item[Item::ItemData::consumable]) { --item.amnt; }
@@ -55,8 +55,8 @@ bool UseItem::rightClick(ItemInfo& item) {
 	if (!info.equals(item)) { firstSwing = true; }
 	if (item.isItem() && item[Item::ItemData::rightClick]
 		&& (firstSwing || item[Item::ItemData::autoUse])) {
-		SDL_Point pPos = GameObjects::player().getCPos();
-		SDL_Point worldMouse = GameObjects::world()
+		SDL_Point pPos = Game::Player().getCPos();
+		SDL_Point worldMouse = Game::World()
 			.getWorldMousePos(mousePos(), pPos, false);
 		usedLeft = worldMouse.x < pPos.x;
 		firstSwing = false;
@@ -68,6 +68,12 @@ bool UseItem::rightClick(ItemInfo& item) {
 		return true;
 	}
 	return false;
+}
+
+void UseItem::clear() {
+	info = ItemInfo::NO_ITEM();
+	useTime = 0;
+	firstSwing = false;
 }
 
 // Armor Inventory
@@ -168,11 +174,11 @@ void PlayerInventory::handleEvents(Event& e) {
 			&& !rightClickPos(mouse) && !armorInv.rightClickPos(armorMouse)) {
 			// Drop the item
 			if (heldItem.isItem()) {
-				SDL_Point pPos = GameObjects::player().getCPos();
-				SDL_Point worldMouse = GameObjects::world()
+				SDL_Point pPos = Game::Player().getCPos();
+				SDL_Point worldMouse = Game::World()
 					.getWorldMousePos(mousePos(), pPos, false);
 				// Drop Item
-				GameObjects::world().dropItem(DroppedItem(heldItem),
+				Game::World().dropItem(DroppedItem(heldItem),
 					worldMouse.x < pPos.x ? DroppedItem::DropDir::left
 					: DroppedItem::DropDir::right);
 				heldItem = ItemInfo::NO_ITEM();
@@ -284,7 +290,7 @@ void PlayerInventory::dropItem() {
 		DroppedItem drop(heldItem);
 		heldItem.amnt = 0;
 		// TODO: left or right?
-		GameObjects::world().dropItem(drop, DroppedItem::DropDir::left);
+		Game::World().dropItem(drop, DroppedItem::DropDir::left);
 	}
 }
 
@@ -303,7 +309,21 @@ ItemInfo& PlayerInventory::getCurrentItemRef() {
 	return heldItem.isItem() ? heldItem : items[0][hotbarItem];
 }
 
+void PlayerInventory::clear() {
+	Inventory::clear();
+	armorInv.clear();
+	heldItem = ItemInfo::NO_ITEM();
+	itemUsed.clear();
+}
+
+void PlayerInventory::reset() {
+	hotbarItem = amntTransferred = 0;
+	if (open) { toggleOpen(); }
+	itemUsed.clear();
+}
+
 void PlayerInventory::read(IO& io) {
+	reset();
 	Inventory::read(io);
 	armorInv.read(io);
 	heldItem.read(io);

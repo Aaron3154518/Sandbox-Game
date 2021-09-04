@@ -80,7 +80,6 @@ public:
 	void dropItem(const DroppedItem& drop, DroppedItem::DropDir dir,
 		Point<double> pos);
 
-
 	bool saving() const { return nextSave <= 0; }
 
 	enum WorldType : uint8_t {
@@ -118,6 +117,8 @@ protected:
 	void drawDroppedItems(const Rect& worldRect);
 
 private:
+	void reset();
+
 	// Loads world
 	void loadWorld();
 	double loadWorld(double progress);
@@ -141,7 +142,7 @@ private:
 	SDL_Point dim{ 0,0 };
 	int numBlocks = 0;
 	// World spawn location
-	SDL_Point spawn = { 0,0 };
+	SDL_Point spawn{ 0,0 };
 
 	// World time
 	uint32_t time = 0;

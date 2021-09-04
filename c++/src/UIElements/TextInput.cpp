@@ -25,9 +25,7 @@ bool TextInput::handleEvents(Event& e) {
 
 void TextInput::draw() {
 	AssetManager& assets = Window::Get().assets();
-	assets.setDrawColor(bkgrnd);
-	SDL_RenderFillRect(assets.renderer(), &mRect);
-	assets.resetDrawColor();
+	assets.rect(&mRect, bkgrnd);
 
 	SharedFont font = assets.getFont(textData);
 	if (!font) { return; }

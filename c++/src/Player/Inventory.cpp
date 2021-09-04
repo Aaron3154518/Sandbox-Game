@@ -1,5 +1,5 @@
 #include "Inventory.h"
-#include "../GameObjects.h"
+#include "../UIs/Game.h"
 
 const SDL_Color Inventory::BKGRND{ 0, 255, 0, 150 };
 const SDL_Color Inventory::SELECT_COLOR{ 175,175,0,255 };
@@ -81,7 +81,7 @@ bool Inventory::leftClickPos(SDL_Point pos) {
 		autoMoveItem(pos);
 	} else {
 		ItemInfo& item = items[pos.y][pos.x];
-		item = GameObjects::playerInv()
+		item = Game::Player().getInventory()
 			.leftClickItem(item, item.maxStack(maxStack));
 		updatePos(pos);
 		// TODO: ActiveUI on inv update
@@ -92,7 +92,7 @@ bool Inventory::leftClickPos(SDL_Point pos) {
 bool Inventory::rightClickPos(SDL_Point pos) {
 	if (validPos(pos)) {
 		ItemInfo& item = items[pos.y][pos.x];
-		item = GameObjects::playerInv()
+		item = Game::Player().getInventory()
 			.rightClickItem(item, item.maxStack(maxStack));
 		updatePos(pos);
 		// TODO: ActiveUI on inv update
@@ -235,6 +235,14 @@ bool Inventory::itemAllowed(item::Id id) const {
 
 bool Inventory::validPos(SDL_Point loc) const {
 	return loc.x >= 0 && loc.y >= 0 && loc.x < dim.x && loc.y < dim.y;
+}
+
+void Inventory::clear() {
+	for (auto& row : items) {
+		for (auto& item : row) {
+			item = ItemInfo::NO_ITEM();
+		}
+	}
 }
 
 void Inventory::read(IO& io) {
