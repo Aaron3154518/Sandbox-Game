@@ -80,13 +80,19 @@ public:
 	void dropItem(const DroppedItem& drop, DroppedItem::DropDir dir,
 		Point<double> pos);
 
+	void read(IO& io);
+	void write(IO& io);
 	bool saving() const { return nextSave <= 0; }
 
 	enum WorldType : uint8_t {
 		world = 0,
 		idle
 	};
+
 	// Static functions
+	static void createNewInfoFile(IO& io);
+	static void createNewWorld(IO& io);
+	static bool createNewUniverse(const std::string& univName);
 	static const Block& airBlock();
 	static Block createBlock(tile::Id tileId, uint8_t dx = 0, uint8_t dy = 0);
 	static SDL_Point toBlockPos(SDL_Point p);
@@ -122,15 +128,15 @@ private:
 	// Loads world
 	void loadWorld();
 	double loadWorld(double progress);
-	void loadInfo();
-	double loadBlocks(double progress, int numRows);
-	double drawWorld(double progress);
+	void loadInfo(IO& io);
+	double loadBlocks(IO& io, double progress, int numRows);
+	double loadMap(IO& io, double progress);
 
 	// Saves world
 	double saveWorld(double progress);
-	void saveInfo();
-	double saveBlocks(double progress, int numRows);
-	double saveMap(double progress);
+	void saveInfo(IO& io);
+	double saveBlocks(IO& io, double progress, int numRows);
+	double saveMap(IO& io, double progress);
 
 	void applyBlockChanges();
 

@@ -66,16 +66,7 @@ bool UniverseSelector::createUniverse(std::string dirName) {
 	if (!isDir(fullDir)) {
 		// Create folder
 		mkDir(fullDir.c_str());
-		// Create info file
-		FileWrite fw;
-		if (!fw.open(gameVals::univInfoFile(dirName))) {
-			std::cerr << "Could not open universe info file" << std::endl;
-			return false;
-		}
-		if (!fw.commit()) {
-			std::cerr << "Failed to write to universe info file" << std::endl;
-			return false;
-		}
+		World::createNewUniverse(dirName);
 		return true;
 	}
 	return false;

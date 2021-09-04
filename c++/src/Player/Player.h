@@ -40,10 +40,12 @@ public:
 	bool placeBlock(SDL_Point worldPos, tile::Id tileId);
 	bool breakBlock(SDL_Point worldPos);
 
+	void read(IO& io);
+	void write(IO& io);
 	void load();
 	void save();
 
-	static void saveNewPlayer(IO& io);
+	static void createNewPlayer(IO& io);
 
 protected:
 	void handleEvents(Event& e);

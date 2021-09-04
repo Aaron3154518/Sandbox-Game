@@ -10,6 +10,7 @@
 #include "Selector.h"
 #include "../Definitions.h"
 #include "../Utils/Rect.h"
+#include "../World/World.h"
 
 class UniverseSelector : public Selector {
 public:

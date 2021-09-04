@@ -44,7 +44,7 @@ bool PlayerSelector::newItem() {
 			std::cerr << "Could not open player file" << std::endl;
 			return false;
 		}
-		Player::saveNewPlayer(fw);
+		Player::createNewPlayer(fw);
 		if (!fw.commit()) {
 			std::cerr << "Failed to write to player file" << std::endl;
 			return false;

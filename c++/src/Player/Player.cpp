@@ -272,6 +272,14 @@ void Player::reset() {
 	craftingOpen = mapOpen = false;
 }
 
+void Player::read(IO& io) {
+	inventory.read(io);
+}
+
+void Player::write(IO& io) {
+	inventory.write(io);
+}
+
 void Player::load() {
 	// Reset the player
 	reset();
@@ -290,10 +298,7 @@ void Player::load() {
 		std::cerr << "Player::read(): Unable to open player file for reading" << std::endl;
 		return;
 	}
-
-	// Read inventory
-	inventory.read(fr);
-
+	read(fr);
 	if (!fr.close()) {
 		std::cerr << "Player::read(): File Close Error" << std::endl;
 	}
@@ -314,18 +319,15 @@ void Player::save() {
 		std::cerr << "Player::write(): Unable to open player file for writing" << std::endl;
 		return;
 	}
-
-	// Write inventory
-	inventory.write(fw);
-
+	write(fw);
 	if (!fw.commit()) {
 		std::cerr << "Player::write(): File Close Error" << std::endl;
 	}	
 }
 
-void Player::saveNewPlayer(IO& io) {
-	PlayerInventory inv;
-	inv.write(io);
+void Player::createNewPlayer(IO& io) {
+	Player player;
+	player.write(io);
 }
 
 // Inventory stuff
