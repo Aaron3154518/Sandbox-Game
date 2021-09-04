@@ -9,6 +9,7 @@
 #include <fstream>
 #include <iostream>
 #include <map>
+#include <random>
 #include <set>
 #include <sstream>
 #include <sys/stat.h>
@@ -32,6 +33,8 @@ bool strToDouble(const std::string& str, double& result);
 
 std::string replaceInString(const std::string& source,
     const std::string& search, const std::string& replace);
+
+std::string randomString(size_t len);
 
 // File functions
 bool isFile(const std::string& fileName);

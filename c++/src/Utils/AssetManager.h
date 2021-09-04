@@ -5,7 +5,6 @@
 #include <cstdlib>
 #include <map>
 #include <memory>
-#include <random>
 #include <sstream>
 #include <string>
 #include <sys/stat.h>
@@ -15,6 +14,7 @@
 #include <SDL_ttf.h>
 
 #include "Rect.h"
+#include "Utils.h"
 #include "../Definitions.h"
 
 // ARGB masks for creating surfaces and colors

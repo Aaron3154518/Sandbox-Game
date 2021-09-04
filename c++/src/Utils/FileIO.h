@@ -2,6 +2,7 @@
 #define DATA_IO_H
 
 #include <cstring>
+#include <cstdio>
 #include <fstream>
 #include <iostream>
 #include <list>

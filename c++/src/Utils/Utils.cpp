@@ -26,6 +26,14 @@ std::string replaceInString(const std::string& source,
     return result.str();
 }
 
+std::string randomString(size_t len) {
+    std::string str(len, ' ');
+    for (char& ch : str) {
+        ch = rand();
+    }
+    return str;
+}
+
 
 // File functions
 bool isFile(const std::string &fileName) {

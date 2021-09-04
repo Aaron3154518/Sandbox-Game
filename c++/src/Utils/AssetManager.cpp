@@ -252,17 +252,17 @@ bool AssetManager::loadAsset(std::string fileName) {
 
 // Add font/asset
 std::string AssetManager::addAsset(const SharedTexture& tex) {
-	std::string id(ID_LEN, ' ');
+	std::string id;
 	do {
-		for (int i = 0; i < id.size(); i++) { id[i] = rand(); }
+		id = randomString(ID_LEN);
 	} while (assets.find(id) != assets.end());
 	updateAsset(id, tex);
 	return id;
 }
 std::string AssetManager::addFont(const FontData& data) {
-	std::string id(ID_LEN, ' ');
+	std::string id;
 	do {
-		for (int i = 0; i < id.size(); i++) { id[i] = rand(); }
+		id = randomString(ID_LEN);
 	} while (fonts.find(id) != fonts.end());
 	updateFont(id, data);
 	return id;

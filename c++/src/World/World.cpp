@@ -342,7 +342,9 @@ double World::saveWorld(double progress) {
 			std::cerr << "World::saveWorld(): File Close Error" << std::endl;
 		}
 		applyBlockChanges();
+#ifdef DEBUG_WORLD
 		std::cerr << "Successfully Saved" << std::endl;
+#endif
 	}
 	return progress;
 }
