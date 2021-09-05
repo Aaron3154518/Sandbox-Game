@@ -129,7 +129,6 @@ struct ItemInfo {
 	SharedTexture getImage() const;
 	bool operator[](Item::ItemData idx) const;
 
-	void update();
 	void read(IO& io);
 	void write(IO& io);
 

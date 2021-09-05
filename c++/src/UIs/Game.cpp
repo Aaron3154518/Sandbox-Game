@@ -43,6 +43,7 @@ void Game::handleEvents(Event& e) {
     if (e.quit) {
         // TODO: Exit button
         data.world.saveWorld();
+        data.player.save();
         running = false;
         return;
     }

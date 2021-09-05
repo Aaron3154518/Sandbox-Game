@@ -105,7 +105,7 @@ std::list<SDL_Point> Inventory::getSpaceForItem(const ItemInfo& item) const {
 	// Positions which are neither full nor empty
 	std::list<SDL_Point> notFull, empty;
 	// Make sure we can pick this item up
-	if (!itemAllowed(item.itemId)) { return notFull; }
+	if (!itemAllowed(item.itemId) || !item.isItem()) { return notFull; }
 	// Get amnt to add and max stack size
 	int amnt = item.amnt;
 	int _maxStack = item.maxStack(maxStack);
@@ -131,7 +131,7 @@ std::list<SDL_Point> Inventory::getSpaceForItem(const ItemInfo& item) const {
 
 bool Inventory::isSpaceForItem(const ItemInfo& item) const {
 	// Make sure we can pick this item up
-	if (!itemAllowed(item.itemId)) { return false; }
+	if (!itemAllowed(item.itemId) || !item.isItem()) { return false; }
 	// Get amnt to add and max stack size
 	int amnt = item.amnt;
 	int _maxStack = item.maxStack(maxStack);

@@ -9,31 +9,23 @@ const ItemInfo& ItemInfo::NO_ITEM() {
 ItemInfo::ItemInfo(item::Id id, size_t _amnt) :
 	itemId(id), amnt(_amnt), data(Item::getItem(id)->newItemData()) {}
 
-void ItemInfo::update() {
-	if (!isItem()) {
-		amnt = 0;
-		itemId = item::Id::numItems;
-		data.clear();
-	}
-}
-
 void ItemInfo::read(IO& io) {
 	io.read(itemId);
 	io.read(amnt);
-	data.read(io);
-	update();
+	if (isItem()) { data.read(io); }
+	else { data.clear(); }
 }
 
 void ItemInfo::write(IO& io) {
-	update();
+	if (!isItem()) { *this = NO_ITEM(); }
 	io.write(itemId);
 	io.write(amnt);
-	data.write(io);
+	if (isItem()) { data.write(io); }
 }
 
 void ItemInfo::print() {
 	std::cerr << "Item ID: " << itemId << ", Amnt: " << amnt
-		<< "Data: " << (data.empty() ? "No" : "Yes") << std::endl;
+		<< ", Data: " << (data.empty() ? "No" : "Yes") << std::endl;
 }
 
 bool ItemInfo::isItem() const {
