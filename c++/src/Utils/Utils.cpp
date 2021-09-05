@@ -133,3 +133,14 @@ SDL_Point mousePos() {
     SDL_GetMouseState(&result.x, &result.y);
     return result;
 }
+
+// Bitwise functions
+bool any8(const uint8_t& src, const uint8_t& comp) {
+    // Any of comp is in src
+    return (src & comp) != 0;
+}
+
+bool all8(const uint8_t& src, const uint8_t& comp) {
+    // All of comp are in src
+    return (src & comp) == comp;
+}

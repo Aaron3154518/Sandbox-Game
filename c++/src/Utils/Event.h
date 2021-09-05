@@ -33,18 +33,19 @@ struct Event {
         LEFT = 0, RIGHT, MIDDLE
     };
 
-    enum HandledStatus : Status {
-        IGNORED = 0, // Handled Status is ignored
+    enum Access : Status {
+        IGNORED = 0, // Handled status is ignored
         ACTIVE, // Currently handling (taking events)
-        HANDLED, // Has been handled
-        NOT_HANDLED // Not handled and not currently handling
+        INACTIVE, // Not handled and not currently handling
+        HANDLED // Has been handled
     };
-    enum ButtonStatus : Status {
+    enum Button : Status {
         PRESSED = 0x01,
         RELEASED = 0x02,
         HELD = 0x04,
 
-        CLICKED = 0x08 // Just for mouse buttons
+        M_CLICKED = 0x08, // For mouse buttons
+        K_HANDLED = 0x08  // For key buttons
     };
 
     struct MouseButton {
@@ -74,10 +75,9 @@ struct Event {
 
     bool checkScroll() const;
     bool checkHover() const;
-    bool checkMouse(Mouse mouse, Status status);
-    bool checkKey(Key key, Status status);
+    uint8_t operator[](const Mouse& mouse);
+    uint8_t operator[](const Key& key);
     void handleKey(Key key);
-    bool checkAndHandleKey(Key key, Status status);
 
     void nextUI(Rect r, bool textInput);
 
@@ -85,17 +85,16 @@ struct Event {
     void update(Timestep ts);
 
 private:
-    static constexpr Status KEY_HANDLED = 0x80;
     static constexpr int MAX_CLICK_DIFF = 10;
 
-    static bool canUse(HandledStatus status);
+    static bool canUse(Access status);
 
     void update(SDL_Event& e);
     static Mouse toMouse(int sdlButtonType);
 
-    HandledStatus mouseStatus = HandledStatus::IGNORED;
+    Access mouseStatus = Access::IGNORED;
     std::map<Mouse, MouseButton> mouseButtons;
-    HandledStatus keyboardStatus = HandledStatus::IGNORED;
+    Access keyboardStatus = Access::IGNORED;
     std::map<Key, KeyButton> keyButtons;
 };
 

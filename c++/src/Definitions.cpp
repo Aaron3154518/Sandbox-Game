@@ -118,7 +118,7 @@ namespace gameVals {
 		return _INV_IMG_W;
 	}
 	int INV_FONT_W() {
-		const static int _INV_FONT_W = INV_W() / 2;
+		const static int _INV_FONT_W = INV_W() * 11 / 24;
 		return _INV_FONT_W;
 	}
 	int INV_MARGIN() {

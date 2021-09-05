@@ -102,8 +102,7 @@ void Selector::handleEvents(Event& e) {
 		return;
 	}
 
-	bool leftClicked = e.checkMouse(Event::Mouse::LEFT,
-		Event::ButtonStatus::CLICKED);
+	bool leftClicked = any8(e[Event::Mouse::LEFT], Event::Button::M_CLICKED);
 
 	if (leftClicked && exitButton.clicked(e.mouse)) {
 		if (exit()) {
@@ -141,8 +140,7 @@ void Selector::handleEvents(Event& e) {
 		onNewItem();
 	}
 	if (input.active()) {
-		if (e.checkKey(SDLK_RETURN, Event::ButtonStatus::RELEASED)
-			&& newItem()) {
+		if (any8(e[SDLK_RETURN], Event::Button::RELEASED) && newItem()) {
 			onNewItem();
 		}
 		input.handleEvents(e);

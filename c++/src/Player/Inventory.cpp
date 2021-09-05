@@ -1,6 +1,9 @@
 #include "Inventory.h"
 #include "../UIs/Game.h"
 
+// Item max stack is not used for inventory-inventory transfers
+// EXCEPT when adding to an existing item
+
 const SDL_Color Inventory::BKGRND{ 0, 255, 0, 150 };
 const SDL_Color Inventory::SELECT_COLOR{ 175,175,0,255 };
 const std::string Inventory::FONT_ID = Window::Get().assets().addFont(
@@ -27,7 +30,8 @@ Inventory::Inventory(SDL_Point _dim) : dim(_dim) {
 	td.fontId = FONT_ID;
 	td.color = WHITE;
 	td.yMode = td.xMode = TextData::PosType::botright;
-	td.w = td.h = gameVals::INV_FONT_W();
+	td.w = gameVals::INV_W();
+	td.h = gameVals::INV_FONT_W();
 
 	mRect = Rect(0, 0, dim.x * gameVals::INV_W() + 2 * gameVals::INV_MARGIN(),
 		dim.y * gameVals::INV_W() + 2 * gameVals::INV_MARGIN());
@@ -67,9 +71,9 @@ void Inventory::handleEvents(Event& e, SDL_Point topLeft) {
 
 	// Left/right click
 	SDL_Point mouse = toInvPos(e.mouse - topLeft - mRect.topLeft());
-	if (e.checkMouse(Event::Mouse::LEFT, Event::ButtonStatus::CLICKED)) {
+	if (any8(e[Event::Mouse::LEFT], Event::Button::M_CLICKED)) {
 		leftClickPos(mouse);
-	} else if (e.checkMouse(Event::Mouse::RIGHT, Event::ButtonStatus::CLICKED)) {
+	} else if (any8(e[Event::Mouse::RIGHT], Event::Button::HELD)) {
 		rightClickPos(mouse);
 	}
 	drawDescription = e.checkHover();
@@ -82,7 +86,7 @@ bool Inventory::leftClickPos(SDL_Point pos) {
 	} else {
 		ItemInfo& item = items[pos.y][pos.x];
 		item = Game::Player().getInventory()
-			.leftClickItem(item, item.maxStack(maxStack));
+			.leftClickItem(item, maxStack);
 		updatePos(pos);
 		// TODO: ActiveUI on inv update
 	}
@@ -93,7 +97,7 @@ bool Inventory::rightClickPos(SDL_Point pos) {
 	if (validPos(pos)) {
 		ItemInfo& item = items[pos.y][pos.x];
 		item = Game::Player().getInventory()
-			.rightClickItem(item, item.maxStack(maxStack));
+			.rightClickItem(item, maxStack);
 		updatePos(pos);
 		// TODO: ActiveUI on inv update
 		return true;
@@ -146,6 +150,7 @@ bool Inventory::isSpaceForItem(const ItemInfo& item) const {
 			}
 		}
 	}
+	return false;
 }
 
 bool Inventory::pickUpItem(ItemInfo& item) {
@@ -291,7 +296,9 @@ void Inventory::updatePos(SDL_Point loc) {
 		assets.drawTexture(itemTex);
 		td.text = std::to_string(item.amnt);
 		td.x = r.x2(); td.y = r.y2();
-		assets.drawText(td);
+		itemTex = assets.renderText(td);
+		itemTex.boundary = r;
+		assets.drawTexture(itemTex);
 	}
 	assets.resetRenderTarget();
 }

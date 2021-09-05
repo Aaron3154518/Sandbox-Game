@@ -8,6 +8,7 @@
 #include <list>
 #include <set>
 #include <sstream>
+#include <type_traits>
 #include <vector>
 
 #include <SDL.h>

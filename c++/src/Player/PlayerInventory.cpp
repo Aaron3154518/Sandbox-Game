@@ -70,6 +70,11 @@ bool UseItem::rightClick(ItemInfo& item) {
 	return false;
 }
 
+void UseItem::setUseTime(int ms) {
+	useTime = ms;
+	if (!inUse()) { info = ItemInfo::NO_ITEM(); }
+}
+
 void UseItem::clear() {
 	info = ItemInfo::NO_ITEM();
 	useTime = 0;
@@ -81,8 +86,6 @@ ArmorInventory::ArmorInventory() : Inventory(DIM) {}
 
 // PlayerInventory
 PlayerInventory::PlayerInventory() : Inventory(DIM) {
-	setMaxStack(10);
-	items[dim.y - 1][dim.x - 1] = ItemInfo(item::Id::DIRT, 10);
 	// Setup armor inventory
 	armorInv.setPos(mRect.x2() + gameVals::INV_W() / 4, mRect.y);
 	Rect armorRect = armorInv.getRect();
@@ -131,11 +134,18 @@ void PlayerInventory::drawInventory() {
 }
 
 void PlayerInventory::handleEvents(Event& e) {
+	// Check to reset right transfer
+	if (!didRightTransfer && rightTransfer != 0.) {
+		rightTransfer = 0.;
+	}
+	didRightTransfer = false;
+
 	itemUsed.tick(e.dt.milliseconds());
 	if (!itemUsed.inUse()) {
 		// Escape
-		if (e.checkAndHandleKey(SDLK_ESCAPE, Event::ButtonStatus::RELEASED)) {
+		if (any8(e[SDLK_ESCAPE], Event::Button::RELEASED)) {
 			toggleOpen();
+			e.handleKey(SDLK_ESCAPE);
 		}
 
 		// Hotbar
@@ -147,8 +157,9 @@ void PlayerInventory::handleEvents(Event& e) {
 			}
 		}
 		for (const auto& pair : gameVals::KEY_NUMS()) {
-			if (e.checkAndHandleKey(pair.first, Event::ButtonStatus::PRESSED)) {
+			if (any8(e[pair.first], Event::Button::PRESSED)) {
 				selectHotbar((pair.second + 9) % 10);
+				e.handleKey(pair.first);
 			}
 		}
 
@@ -158,32 +169,46 @@ void PlayerInventory::handleEvents(Event& e) {
 		SDL_Point mouse = toInvPos(e.mouse - mRect.topLeft());
 		SDL_Point armorMouse =
 			toInvPos(e.mouse - armorInv.mRect.topLeft());
-		// Check left click, try to click inventory, try to click armor inventory
-		if (e.checkMouse(Event::Mouse::LEFT, Event::ButtonStatus::CLICKED)
+		// Check left click, try to click inventory,
+		// try to click armor inventory
+		if (any8(e[Event::Mouse::LEFT], Event::Button::M_CLICKED)
 			&& !leftClickPos(mouse) && !armorInv.leftClickPos(armorMouse)) {
 			// Try to click crafting toggle
 			if (craftToggle.clicked(e.mouse)) {
 				std::cerr << "Open Crafting" << std::endl;
-			// Click with item and update inventory
+				// Click with item and update inventory
 			} else if (itemUsed.leftClick(getCurrentItemRef())
 				&& !heldItem.isItem()) {
 				updatePos(SDL_Point{ hotbarItem, 0 });
 			}
-		// Check right click, try to click inventory, try to click armor inventory
-		} else if (e.checkMouse(Event::Mouse::RIGHT, Event::ButtonStatus::CLICKED)
-			&& !rightClickPos(mouse) && !armorInv.rightClickPos(armorMouse)) {
-			// Drop the item
-			if (heldItem.isItem()) {
-				SDL_Point pPos = Game::Player().getCPos();
-				SDL_Point worldMouse = Game::World()
-					.getWorldMousePos(mousePos(), pPos, false);
-				// Drop Item
-				Game::World().dropItem(DroppedItem(heldItem),
-					worldMouse.x < pPos.x ? DroppedItem::DropDir::left
-					: DroppedItem::DropDir::right);
-				heldItem = ItemInfo::NO_ITEM();
-			// Use the item
-			} else { itemUsed.rightClick(getCurrentItemRef()); }
+		// Check right held, try to click inventory
+		} else if (any8(e[Event::Mouse::RIGHT], Event::Button::HELD)
+			&& !rightClickPos(mouse)) {
+			// Click armor inventory
+			armorInv.rightClickPos(armorMouse);
+		// Check right held, try to click inventory, try to click armor inventory
+		} else if (any8(e[Event::Mouse::RIGHT], Event::Button::M_CLICKED)) {
+			bool good = true;
+			std::vector<Rect> rects = {
+				mRect, armorInv.mRect, craftToggle.getRect() };
+			// if (crafting.open) { rects.push_back(crafting.getRect()); }
+			for (const Rect& r : rects) {
+				if (SDL_PointInRect(&e.mouse, &r)) { good = false; break; }
+			}
+			if (good) {
+				// Drop the item
+				if (heldItem.isItem()) {
+					SDL_Point pPos = Game::Player().getCPos();
+					SDL_Point worldMouse = Game::World()
+						.getWorldMousePos(mousePos(), pPos, false);
+					// Drop Item
+					Game::World().dropItem(DroppedItem(heldItem),
+						worldMouse.x < pPos.x ? DroppedItem::DropDir::left
+						: DroppedItem::DropDir::right);
+					heldItem = ItemInfo::NO_ITEM();
+					// Use the item
+				} else { itemUsed.rightClick(getCurrentItemRef()); }
+			}
 		}
 
 		// Check hovering
@@ -193,11 +218,6 @@ void PlayerInventory::handleEvents(Event& e) {
 			} else if (SDL_PointInRect(&e.mouse, &armorInv.mRect)) {
 				armorInv.drawDescription = true;
 			}
-		}
-
-		// Check holding right click
-		if (!e.checkMouse(Event::Mouse::RIGHT, Event::ButtonStatus::HELD)) {
-			amntTransferred = 0.;
 		}
 	}
 }
@@ -225,22 +245,33 @@ bool PlayerInventory::rightClickPos(SDL_Point pos) {
 	return false;
 }
 
-ItemInfo PlayerInventory::leftClickItem(ItemInfo item, int itemMaxStack) {
+ItemInfo PlayerInventory::leftClickItem(ItemInfo item, int otherMaxStack) {
 	// If both items are nothing then there's nothing to grab
 	if (item.isItem() || heldItem.isItem()) {
-		// Transfer the item to here
+		// Transfer the item to held
 		if (!heldItem.isItem()) {
 			heldItem = item;
+			// TODO: Ignore maxStack if player inventory
 			int transferAmnt = std::min(item.amnt, maxStack);
 			heldItem.amnt = transferAmnt;
 			item.amnt -= transferAmnt;
 		// Transfer the item to there
 		} else {
 			if (!item.isItem()) { item = heldItem; item.amnt = 0; }
+			// Add to item
 			if (heldItem.sameAs(item)) {
-				int transferAmnt = std::min(heldItem.amnt, itemMaxStack - item.amnt);
+				// If item is empty, disregard item max stack
+				int itemMaxStack = item.amnt == 0 ? otherMaxStack :
+					item.maxStack(otherMaxStack);
+				int transferAmnt = std::min(heldItem.amnt,
+					std::max(itemMaxStack - item.amnt, 0));
 				item.amnt += transferAmnt;
 				heldItem.amnt -= transferAmnt;
+			// Swap items
+			} else if (heldItem.amnt < otherMaxStack && item.amnt < maxStack) {
+				ItemInfo tmp = item;
+				item = heldItem;
+				heldItem = tmp;
 			}
 		}
 		itemUsed.setUseTime(heldItem.isItem() ? heldItem.useTime() : 300);
@@ -248,20 +279,20 @@ ItemInfo PlayerInventory::leftClickItem(ItemInfo item, int itemMaxStack) {
 	return item;
 }
 
-ItemInfo PlayerInventory::rightClickItem(ItemInfo item, int itemMaxStack) {
+ItemInfo PlayerInventory::rightClickItem(ItemInfo item, int otherMaxStack) {
 	if (item.isItem() && (!heldItem.isItem() || heldItem.sameAs(item))) {
 		// Time to wait until next item transfer
-		double prev = amntTransferred;
+		double prev = rightTransfer;
 		// Get tranfer amnt
-		if (amntTransferred == 0.) { amntTransferred = 1.; }
-		else { amntTransferred *= 1.1; }
-		int idealGrab = (int)(amntTransferred - prev);
-		int maxGrab = heldItem.maxStack(maxStack) - heldItem.amnt;
+		rightTransfer = rightTransfer == 0. ? 1. : rightTransfer * 1.01;
+		int idealGrab = (int)rightTransfer - (int)prev;
+		int maxGrab = std::max(heldItem.maxStack(maxStack) - heldItem.amnt, 0);
 		int transferAmnt = std::min(item.amnt, std::min(idealGrab, maxGrab));
 		if (!heldItem.isItem()) { heldItem = item; heldItem.amnt = 0; }
 		heldItem.amnt += transferAmnt;
 		item.amnt -= transferAmnt;
-	} else { amntTransferred = 0.; }
+		didRightTransfer = true;
+	}
 	return item;
 }
 
@@ -317,7 +348,7 @@ void PlayerInventory::clear() {
 }
 
 void PlayerInventory::reset() {
-	hotbarItem = amntTransferred = 0;
+	hotbarItem = rightTransfer = 0;
 	if (open) { toggleOpen(); }
 	itemUsed.clear();
 }

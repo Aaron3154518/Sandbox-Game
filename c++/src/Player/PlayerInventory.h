@@ -42,7 +42,7 @@ private:
 	void tick(int ms);
 	bool leftClick(ItemInfo& item);
 	bool rightClick(ItemInfo& item);
-	void setUseTime(int ms) { useTime = ms; if (!inUse()) { info.itemId = item::Id::numItems; } }
+	void setUseTime(int ms);
 	void decUseTime(int ms) { setUseTime(useTime - ms); }
 
 	void clear();
@@ -64,8 +64,8 @@ public:
 	bool leftClickPos(SDL_Point pos);
 	bool rightClickPos(SDL_Point pos);
 
-	ItemInfo leftClickItem(ItemInfo item, int itemMaxStack);
-	ItemInfo rightClickItem(ItemInfo item, int itemMaxStack);
+	ItemInfo leftClickItem(ItemInfo item, int otherMaxStack);
+	ItemInfo rightClickItem(ItemInfo item, int otherMaxStack);
 	void autoMoveItem(SDL_Point loc);
 	void onChangeHeld(); //Private
 
@@ -105,7 +105,8 @@ private:
 	// Is the inventory open
 	bool open;
 	// Item transfer for right click
-	double amntTransferred = 0.;
+	bool didRightTransfer = false;
+	double rightTransfer = 0.;
 
 	// Item begin used
 	UseItem itemUsed;

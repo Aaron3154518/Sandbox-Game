@@ -39,11 +39,12 @@ void Player::handleEvents(Event& e) {
 	// Otherwise handle events
 	} else if (mapOpen) {
 		e.nextUI(screenR, true);
-		if (e.checkAndHandleKey(SDLK_m, Event::ButtonStatus::RELEASED)) {
+		if (any8(e[SDLK_m], Event::Button::RELEASED)) {
 			std::cerr << "Close Map" << std::endl;
 			mapOpen = false;
 			// map.setCenter(mRect.cX() / gameVals::BLOCK_W(), mRect.cY() / gameVals::BLOCK_W());
 			// map.zoom = 1;
+			e.handleKey(SDLK_m);
 		}
 	} else {
 		/*// When we open the inventory, check if crafting should open as well
@@ -83,24 +84,27 @@ void Player::handleEvents(Event& e) {
 		e.nextUI(screenR, false);
 
 		// Map Toggle
-		if (e.checkAndHandleKey(SDLK_m, Event::ButtonStatus::RELEASED)) {
+		if (any8(e[SDLK_m], Event::Button::RELEASED)) {
 			std::cerr << "Open Map" << std::endl;
 			mapOpen = true;
 			// map.setCenter(mRect.cX() / gameVals::BLOCK_W(), mRect.cY() / gameVals::BLOCK_W());
 			// map.zoom = 1;
+			e.handleKey(SDLK_m);
 		}
 		// Minimap zoom
-		if (e.checkAndHandleKey(SDLK_EQUALS, Event::ButtonStatus::HELD)) {
+		if (any8(e[SDLK_EQUALS], Event::Button::HELD)) {
 			std::cerr << "Minimap Zoom In" << std::endl;
 			/* map.zoom += e.dt.milliseconds * 10;
 			if(map.zoom > 5) { map.zoom = 5; }
 			*/
+			e.handleKey(SDLK_EQUALS);
 		}
-		if (e.checkAndHandleKey(SDLK_MINUS, Event::ButtonStatus::HELD)) {
+		if (any8(e[SDLK_MINUS], Event::Button::HELD)) {
 			std::cerr << "Minimap Zoom Out" << std::endl;
 			/* map.zoom -= e.dt.milliseconds * 10;
 			if(map.zoom < 1) { map.zoom = 1; }
 			*/
+			e.handleKey(SDLK_MINUS);
 		}
 
 		// Handle movement
@@ -108,16 +112,17 @@ void Player::handleEvents(Event& e) {
 			// acc = stats.getStat("acceleration");
 			double acc = 3;
 			a.x = 0;
-			if (e.checkAndHandleKey(SDLK_a, Event::ButtonStatus::HELD)) {
-				a.x -= acc;
+			if (any8(e[SDLK_a], Event::Button::HELD)) {
+				a.x -= acc; e.handleKey(SDLK_a);
 			}
-			if (e.checkAndHandleKey(SDLK_d, Event::ButtonStatus::HELD)) {
-				a.x += acc;
+			if (any8(e[SDLK_d], Event::Button::HELD)) {
+				a.x += acc; e.handleKey(SDLK_d);
 			}
 			// Check for jump
 			if (collided.y == CollideType::botRight
-				&& e.checkAndHandleKey(SDLK_SPACE, Event::ButtonStatus::HELD)) {
-				v.y = -6; // -stats.getStat("jump_speed");
+				&& any8(e[SDLK_SPACE], Event::Button::HELD)) {
+				// -stats.getStat("jump_speed");
+				v.y = -6; e.handleKey(SDLK_SPACE);
 			}
 			move(e.dt);
 		}
@@ -327,6 +332,8 @@ void Player::save() {
 
 void Player::createNewPlayer(IO& io) {
 	Player player;
+	player.inventory.setItem(0, 0,
+		ItemInfo{item::Id::DIRT, player.inventory.getMaxStack()});
 	player.write(io);
 }
 

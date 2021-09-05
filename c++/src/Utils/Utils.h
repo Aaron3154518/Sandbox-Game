@@ -13,6 +13,7 @@
 #include <set>
 #include <sstream>
 #include <sys/stat.h>
+#include <type_traits>
 #include <vector>
 #include <unistd.h>
 
@@ -63,5 +64,10 @@ Rect toBlockRect(Rect r);
 bool rectsOverlap(Rect r1, Rect r2);
 
 SDL_Point mousePos();
+
+// Bitwise functions
+bool any8(const uint8_t& src, const uint8_t& comp);
+
+bool all8(const uint8_t& src, const uint8_t& comp);
 
 #endif
