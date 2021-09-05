@@ -12,8 +12,10 @@ namespace item {
 	// - declares a constructor Type()
 	// - implements a special id for the type
 
+	// Placeables
 	class Dirt : public Item { NEW_ITEM(Dirt) };
 	class Stone : public Item { NEW_ITEM(Stone) };
+	class WorkTable : public Item { NEW_ITEM(WorkTable) };
 }
 
 #endif

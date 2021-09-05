@@ -97,8 +97,7 @@ PlayerInventory::PlayerInventory() : Inventory(DIM) {
 	craftR.y = armorRect.y2() + BUTTON_W / 4;
 	craftToggle.setRect(craftR);
 
-	open = true;
-	toggleOpen();
+	if (open) { toggleOpen(); }
 }
 
 void PlayerInventory::draw() {
@@ -110,6 +109,11 @@ void PlayerInventory::draw() {
 		armorInv.draw(p);
 		craftToggle.draw(p);
 	}
+
+	if (crafting.open) {
+		crafting.draw();
+	}
+
 	if (drawDescription) {
 		drawHoverItem(toInvPos(mousePos() - mTex.dest.topLeft()));
 	}
@@ -175,7 +179,7 @@ void PlayerInventory::handleEvents(Event& e) {
 			&& !leftClickPos(mouse) && !armorInv.leftClickPos(armorMouse)) {
 			// Try to click crafting toggle
 			if (craftToggle.clicked(e.mouse)) {
-				std::cerr << "Open Crafting" << std::endl;
+				crafting.toggleOpen();
 				// Click with item and update inventory
 			} else if (itemUsed.leftClick(getCurrentItemRef())
 				&& !heldItem.isItem()) {
@@ -330,6 +334,7 @@ void PlayerInventory::toggleOpen() {
 	int difference = gameVals::INV_W() * (dim.y - 1);
 	mRect.h += open ? difference : -difference;
 	mTex.area = open ? TextureData::NO_RECT() : Rect(0, 0, mRect.w, mRect.h);
+	if (!open) { crafting.setOpen(false); }
 }
 
 const ItemInfo& PlayerInventory::getCurrentItem() const {
@@ -338,6 +343,12 @@ const ItemInfo& PlayerInventory::getCurrentItem() const {
 
 ItemInfo& PlayerInventory::getCurrentItemRef() {
 	return heldItem.isItem() ? heldItem : items[0][hotbarItem];
+}
+
+Rect PlayerInventory::getFullRect() const {
+	Rect result = mRect;
+	if (!open) { result.h += (DIM.y - 1) * gameVals::INV_W(); }
+	return result;
 }
 
 void PlayerInventory::clear() {

@@ -11,6 +11,7 @@ namespace item {
 #define PLACEABLE setItemData(ItemData::consumable | ItemData::autoUse \
 	| ItemData::swing | ItemData::placer | ItemData::leftClick, true)
 
+	// Placeables
 	ADD_ITEM(Dirt, DIRT) {
 		name = "Dirt";
 		img = "dirt.png";
@@ -21,6 +22,12 @@ namespace item {
 		name = "Stone";
 		img = "stone.png";
 		blockId = tile::Id::STONE;
+		PLACEABLE;
+	}
+	ADD_ITEM(WorkTable, WORK_TABLE) {
+		name = "Work Table";
+		img = "work_table.png";
+		blockId = tile::Id::WORK_TABLE;
 		PLACEABLE;
 	}
 }

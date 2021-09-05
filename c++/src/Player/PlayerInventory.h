@@ -7,6 +7,7 @@
 
 #include <SDL.h>
 
+#include "CraftingUI.h"
 #include "Inventory.h"
 #include "../Definitions.h"
 #include "../Objects/DroppedItem.h"
@@ -82,6 +83,8 @@ public:
 	// Current selected item (held or in hotbar)
 	const ItemInfo& getCurrentItem() const;
 
+	Rect getFullRect() const;
+
 	void clear();
 
 	void read(IO& io);
@@ -103,13 +106,16 @@ private:
 	ItemInfo heldItem;
 	int hotbarItem = 0;
 	// Is the inventory open
-	bool open;
+	bool open = true;
 	// Item transfer for right click
 	bool didRightTransfer = false;
 	double rightTransfer = 0.;
 
 	// Item begin used
 	UseItem itemUsed;
+
+	// Crafting ui
+	CraftingUI crafting;
 
 	static const SDL_Point DIM;
 	static const int BUTTON_W;

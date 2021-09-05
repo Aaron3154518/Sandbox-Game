@@ -80,3 +80,18 @@ std::map<Tile::TileData, bool> Tile::getTileData(const DataKeys& keys) const {
 void Tile::setTileData(const DataKeys& keys, bool val) {
 	for (TileData key : keys) { data[key] = val; }
 }
+
+bool Recipe::hasResult() const {
+	return resultAmnt > 0 && resultItem != item::Id::NONE
+		&& resultItem != item::Id::numItems;
+}
+
+// Recipe
+bool Recipe::operator<(const Recipe& r) const {
+	return resultItem < r.resultItem;
+}
+
+// CraftingStation
+CraftingStation::CraftingStation() {
+	setTileData(TileData::crafting, true);
+}

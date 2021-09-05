@@ -5,6 +5,7 @@
 #include <list>
 #include <vector>
 #include <forward_list>
+#include <map>
 #include <memory>
 #include <typeindex>
 #include <typeinfo>
@@ -115,6 +116,28 @@ protected:
 private:
 	const static tile::Id ID = tile::Id::numTiles;
 	static std::vector<TilePtr>& getTiles();
+};
+
+struct Recipe {
+	item::Id resultItem = item::Id::NONE;
+	int resultAmnt = 0;
+	std::map<item::Id, int> ingredients;
+
+	bool hasResult() const;
+	bool operator<(const Recipe& r) const;
+};
+
+class CraftingStation : public Tile {
+public:
+	CraftingStation();
+	~CraftingStation() = default;
+
+	const std::set<Recipe>& getRecipes() const { return recipes; }
+
+protected:
+	// Makes recipes easier to hardcode
+	using I = item::Id;
+	std::set<Recipe> recipes;
 };
 
 #define NEW_TILE(TYPE) \

@@ -13,16 +13,25 @@
 class Button : public UIElement {
 public:
 	Button() = default;
-	Button(std::string id, Uint8 hoverStr = 120);
+	Button(const std::string& id, Uint8 hoverStr = 120);
+	Button(SharedTexture tex, Uint8 hoverStr = 120);
 	~Button() = default;
 
 	bool clicked(SDL_Point mouse);
 	void draw(SDL_Point parentPos = SDL_Point{ 0,0 },
 		Rect boundary = TextureData::NO_RECT());
 
-	virtual void setRect(const Rect& rect);
+	void setRect(const Rect& rect);
+	void setHoverImg(const std::string& id);
+	void setHoverImg(SharedTexture tex);
 
 private:
+	struct State {
+		bool useTexture = false;
+		std::string textureId = "";
+		SharedTexture texture = makeSharedTexture();
+	};
+	State normal, hover;
 	TextureData data;
 };
 

@@ -45,6 +45,9 @@ constexpr SDL_Color BLUE{ 0,0,255,255 };
 constexpr SDL_Color MAGENTA{ 255,0,255,255 };
 constexpr SDL_Color PURPLE{ 128,0,128,255 };
 
+bool operator==(const SDL_Color& lhs, const SDL_Color& rhs);
+bool operator!=(const SDL_Color& lhs, const SDL_Color& rhs);
+
 static Uint32 toUint(SDL_Color c) {
 #if SDL_BYTEORDER == SDL_BIG_ENDIAN
 	Uint8 arr[4] = { c.r, c.g, c.b, c.a };
@@ -68,6 +71,7 @@ SharedFont makeSharedFont(TTF_Font* font = NULL);
 
 struct FontData {
 	int w = -1, h = -1;
+	std::string sampleText = "";
 	std::string fileName = gameVals::fontFile();
 };
 
@@ -80,7 +84,7 @@ struct TextData {
 	bool useFont = false;
 	SharedFont font = makeSharedFont();
 	std::string text = "", fontId = "";
-	SDL_Color color = BLACK;
+	SDL_Color color = BLACK, bkgrnd = TRANSPARENT;
 	double x = 0., y = 0.;
 	PosType xMode = PosType::topleft, yMode = PosType::topleft;
 	int w = 0, h = 0; // <= 0 for unbounded
@@ -130,6 +134,8 @@ public:
 	// Texture/font size
 	static bool getTextureSize(SDL_Texture* tex, int* w, int* h);
 	static void getFontSize(std::string fileName, int size, int* w, int* h);
+	static void getTextSize(std::string fileName, int size,
+		std::string sampleText, int* w, int* h);
 	// Create texture/font
 	static Font createFont(const FontData& data);
 	Texture createTexture(int w, int h, SDL_Color bkgrnd = TRANSPARENT);
@@ -161,13 +167,12 @@ public:
 
 	// Render text
 	TextureData renderText(const TextData& data) const;
-	TextureData renderTextWrapped(const TextData& data,
-		Uint32 bkgrnd = -1) const;
+	TextureData renderTextWrapped(const TextData& data) const;
 
 	// Draw textures/text
 	void drawTexture(const TextureData& data);
 	void drawText(const TextData& data);
-	void drawTextWrapped(const TextData& data, Uint32 bkgrnd = -1);
+	void drawTextWrapped(const TextData& data);
 
 	Rect getMinRect(std::string id, int maxW, int maxH);
 

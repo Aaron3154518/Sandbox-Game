@@ -332,8 +332,10 @@ void Player::save() {
 
 void Player::createNewPlayer(IO& io) {
 	Player player;
-	player.inventory.setItem(0, 0,
+	player.inventory.setItem(0, 1,
 		ItemInfo{item::Id::DIRT, player.inventory.getMaxStack()});
+	player.inventory.setItem(1, 1,
+		ItemInfo{item::Id::WORK_TABLE, 5});
 	player.write(io);
 }
 

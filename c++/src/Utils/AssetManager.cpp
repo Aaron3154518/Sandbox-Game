@@ -49,6 +49,14 @@ SharedFont makeSharedFont(TTF_Font* font) {
 }
 #endif
 
+bool operator==(const SDL_Color& lhs, const SDL_Color& rhs) {
+	return lhs.a == rhs.a && lhs.r == rhs.r
+		&& lhs.g == rhs.g && lhs.b == rhs.b;
+}
+bool operator!=(const SDL_Color& lhs, const SDL_Color& rhs) {
+	return !(lhs == rhs);
+}
+
 // TextData
 void TextData::adjustRect(Rect& r) const {
 	switch (xMode) {
@@ -163,9 +171,16 @@ bool AssetManager::getTextureSize(SDL_Texture* tex, int* w, int* h) {
 }
 void AssetManager::getFontSize(std::string fileName, int size, int* w, int* h) {
 	Font font = makeFont(TTF_OpenFont(fileName.c_str(), size));
-	// Don't use ' '!
 	TTF_SizeText(font.get(), "_", w, NULL);
 	if (h) { *h = TTF_FontHeight(font.get()); }
+}
+void AssetManager::getTextSize(std::string fileName, int size,
+	std::string sampleText,	int* w, int* h) {
+	if (sampleText.empty()) { getFontSize(fileName, size, w, h); }
+	else {
+		Font font = makeFont(TTF_OpenFont(fileName.c_str(), size));
+		TTF_SizeText(font.get(), sampleText.c_str(), w, h);
+	}
 }
 
 // Create font/asset
@@ -175,20 +190,20 @@ Font AssetManager::createFont(const FontData& data) {
 	}
 	int minSize = 1, maxSize = 10;
 	int w, h;
-	getFontSize(data.fileName, 1, &w, &h);
+	getTextSize(data.fileName, 1, data.sampleText, &w, &h);
 	// While too small
 	while ((data.w != -1 && w < data.w) || (data.h != -1 && h < data.h)) {
 		minSize = maxSize;
 		maxSize *= 2;
-		getFontSize(data.fileName, maxSize, &w, &h);
+		getTextSize(data.fileName, maxSize, data.sampleText, &w, &h);
 	}
 	Font font = makeFont();
 	while (true) {
 		int size = (maxSize + minSize) / 2;
-		getFontSize(data.fileName, size, &w, &h);
+		getTextSize(data.fileName, size, data.sampleText, &w, &h);
 		// If too small
 		if ((data.w != -1 && w <= data.w) || (data.h != -1 && h <= data.h)) {
-			getFontSize(data.fileName, size + 1, &w, &h);
+			getTextSize(data.fileName, size + 1, data.sampleText, &w, &h);
 			if ((data.w == -1 || w > data.w) && (data.h == -1 || h > data.h)) {
 				font = makeFont(TTF_OpenFont(data.fileName.c_str(), size + 1));
 				break;
@@ -197,7 +212,7 @@ Font AssetManager::createFont(const FontData& data) {
 			}
 			// If too big
 		} else {
-			getFontSize(data.fileName, size - 1, &w, &h);
+			getTextSize(data.fileName, size - 1, data.sampleText, &w, &h);
 			if ((data.w == -1 || w > data.w) && (data.h == -1 || h > data.h)) {
 				maxSize = size - 1;
 			} else {
@@ -409,13 +424,26 @@ std::vector<std::string> AssetManager::splitText(const std::string& text,
 // Functions to create a texture
 TextureData AssetManager::renderText(const TextData& data) const {
 	TextureData tData;
+	if (data.text.empty()) { return tData; }
 	SharedFont font = getFont(data);
 	if (!font) {
 		std::cerr << "renderText(): Invalid font" << std::endl;
 		return tData;
 	}
-	SDL_Surface* surface = TTF_RenderText_Blended(font.get(),
-		data.text.c_str(), data.color);
+	SDL_Surface* surface = NULL;
+	if (data.bkgrnd == TRANSPARENT) {
+		surface = TTF_RenderText_Blended(font.get(),
+			data.text.c_str(), data.color);
+	} else {
+		surface = TTF_RenderText_Shaded(font.get(),
+			data.text.c_str(), data.color, data.bkgrnd);
+	}
+	if (!surface) {
+#ifdef DEBUG_RENDER
+		std::cerr << "renderText(): Unable to render text" << std::endl;
+#endif
+		return tData;
+	}
 	tData.setTexture(makeTexture(
 		SDL_CreateTextureFromSurface(mRenderer.get(), surface)));
 	SDL_FreeSurface(surface);
@@ -426,8 +454,7 @@ TextureData AssetManager::renderText(const TextData& data) const {
 	return tData;
 }
 
-TextureData AssetManager::renderTextWrapped(const TextData& data,
-	Uint32 bkgrnd) const {
+TextureData AssetManager::renderTextWrapped(const TextData& data) const {
 	TextureData tData;
 	SharedFont font = getFont(data);
 	if (!font) {
@@ -442,7 +469,7 @@ TextureData AssetManager::renderTextWrapped(const TextData& data,
 	int w = data.w, h = lineH * lines.size();
 	SDL_Surface* surf = SDL_CreateRGBSurface(0, w, h, 32,
 		rmask, gmask, bmask, amask);
-	if (bkgrnd != -1) { SDL_FillRect(surf, NULL, bkgrnd); }
+	if (data.bkgrnd != TRANSPARENT) { SDL_FillRect(surf, NULL, toUint(data.bkgrnd)); }
 	int x = data.w / 2, y = lineH / 2;
 	for (std::string line : lines) {
 		if (line == "") { y += lineH; continue; }
@@ -554,8 +581,8 @@ void AssetManager::drawTexture(const TextureData& data) {
 void AssetManager::drawText(const TextData& data) {
 	drawTexture(renderText(data));
 }
-void AssetManager::drawTextWrapped(const TextData& data, Uint32 bkgrnd) {
-	drawTexture(renderTextWrapped(data, bkgrnd));
+void AssetManager::drawTextWrapped(const TextData& data) {
+	drawTexture(renderTextWrapped(data));
 }
 
 Rect AssetManager::getMinRect(std::string id, int maxW, int maxH) {
@@ -625,7 +652,7 @@ SharedTexture AssetManager::brightenTexture(SharedTexture src, Uint8 val) {
 
 		return dest;
 	} else {
-#ifdef RENDER_DEBUG
+#ifndef RENDER_DEBUG
 		std::cerr << "AssetManager::brightenTexture: "
 			<< "could not query source texture" << std::endl;
 #endif

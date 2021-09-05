@@ -12,9 +12,13 @@ namespace tile {
 	// - declares a constructor Type()
 	// - implements a special id for the type
 
+	// Normal blocks
 	class Air : public Tile { NEW_TILE(Air) };
 	class Dirt : public Tile { NEW_TILE(Dirt) };
 	class Stone : public Tile { NEW_TILE(Stone) };
+
+	// Crafting Stations
+	class WorkTable : public CraftingStation { NEW_TILE(WorkTable) };
 }
 
 #endif

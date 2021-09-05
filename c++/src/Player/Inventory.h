@@ -23,7 +23,7 @@ public:
 	Inventory(SDL_Point _dim);
 	~Inventory() = default;
 
-	virtual void draw(SDL_Point toplef);
+	virtual void draw(SDL_Point topleft);
 	virtual void drawInventory();
 
 	virtual void handleEvents(Event& e, SDL_Point topLeft);
