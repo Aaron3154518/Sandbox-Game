@@ -167,7 +167,10 @@ void PlayerInventory::handleEvents(Event& e) {
 			}
 		}
 
-		// Auto move items
+		// Crafting UI
+		crafting.handleEvents(e);
+
+		// TODO: Auto move items
 
 		// Left/right click
 		SDL_Point mouse = toInvPos(e.mouse - mRect.topLeft());

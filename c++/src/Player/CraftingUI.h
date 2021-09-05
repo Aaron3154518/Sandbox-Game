@@ -13,6 +13,7 @@
 #include "../Objects/Tile.h"
 #include "../UIElements/Button.h"
 #include "../Utils/AssetManager.h"
+#include "../Utils/Event.h"
 #include "../Utils/Rect.h"
 
 class CraftingUI {
@@ -21,13 +22,16 @@ public:
 	CraftingUI();
 	~CraftingUI() = default;
 
+	void handleEvents(Event& e);
 	void draw();
 
 	void setOpen(bool val);
 	void toggleOpen();
 
 private:
-	Rect mRect, recipeRect, ingredientRect;
+	Rect mRect, craftersRect, recipeRect;
+	Rect resultRect, ingredientRect;
+	Rect optionsRect;
 	bool open = false;
 
 	// Craft button
@@ -48,6 +52,8 @@ private:
 	// Selected crafter and recipe
 	tile::Id cSelected = tile::Id::AIR;
 
+	const static SDL_Point DIM;
+	const static std::string CRAFT;
 	static std::set<Recipe> HAND_CRAFTS;
 };
 
