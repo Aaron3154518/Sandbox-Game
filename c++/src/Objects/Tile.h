@@ -30,6 +30,7 @@ public:
 	Tile() = default;
 	~Tile() = default;
 
+	// TODO: bitwise
 	enum TileData {
 		hasData = 0,	// Tile stores data
 		clickable,		// Tile is interactable

@@ -117,7 +117,7 @@ struct ItemInfo {
 	ItemInfo(item::Id id, size_t amnt);
 	~ItemInfo() = default;
 
-	item::Id itemId = item::Id::numItems;
+	item::Id itemId = item::Id::NONE;
 	int amnt = 0;
 	ByteArray data;
 

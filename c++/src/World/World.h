@@ -47,8 +47,8 @@ public:
 	// Functions involving the world blocks
 	void getBlockSrc(int& x, int& y) const;
 	SDL_Point getBlockSrc(SDL_Point loc) const;
-	bool checkCollisions(Point<double>& pos, Point<double> dim,
-		Point<double>& d) const;
+	void checkCollisions(Point<int> size,
+		Point<double>& pos, Point<double>& d) const;
 	bool touchingBlocks(const Point<double>& pos, const Point<double>& dim,
 		bool x, bool topLeft) const;
 	bool anySolidBlocks(int x1, int x2, int y1, int y2) const;

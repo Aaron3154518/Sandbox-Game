@@ -16,7 +16,7 @@ void UseItem::tick(int ms) {
 	else {
 		if (info.isItem()) { useTime = info.getItem()->tick(useTime, ms); } 
 		else { useTime -= ms; }
-		if (!inUse()) { info.itemId = item::Id::numItems; }
+		if (!inUse()) { info.itemId = item::Id::NONE; }
 	}
 }
 

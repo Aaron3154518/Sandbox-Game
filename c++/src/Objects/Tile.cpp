@@ -54,8 +54,8 @@ std::forward_list<ItemInfo> Tile::generateDrops() const {
 }
 
 bool Tile::onBreak(SDL_Point loc) {
-	Point<double> pos{(double)loc.x * gameVals::BLOCK_W(),
-		(double)loc.y * gameVals::BLOCK_W()};
+	Point<double> pos{ (.5 + loc.x) * gameVals::BLOCK_W(),
+		(.5 + loc.y) * gameVals::BLOCK_W() };
 	for (ItemInfo& info : generateDrops()) {
 		Game::World().dropItem(DroppedItem(info),
 			DroppedItem::DropDir::none, pos);

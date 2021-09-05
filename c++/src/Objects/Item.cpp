@@ -29,10 +29,11 @@ void ItemInfo::print() {
 }
 
 bool ItemInfo::isItem() const {
-	return amnt > 0 && itemId != item::Id::numItems;
+	return amnt > 0 && itemId != item::Id::NONE
+		&& itemId != item::Id::numItems;
 }
 ItemPtr ItemInfo::getItem() const {
-	return Item::getItem(isItem() ? itemId : item::Id::numItems);
+	return Item::getItem(isItem() ? itemId : item::Id::NONE);
 }
 int ItemInfo::maxStack() const {
 	return getItem()->maxStack;

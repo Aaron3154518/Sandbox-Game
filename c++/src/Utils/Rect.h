@@ -1,6 +1,7 @@
 #ifndef RECT_H
 #define RECT_H
 
+#include <cmath>
 #include <iostream>
 
 #include <SDL.h>

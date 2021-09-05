@@ -27,7 +27,7 @@ void DroppedItem::move(Timestep& dt) {
 		v.x = copysignf(fmaxf(fabsf(v.x) - 1, 0), v.x);
 		v.y += MAX_FALL_SPEED * sec / 2;
 		v.y = fminf(v.y, MAX_FALL_SPEED / 2);
-		Game::World().checkCollisions(pos, ratio, d);
+		Game::World().checkCollisions(toPoint(mRect.dim()), pos, d);
 	}
 	mRect.x = (int)pos.x; mRect.y = (int)pos.y;
 }

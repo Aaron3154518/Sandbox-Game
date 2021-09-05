@@ -10,10 +10,7 @@ const std::string Inventory::FONT_ID = Window::Get().assets().addFont(
 	FontData{ gameVals::INV_FONT_W(), gameVals::INV_FONT_W() });
 
 SDL_Point Inventory::toInvPos(SDL_Point pos) {
-	SDL_Point result = (pos - gameVals::INV_MARGIN()) / gameVals::INV_W();
-	if (pos.x < 0) { --result.x; }
-	if (pos.y < 0) { --result.y; }
-	return result;
+	return (pos - gameVals::INV_MARGIN()) / gameVals::INV_W();
 }
 SDL_Point Inventory::toPxPos(SDL_Point pos) {
 	return (pos * gameVals::INV_W()) + gameVals::INV_MARGIN();

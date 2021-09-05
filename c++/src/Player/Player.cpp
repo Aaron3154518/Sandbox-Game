@@ -157,7 +157,7 @@ void Player::move(Timestep dt) {
 
 	Point<double> prevD = d, prevP = pos;
 	// Check for collisions and set new position
-	bool didHit = Game::World().checkCollisions(pos, dim, d);
+	Game::World().checkCollisions(toPoint(mRect.dim()), pos, d);
 	setPos(pos);
 
 	// Get actual change in position

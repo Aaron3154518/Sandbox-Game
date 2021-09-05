@@ -146,8 +146,7 @@ double World::loadWorld(double progress) {
 		return 1.;
 	}
 	progress *= 2;
-	if (progress < 1.) { progress = loadBlocks(fr, progress, 3) / 2.; }
-	else { progress = loadMap(fr, progress - 1) / 2. + .5; }
+	if (progress < 1.) { progress = loadBlocks(fr, progress, 3) / 2.; } else { progress = loadMap(fr, progress - 1) / 2. + .5; }
 	if (progress >= 1.) {
 		if (!fr.close()) {
 			std::cerr << "World::loadWorld(): File Close Error" << std::endl;
@@ -256,7 +255,7 @@ double World::loadBlocks(IO& io, double progress, int numRows) {
 						if tile.has_data :
 							amnt = int.from_bytes(f_obj.read(2), byteorder)
 							c.update_dict(col1, row, f_obj.read(amnt), block_data)
-							
+
 		}
 		// Update our column and blocks left
 		blocksLeft -= num;
@@ -335,8 +334,7 @@ double World::saveWorld(double progress) {
 		return 1.;
 	}
 	progress *= 2;
-	if (progress < 1.) { progress = saveBlocks(fw, progress, 3) / 2.; }
-	else { progress = saveMap(fw, progress - 1.) / 2. + .5; }
+	if (progress < 1.) { progress = saveBlocks(fw, progress, 3) / 2.; } else { progress = saveMap(fw, progress - 1.) / 2. + .5; }
 	if (progress >= 1.) {
 		if (!fw.commit()) {
 			std::cerr << "World::saveWorld(): File Close Error" << std::endl;
@@ -431,19 +429,89 @@ SDL_Point World::getBlockSrc(SDL_Point loc) const {
 	return loc;
 }
 
-bool World::checkCollisions(Point<double>& pos, Point<double> dim,
-	Point<double>& d) const {
-	dim.x *= gameVals::BLOCK_W(); dim.y *= gameVals::BLOCK_W();
-	pos.x += d.x; pos.y += d.y;
-	forceInWorld(pos, dim);
-	return false;
+void World::checkCollisions(Point<int> size,
+	Point<double>& pos, Point<double>& d) const {
+	const int BW = gameVals::BLOCK_W();
+	const Point<int> wDim = toPoint(dim);
+	// Break up displacement into smaller parts
+	while (d.x != 0 || d.y != 0) {
+		// Get distances based on traveling 1 block in the largest direction
+		// This way we travel at most 1 block in any direction
+		double frac = std::min(BW / std::max(std::abs(d.x), std::abs(d.y)), 1.);
+		Point<double> d_{ d.x * frac, d.y * frac };
+		d.x -= d_.x; d.y -= d_.y;
+
+		// Current block - {{left, right}, {top, bottom}}
+		Point<Point<int>> currBlock{ {0,0}, {0,0} };
+		// Next block in the direction of travel
+		Point<int> nextBlock{ 0,0 };
+		// Distance to next block
+		Point<double> toNext{ 0.,0. };
+		for (auto idx : getDimList()) {
+			// Get current and next block
+			currBlock[idx].x = std::floor(pos[idx] / BW);
+			currBlock[idx].y = std::ceil((pos[idx] + size[idx]) / BW) - 1;
+			// Going top/left or bottom/right
+			nextBlock[idx] = d_[idx] < 0 ? std::floor((pos[idx] + d_[idx])
+				/ BW) : std::ceil((pos[idx] + size[idx] + d_[idx]) / BW) - 1;
+			// Use top left or bottom right
+			Dim idx2 = d_[idx] <= 0 ? Dim::x : Dim::y;
+			// We didn't move to a new block
+			if (currBlock[idx][idx2] == nextBlock[idx]) {
+				pos[idx] += d_[idx];
+				d_[idx] = 0.;
+			// Stop at top left world boundary
+			} else if (nextBlock[idx] < 0) {
+				pos[idx] = d_[idx] = 0.;
+			// Stop at bottom right world bondary
+			} else if (nextBlock[idx] >= wDim[idx]) {
+				pos[idx] = (wDim[idx] * BW) - size[idx];
+				d_[idx] = 0.;
+			// Move to the next block
+			} else {
+				toNext[idx] = (nextBlock[idx] * BW) - pos[idx]
+					- (d_[idx] < 0 ? -BW : size[idx]);
+			}
+		}
+
+		// We are only moving in one direction
+		if (d_.x * d_.y == 0. && (d_.x != 0. || d_.y != 0.)) {
+			// The Points below are set up as follows:
+			// {value for moving idx, value for stationary idx}
+			Point<Dim> idxs = d_.y == 0 ? (Point<Dim>) { Dim::x, Dim::y } :
+				(Point<Dim>) { Dim::y, Dim::x };
+			Point<int> lbs = { nextBlock[idxs.x], currBlock[idxs.y].x };
+			Point<int> ubs = { lbs.x + 1, currBlock[idxs.y].y + 1 };
+			// We can move freely in the moving direction
+			pos[idxs.x] += anySolidBlocks(lbs[idxs.x], ubs[idxs.x],
+				lbs[idxs.y], ubs[idxs.y]) ? toNext[idxs.x] : d_[idxs.x];
+		// We are moving in both directions
+		} else if (d_.x * d_.y != 0) {
+			// Shortest time to next block
+			Point<double> nextFrac{ toNext.x / d_.x, toNext.y / d_.y };
+			// Shortest time direction
+			Dim idx1 = nextFrac.x <= nextFrac.y ? Dim::x : Dim::y;
+			// Longest time direction
+			Dim idx2 = nextFrac.x <= nextFrac.y ? Dim::y : Dim::x;
+			// Move in the shortest time direction first
+			// as it will change blocks first
+			std::vector<Point<Dim>> idxList = { {idx1, idx2}, {idx2,idx1} };
+			for (Point<Dim> idxs : idxList) {
+				// The Points below are set up as follows:
+				// {value for moving idx, value for stationary idx}
+				Point<int> lbs = { nextBlock[idxs.x], currBlock[idxs.y].x };
+				Point<int> ubs = { lbs.x + 1, currBlock[idxs.y].y + 1 };
+				pos[idxs.x] += anySolidBlocks(lbs[idxs.x], ubs[idxs.x],
+					lbs[idxs.y], ubs[idxs.y]) ? toNext[idxs.x] : d_[idxs.x];
+			}
+		}
+	}
 }
 
 bool World::touchingBlocks(const Point<double>& pos, const Point<double>& dim,
 	bool x, bool topLeft) const {
 	float p1, p2, d1, d2;
-	if (x) { p1 = pos.x; p2 = pos.y; d1 = dim.x; d2 = dim.y;  }
-	else { p1 = pos.y; p2 = pos.x; d1 = dim.y; d2 = dim.x; }
+	if (x) { p1 = pos.x; p2 = pos.y; d1 = dim.x; d2 = dim.y; } else { p1 = pos.y; p2 = pos.x; d1 = dim.y; d2 = dim.x; }
 	float l1 = d1 * gameVals::BLOCK_W(), l2 = d2 * gameVals::BLOCK_W();
 	// Check if we are actually touching a new block
 	if ((int)fabsf(p1 + (topLeft ? 0 : l1)) % gameVals::BLOCK_W() == 0) {
@@ -454,8 +522,8 @@ bool World::touchingBlocks(const Point<double>& pos, const Point<double>& dim,
 		if (topLeft ? next < 0 : next >= d1) { return true; }
 		// Otherwise check if there is a solid block
 		else {
-			Point<int> range{(int)(p2 / gameVals::BLOCK_W()),
-				(int)ceilf((p2 + l2) / gameVals::BLOCK_W())};
+			Point<int> range{ (int)(p2 / gameVals::BLOCK_W()),
+				(int)ceilf((p2 + l2) / gameVals::BLOCK_W()) };
 			return x ? anySolidBlocks(next, next + 1, range.x, range.y) :
 				anySolidBlocks(range.x, range.y, next, next + 1);
 		}
@@ -466,11 +534,11 @@ bool World::touchingBlocks(const Point<double>& pos, const Point<double>& dim,
 bool World::anySolidBlocks(int x1, int x2, int y1, int y2) const {
 	if (x1 < 0) { x1 = 0; }
 	if (y1 < 0) { y1 = 0; }
-	if (x2 >= dim.x) { x2 = dim.x - 1; }
-	if (y2 >= dim.y) { y2 = dim.y - 1; }
-	for (; y1 < y2; y1++) {
-		for (; x1 < x2; x1++) {
-			TilePtr tile = Tile::getTile(blocks[y1][x1].id);
+	if (x2 > dim.x) { x2 = dim.x; }
+	if (y2 > dim.y) { y2 = dim.y; }
+	for (int y = y1; y < y2; y++) {
+		for (int x = x1; x < x2; x++) {
+			TilePtr tile = Tile::getTile(getBlock(x, y).id);
 			if (tile->getTileData(Tile::TileData::barrier)) { return true; }
 		}
 	}
@@ -522,15 +590,13 @@ Rect World::getScreenRect(SDL_Point center) const {
 	Rect r(0, 0, dim.x, dim.y);
 	if (worldW >= dim.x) {
 		r.setCX(center.x);
-		if (r.x < 0) { r.x = 0; }
-		else if (r.x2() > worldW) { r.setX2(worldW); }
+		if (r.x < 0) { r.x = 0; } 		else if (r.x2() > worldW) { r.setX2(worldW); }
 	} else {
 		r.x = (int)((worldW - dim.x) / 2);
 	}
 	if (worldH >= dim.y) {
 		r.setCY(center.y);
-		if (r.y < 0) { r.y = 0; }
-		else if (r.y2() > worldH) { r.setY2(worldH); }
+		if (r.y < 0) { r.y = 0; } 		else if (r.y2() > worldH) { r.setY2(worldH); }
 	} else {
 		r.y = (int)((worldH - dim.y) / 2);
 	}
@@ -612,8 +678,7 @@ void World::setBlock(int x, int y, const Block& b) {
 }
 void World::setBlock(SDL_Point loc, const Block& b) {
 	if (isInWorld(loc)) {
-		if (saving()) { blockChanges[loc] = b; }
-		else { blocks[loc.y][loc.x] = b; }
+		if (saving()) { blockChanges[loc] = b; } else { blocks[loc.y][loc.x] = b; }
 	}
 }
 void World::setBlockData(int x, int y, ByteArray& data) {
@@ -697,7 +762,6 @@ bool WorldAccess::breakBlock(SDL_Point loc) {
 				}
 			}
 			// manager.blockChange(loc, tileId, false);
-			// TODO: Drop items
 			return true;
 		}
 	}

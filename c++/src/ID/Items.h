@@ -4,7 +4,8 @@
 namespace item {
 	// Order never changes!
 	enum Id : uint16_t {
-		DIRT = 0,
+		NONE = 0,
+		DIRT,
 		STONE,
 		BASIC_SWORD,
 		BASIC_PICKAXE,
@@ -54,9 +55,6 @@ namespace item {
 
 		numItems
 	};
-
-	// TODO: operator bool(const Id& id) { return id != Id::numItems; }
-	//bool toBool(const Id& id) { return id != Id::numItems; }
 }
 
 #endif

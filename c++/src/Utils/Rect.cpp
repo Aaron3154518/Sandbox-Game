@@ -169,28 +169,28 @@ SDL_Point operator /(SDL_Point lhs, const SDL_Point& rhs) {
 }
 // Point with double
 SDL_Point& operator +=(SDL_Point& lhs, const double& rhs) {
-    lhs.x += rhs; lhs.y += rhs;
+    lhs.x = std::floor(lhs.x + rhs); lhs.y = std::floor(lhs.y + rhs);
     return lhs;
 }
 SDL_Point operator +(SDL_Point lhs, const double& rhs) {
     return lhs += rhs;
 }
 SDL_Point& operator -=(SDL_Point& lhs, const double& rhs) {
-    lhs.x -= rhs; lhs.y -= rhs;
+    lhs.x = std::floor(lhs.x - rhs); lhs.y = std::floor(lhs.y - rhs);
     return lhs;
 }
 SDL_Point operator -(SDL_Point lhs, const double& rhs) {
     return lhs -= rhs;
 }
 SDL_Point& operator *=(SDL_Point& lhs, const double& rhs) {
-    lhs.x *= rhs; lhs.y *= rhs;
+    lhs.x = std::floor(lhs.x * rhs); lhs.y = std::floor(lhs.y * rhs);
     return lhs;
 }
 SDL_Point operator *(SDL_Point lhs, const double& rhs) {
     return lhs *= rhs;
 }
 SDL_Point& operator /=(SDL_Point& lhs, const double& rhs) {
-    lhs.x /= rhs; lhs.y /= rhs;
+    lhs.x = std::floor(lhs.x / rhs); lhs.y = std::floor(lhs.y / rhs);
     return lhs;
 }
 SDL_Point operator /(SDL_Point lhs, const double& rhs) {
