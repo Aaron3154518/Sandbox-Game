@@ -168,53 +168,53 @@ void PlayerInventory::handleEvents(Event& e) {
 		}
 
 		// Crafting UI
-		crafting.handleEvents(e);
+		if (!crafting.open || !crafting.handleEvents(e)) {
+			// TODO: Auto move items
 
-		// TODO: Auto move items
-
-		// Left/right click
-		SDL_Point mouse = toInvPos(e.mouse - mRect.topLeft());
-		SDL_Point armorMouse =
-			toInvPos(e.mouse - armorInv.mRect.topLeft());
-		// Check left click, try to click inventory,
-		// try to click armor inventory
-		if (any8(e[Event::Mouse::LEFT], Event::Button::M_CLICKED)
-			&& !leftClickPos(mouse) && !armorInv.leftClickPos(armorMouse)) {
-			// Try to click crafting toggle
-			if (craftToggle.clicked(e.mouse)) {
-				crafting.toggleOpen();
-				// Click with item and update inventory
-			} else if (itemUsed.leftClick(getCurrentItemRef())
-				&& !heldItem.isItem()) {
-				updatePos(SDL_Point{ hotbarItem, 0 });
-			}
-		// Check right held, try to click inventory
-		} else if (any8(e[Event::Mouse::RIGHT], Event::Button::HELD)
-			&& !rightClickPos(mouse)) {
-			// Click armor inventory
-			armorInv.rightClickPos(armorMouse);
-		// Check right held, try to click inventory, try to click armor inventory
-		} else if (any8(e[Event::Mouse::RIGHT], Event::Button::M_CLICKED)) {
-			bool good = true;
-			std::vector<Rect> rects = {
-				mRect, armorInv.mRect, craftToggle.getRect() };
-			// if (crafting.open) { rects.push_back(crafting.getRect()); }
-			for (const Rect& r : rects) {
-				if (SDL_PointInRect(&e.mouse, &r)) { good = false; break; }
-			}
-			if (good) {
-				// Drop the item
-				if (heldItem.isItem()) {
-					SDL_Point pPos = Game::Player().getCPos();
-					SDL_Point worldMouse = Game::World()
-						.getWorldMousePos(mousePos(), pPos, false);
-					// Drop Item
-					Game::World().dropItem(DroppedItem(heldItem),
-						worldMouse.x < pPos.x ? DroppedItem::DropDir::left
-						: DroppedItem::DropDir::right);
-					heldItem = ItemInfo::NO_ITEM();
-					// Use the item
-				} else { itemUsed.rightClick(getCurrentItemRef()); }
+			// Left/right click
+			SDL_Point mouse = toInvPos(e.mouse - mRect.topLeft());
+			SDL_Point armorMouse =
+				toInvPos(e.mouse - armorInv.mRect.topLeft());
+			// Check left click, try to click inventory,
+			// try to click armor inventory
+			if (any8(e[Event::Mouse::LEFT], Event::Button::M_CLICKED)
+				&& !leftClickPos(mouse) && !armorInv.leftClickPos(armorMouse)) {
+				// Try to click crafting toggle
+				if (craftToggle.clicked(e.mouse)) {
+					crafting.toggleOpen();
+					// Click with item and update inventory
+				} else if (itemUsed.leftClick(getCurrentItemRef())
+					&& !heldItem.isItem()) {
+					updatePos(SDL_Point{ hotbarItem, 0 });
+				}
+			// Check right held, try to click inventory
+			} else if (any8(e[Event::Mouse::RIGHT], Event::Button::HELD)
+				&& !rightClickPos(mouse)) {
+				// Click armor inventory
+				armorInv.rightClickPos(armorMouse);
+			// Check right held, try to click inventory, try to click armor inventory
+			} else if (any8(e[Event::Mouse::RIGHT], Event::Button::M_CLICKED)) {
+				bool good = true;
+				std::vector<Rect> rects = {
+					mRect, armorInv.mRect, craftToggle.getRect() };
+				// if (crafting.open) { rects.push_back(crafting.getRect()); }
+				for (const Rect& r : rects) {
+					if (SDL_PointInRect(&e.mouse, &r)) { good = false; break; }
+				}
+				if (good) {
+					// Drop the item
+					if (heldItem.isItem()) {
+						SDL_Point pPos = Game::Player().getCPos();
+						SDL_Point worldMouse = Game::World()
+							.getWorldMousePos(mousePos(), pPos, false);
+						// Drop Item
+						Game::World().dropItem(DroppedItem(heldItem),
+							worldMouse.x < pPos.x ? DroppedItem::DropDir::left
+							: DroppedItem::DropDir::right);
+						heldItem = ItemInfo::NO_ITEM();
+						// Use the item
+					} else { itemUsed.rightClick(getCurrentItemRef()); }
+				}
 			}
 		}
 

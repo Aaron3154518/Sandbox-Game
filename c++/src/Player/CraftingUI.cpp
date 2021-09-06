@@ -25,6 +25,15 @@ CraftingUI::CraftingUI() {
 		DIM.y * gameVals::INV_W());
 
 	craftersRect = Rect(mRect.x, mRect.y, mRect.w, gameVals::INV_W());
+	crafterSpinner.setRect(craftersRect);
+	std::vector<std::string> files = {"work_table.png", "crusher/crusher_0.png", "crusher/crusher_1.png",
+		"crusher/crusher_2.png", "crusher/crusher_3.png", "crusher/crusher_4.png", "forge/forge_0.png",
+		"forge/forge_1.png", "forge/forge_2.png"};
+	std::vector<Asset> assetVec;
+	for (std::string file : files) {
+		assetVec.push_back(Asset{ false, gameVals::items() + file });
+	}
+	crafterSpinner.set(assetVec);
 
 	recipeRect = Rect(mRect.x, craftersRect.y2(),
 		mRect.w, mRect.h - gameVals::INV_W() * 2);
@@ -53,22 +62,26 @@ CraftingUI::CraftingUI() {
 	}
 }
 
-void CraftingUI::handleEvents(Event& e) {
-	if (any8(e[Event::Mouse::LEFT], Event::Button::M_CLICKED)) {
-		if (craftButton.clicked(e.mouse)) {
-			std::cerr << "Do Craft" << std::endl;
-		} else if (SDL_PointInRect(&e.mouse, &craftersRect)) {
-			std::cerr << "Crafting Stations" << std::endl;
-		} else if (SDL_PointInRect(&e.mouse, &recipeRect)) {
-			std::cerr << "Recipes" << std::endl;
-		} else if (SDL_PointInRect(&e.mouse, &optionsRect)) {
-			std::cerr << "Ingredient Options" << std::endl;
-		} else if (SDL_PointInRect(&e.mouse, &resultRect)) {
-			std::cerr << "Recipe Result" << std::endl;
-		} else if (SDL_PointInRect(&e.mouse, &ingredientRect)) {
-			std::cerr << "Recipe Ingredients" << std::endl;
+bool CraftingUI::handleEvents(Event& e) {
+	if (!crafterSpinner.handleEvents(e)) {
+		if (any8(e[Event::Mouse::LEFT], Event::Button::M_CLICKED)) {
+			if (craftButton.clicked(e.mouse)) {
+				std::cerr << "Do Craft" << std::endl;
+			} else if (SDL_PointInRect(&e.mouse, &craftersRect)) {
+				std::cerr << "Crafting Stations" << std::endl;
+			} else if (SDL_PointInRect(&e.mouse, &recipeRect)) {
+				std::cerr << "Recipes" << std::endl;
+			} else if (SDL_PointInRect(&e.mouse, &optionsRect)) {
+				std::cerr << "Ingredient Options" << std::endl;
+			} else if (SDL_PointInRect(&e.mouse, &resultRect)) {
+				std::cerr << "Recipe Result" << std::endl;
+			} else if (SDL_PointInRect(&e.mouse, &ingredientRect)) {
+				std::cerr << "Recipe Ingredients" << std::endl;
+			} else { return false; }
+			return true;
 		}
-	}
+	} else { return true; }
+	return false;
 }
 
 void CraftingUI::draw() {
@@ -79,6 +92,8 @@ void CraftingUI::draw() {
 	assets.rect(&resultRect, { 255,0,0,128 }, SDL_BLENDMODE_BLEND);
 	assets.rect(&ingredientRect, { 128,128,128,128 }, SDL_BLENDMODE_BLEND);
 	craftButton.draw();
+
+	crafterSpinner.draw();
 }
 
 void CraftingUI::setOpen(bool val) {

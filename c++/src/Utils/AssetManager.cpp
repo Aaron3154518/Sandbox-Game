@@ -118,7 +118,7 @@ void AssetManager::initAssets(SDL_Window* w) {
 	mRenderer.reset(SDL_CreateRenderer(w, -1, 0));
 	resetDrawColor();
 	resetRenderTarget();
-	resetRenderBlendMode();
+	resetBlendMode();
 	for (const std::string& fName : queuedAssets) {
 		loadAsset(fName);
 	}
@@ -159,10 +159,10 @@ void AssetManager::resetRenderTarget() {
 	SDL_SetRenderTarget(mRenderer.get(), NULL);
 	resetDrawColor();
 }
-void AssetManager::setRenderBlendMode(SDL_BlendMode mode) {
+void AssetManager::setBlendMode(SDL_BlendMode mode) {
 	SDL_SetRenderDrawBlendMode(mRenderer.get(), mode);
 }
-void AssetManager::resetRenderBlendMode() {
+void AssetManager::resetBlendMode() {
 	SDL_SetRenderDrawBlendMode(mRenderer.get(), SDL_BLENDMODE_BLEND);
 }
 
@@ -589,19 +589,20 @@ Rect AssetManager::getMinRect(std::string id, int maxW, int maxH) {
 	return Rect::getMinRect(getAsset(id).get(), maxW, maxH);
 }
 
+// TODO: negatic thickness (SDL_gfx)
+// TODO: boundary
 // Functions to draw a rectangle
 void AssetManager::rect(Rect* r, const SDL_Color& color,
 	SDL_BlendMode mode) {
-	setRenderBlendMode(mode);
+	setBlendMode(mode);
 	setDrawColor(color);
 	SDL_RenderFillRect(mRenderer.get(), r);
 	resetDrawColor();
-	resetRenderBlendMode();
+	resetBlendMode();
 }
 
 void AssetManager::thickRect(Rect r, int thickness,
 	AssetManager::BorderType border, const SDL_Color& color) {
-	setDrawColor(color);
 	int lb, ub;
 	switch (border) {
 		case BorderType::inside:
@@ -615,6 +616,7 @@ void AssetManager::thickRect(Rect r, int thickness,
 		default:
 			lb = ub = 0; break;
 	}
+	setDrawColor(color);
 	// Set inital rect
 	r.x -= lb; r.y -= lb; r.w += lb * 2; r.h += lb * 2;
 	while (lb++ < ub) {
@@ -624,6 +626,52 @@ void AssetManager::thickRect(Rect r, int thickness,
 		SDL_RenderDrawRect(mRenderer.get(), &r);
 	}
 	resetDrawColor();
+}
+
+void AssetManager::circle(SDL_Point c, int r, const SDL_Color& color, 
+	SDL_BlendMode mode) {
+	thickCircle(c, r, r, BorderType::inside, color, mode);
+}
+
+void AssetManager::thickCircle(SDL_Point c, int r, int thickness,
+	BorderType border, const SDL_Color& color, SDL_BlendMode mode) {
+	if (r <= 0) { return; }
+	switch (border) {
+		case BorderType::inside:
+		{
+			setBlendMode(mode);
+			setDrawColor(color);
+			int r2 = r - thickness;
+			int dx = 0;
+			while (dx < r) {
+				int ub = (int)(std::sqrt(r * r - dx * dx) + .5);
+				int lb = dx >= r2 ? 0 : (int)(std::sqrt(r2 * r2 - dx * dx) + .5);
+				double x = c.x + dx;
+				SDL_RenderDrawLine(mRenderer.get(), x, c.y + lb, x, c.y + ub);
+				SDL_RenderDrawLine(mRenderer.get(), x, c.y - lb, x, c.y - ub);
+				x = c.x - dx;
+				SDL_RenderDrawLine(mRenderer.get(), x, c.y + lb, x, c.y + ub);
+				SDL_RenderDrawLine(mRenderer.get(), x, c.y - lb, x, c.y - ub);
+				dx++;
+			}
+			resetDrawColor();
+			resetBlendMode();
+			break;
+		}
+		case BorderType::outside:
+			thickCircle(c, r + thickness, thickness, BorderType::inside,
+				color, mode);
+			break;
+		case BorderType::middle:
+		{
+			int lb = -(int)(thickness / 2);
+			int ub = (int)(((double)thickness / 2) + .5);
+			thickCircle(c, r + ub, ub - lb, BorderType::inside, color, mode);
+			break;
+		}
+		default:
+			break;
+	}
 }
 
 SharedTexture AssetManager::brightenTexture(SharedTexture src, Uint8 val) {
@@ -636,7 +684,7 @@ SharedTexture AssetManager::brightenTexture(SharedTexture src, Uint8 val) {
 
 		SharedTexture dest = AssetManager::createTexture(w, h);
 		setRenderTarget(dest.get());
-		setRenderBlendMode(SDL_BLENDMODE_ADD);
+		setBlendMode(SDL_BLENDMODE_ADD);
 
 		TextureData data;
 		data.dest = Rect(0, 0, w, h);
@@ -647,7 +695,7 @@ SharedTexture AssetManager::brightenTexture(SharedTexture src, Uint8 val) {
 		SDL_RenderFillRect(mRenderer.get(), NULL);
 		resetDrawColor();
 
-		resetRenderBlendMode();
+		resetBlendMode();
 		resetRenderTarget();
 
 		return dest;

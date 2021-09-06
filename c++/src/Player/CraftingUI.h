@@ -4,6 +4,7 @@
 #include <iostream>
 #include <map>
 #include <set>
+#include <vector>
 
 #include <SDL.h>
 
@@ -12,6 +13,7 @@
 #include "../ID/Tiles.h"
 #include "../Objects/Tile.h"
 #include "../UIElements/Button.h"
+#include "../UIElements/Spinner.h"
 #include "../Utils/AssetManager.h"
 #include "../Utils/Event.h"
 #include "../Utils/Rect.h"
@@ -22,7 +24,7 @@ public:
 	CraftingUI();
 	~CraftingUI() = default;
 
-	void handleEvents(Event& e);
+	bool handleEvents(Event& e);
 	void draw();
 
 	void setOpen(bool val);
@@ -49,6 +51,7 @@ private:
 		Recipe rSelected;
 	};
 	std::map<tile::Id, Crafter> crafters;
+	Spinner crafterSpinner;
 	// Selected crafter and recipe
 	tile::Id cSelected = tile::Id::AIR;
 

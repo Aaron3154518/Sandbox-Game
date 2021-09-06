@@ -96,6 +96,12 @@ struct TextData {
 	void setFont(const SharedFont& newFont);
 };
 
+struct Asset {
+	bool useTexture = false;
+	std::string assetId = "";
+	SharedTexture texture;
+};
+
 struct TextureData {
 	static const Rect& NO_RECT();
 
@@ -128,8 +134,8 @@ public:
 	void resetDrawColor();
 	void setRenderTarget(SDL_Texture* tex);
 	void resetRenderTarget();
-	void setRenderBlendMode(SDL_BlendMode mode);
-	void resetRenderBlendMode();
+	void setBlendMode(SDL_BlendMode mode);
+	void resetBlendMode();
 
 	// Texture/font size
 	static bool getTextureSize(SDL_Texture* tex, int* w, int* h);
@@ -182,6 +188,10 @@ public:
 		SDL_BlendMode mode = SDL_BLENDMODE_NONE);
 	void thickRect(Rect r, int thickness, BorderType border,
 		const SDL_Color& color);
+	void circle(SDL_Point c, int r, const SDL_Color& color,
+		SDL_BlendMode mode = SDL_BLENDMODE_NONE);
+	void thickCircle(SDL_Point c, int r, int thickness, BorderType border,
+		const SDL_Color& color, SDL_BlendMode mode = SDL_BLENDMODE_NONE);
 
 	// Brighten a texture
 	SharedTexture brightenTexture(SharedTexture src, Uint8 val);

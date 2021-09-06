@@ -26,12 +26,7 @@ public:
 	void setHoverImg(SharedTexture tex);
 
 private:
-	struct State {
-		bool useTexture = false;
-		std::string textureId = "";
-		SharedTexture texture = makeSharedTexture();
-	};
-	State normal, hover;
+	Asset normal, hover;
 	TextureData data;
 };
 

@@ -26,6 +26,7 @@ private:
 };
 
 // TODO: EventStatus separate (can create multiple too)
+// TODO: Getters
 struct Event {
     typedef uint8_t Status;
     typedef SDL_KeyCode Key;

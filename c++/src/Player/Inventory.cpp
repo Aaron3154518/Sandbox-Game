@@ -289,7 +289,6 @@ void Inventory::updatePos(SDL_Point loc) {
 		itemTex.dest = Rect::getMinRect(itemTex.texture.get(),
 			gameVals::INV_IMG_W(), gameVals::INV_IMG_W());
 		itemTex.dest.setCenter(r.cX(), r.cY());
-		itemTex.boundary = Rect(0, 0, mRect.w, mRect.h);
 		assets.drawTexture(itemTex);
 		td.text = std::to_string(item.amnt);
 		td.x = r.x2(); td.y = r.y2();
