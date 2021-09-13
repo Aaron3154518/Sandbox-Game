@@ -1,20 +1,23 @@
 #include "Selector.h"
 
-constexpr SDL_Color BKGRND{ 128,128,128,255 };
-constexpr SDL_Color SCROLL_BKGRND{ 0,0,128,255 };
+constexpr SDL_Color Selector::BKGRND{ 128,128,128,255 };
+constexpr SDL_Color Selector::SCROLL_BKGRND{ 0,0,128,255 };
 
-const std::string PLAY_IMG = gameVals::images() + "play.png";
-const std::string DELETE_IMG = gameVals::images() + "delete.png";
-const std::string ADD_IMG = gameVals::images() + "add.png";
-const std::string EXIT_IMG = gameVals::images() + "exit.png";
+const std::string Selector::PLAY_IMG = gameVals::images() + "play.png";
+const std::string Selector::DELETE_IMG = gameVals::images() + "delete.png";
+const std::string Selector::ADD_IMG = gameVals::images() + "add.png";
+const std::string Selector::EXIT_IMG = gameVals::images() + "exit.png";
 
 Selector::Selector() :
 	ITEM_FONT(Window::Get().assets().addFont(FontData{})) {
 	textInput = true;
 
-	itemText.fontId = ITEM_FONT;
+	itemText.setFontId(ITEM_FONT);
 	itemText.color = WHITE;
-	itemText.xMode = itemText.yMode = TextData::PosType::center;
+
+	titleText.text = "Select <Item>";
+	titleText.setFontId(ITEM_FONT);
+	titleText.color = SCROLL_BKGRND;
 
 	input.setFont(ITEM_FONT);
 	input.setCharConstraint([](const char& ch) {
@@ -54,11 +57,11 @@ void Selector::resize(Rect* rect) {
 	int quarter = (int)(itemH / 4);
 	int eighth = (int)(itemH / 8);
 
-	titleRect = Rect((int)((mRect.w - itemW) / 2), 0, itemW, itemH);
+	title.dest = title.boundary = Rect((int)((mRect.w - itemW) / 2),
+		mRect.y, itemW, itemH);
 
-	scrollRect = Rect(titleRect.x, titleRect.y2(),
+	scrollRect = Rect(title.dest.x, mRect.y + itemH,
 		itemW, mRect.h - 2 * itemH);
-	scrollRect += mRect.topLeft();
 
 	if (input.active()) { scrollRect.h -= itemH; }
 
@@ -77,12 +80,22 @@ void Selector::resize(Rect* rect) {
 	deleteButton.setRect(Rect(playRect.x, playRect.y2(), half, half));
 	exitButton.setRect(Rect(0, 0, half + quarter, half + quarter));
 
-	itemRect = Rect(0, 0, titleRect.w - playRect.w, titleRect.h);
+	itemRect = Rect(scrollRect.x, scrollRect.y,
+		title.dest.w - playRect.w, itemH);
+	items.clear();
 
 	maxScroll = std::max(0, (int)files.size() * itemH - scrollRect.h);
 
-	itemText.h = half + eighth;
-	Window::Get().assets().updateFont(ITEM_FONT, FontData{ -1, itemText.h });
+	Window::Get().assets().updateFont(ITEM_FONT, FontData{ -1, half + eighth });
+	setTitle(titleText.text);
+}
+
+void Selector::setTitle(const std::string& newTitle) {
+	AssetManager& assets = Window::Get().assets();
+	titleText.text = newTitle;
+	title.asset.setTexture(assets.renderText(titleText));
+	title.fitToAsset(assets, title.dest.w, title.dest.h);
+	title.dest.setCenter(title.boundary.cX(), title.boundary.cY());
 }
 
 void Selector::handleEvents(Event& e) {
@@ -98,6 +111,7 @@ void Selector::handleEvents(Event& e) {
 			maxScroll = std::max(0,
 				(int)files.size() * itemH - scrollRect.h);
 			scroll = std::min(maxScroll, scroll);
+			items.clear();
 		}
 		return;
 	}
@@ -113,7 +127,7 @@ void Selector::handleEvents(Event& e) {
 		scroll = std::max(0,
 			std::min(maxScroll, scroll + e.scroll * scrollAmnt));
 		// Left click in scroll window
-		if (leftClicked) { 
+		if (leftClicked) {
 			SDL_Point mouse = e.mouse - scrollRect.topLeft();
 			mouse.y += scroll;
 			int idx = (int)(mouse.y / itemH);
@@ -152,13 +166,7 @@ void Selector::draw() {
 	assets.rect(&mRect, BKGRND);
 
 	// Draw title
-	itemText.text = title;
-	itemText.setPos(titleRect);
-	itemText.color = SCROLL_BKGRND;
-	TextureData texData = assets.renderText(itemText);
-	texData.boundary = titleRect;
-	assets.drawTexture(texData);
-	itemText.color = WHITE;
+	assets.drawTexture(title);
 
 	drawScroll();
 	if (input.active()) {
@@ -166,52 +174,57 @@ void Selector::draw() {
 		input.draw();
 
 		// Draw add button
-		newButton.draw(mRect.topLeft());
+		newButton.draw(mRect.topLeft(), mRect);
 	}
 	if (deletePrompt.active()) {
 		deletePrompt.draw();
 	}
-	exitButton.draw(mRect.topLeft());
+	exitButton.draw(mRect.topLeft(), mRect);
 }
 
 void Selector::drawScroll() {
-	// Set item text location
-	itemText.setPos(itemRect);
+	AssetManager& assets = Window::Get().assets();
 
-	Window::Get().assets().rect(&scrollRect, SCROLL_BKGRND);
-	int lb = scroll / itemH, ub = (scroll + scrollRect.h) / itemH;
-	SDL_Point topLeft = mRect.topLeft() + scrollRect.topLeft()
-		+ SDL_Point{ 0,-scroll + lb * itemH };
-	for (int i = lb; i <= ub; i++) {
-		TextureData data;
-		data.setTexture(drawItem(i));
-		if (!data.texture) { continue; }
-		int y = i * itemH - scroll;
-		data.dest = Rect(scrollRect.x, scrollRect.y + y, itemW, itemH);
-		data.boundary = scrollRect;
-		Window::Get().assets().drawTexture(data);
-
-		playButton.draw(topLeft, scrollRect);
-		deleteButton.draw(topLeft, scrollRect);
-		topLeft.y += itemH;
+	assets.rect(&scrollRect, SCROLL_BKGRND);
+	int lb = scroll / itemH, ub = std::ceil((double)(scroll + scrollRect.h) / itemH);
+	if (ub > files.size()) { ub = files.size(); }
+	if (lb != sIdx || ub != sIdx + items.size()) {
+		std::vector<RenderData> oldItems = items;
+		items.resize(ub - lb);
+		for (int i = lb; i < ub; i++) {
+			// New item
+			if (i < sIdx || i >= sIdx + oldItems.size()) {
+				RenderData& data = items[i - lb];
+				itemText.text = files[i];
+				data.asset.setTexture(assets.renderText(itemText));
+				data.boundary = scrollRect;
+				data.fitToAsset(assets, itemRect.w, itemRect.h * 3 / 4);
+			// Old item
+			} else {
+				items[i - lb] = oldItems[i - sIdx];
+			}
+		}
+		sIdx = lb;
+	}
+	
+	Rect r = itemRect - SDL_Point{ 0,scroll % itemH };
+	for (int i = lb; i < ub; i++) {
+		drawItem(i, r);
+		r.y += itemH;
 	}
 }
 
-Texture Selector::drawItem(int idx) {
-	if (idx >= files.size()) { return makeTexture(); }
+void Selector::drawItem(int idx, const Rect& space) {
+	idx -= sIdx;
+	if (idx < 0 || idx >= items.size()) { return; }
 
-	AssetManager& assets = Window::Get().assets();
-	Texture tex = assets.createTexture(itemW, itemH);
-	assets.setRenderTarget(tex.get());
-	assets.rect(NULL, BLACK);
+	items[idx].dest.setCX(space.cX());
+	items[idx].dest.setCY(space.cY());
+	items[idx].boundary = scrollRect;
+	Window::Get().assets().drawTexture(items[idx]);
 
-	itemText.text = files[idx];
-	TextureData texData = assets.renderText(itemText);
-	texData.boundary = itemRect;
-	assets.drawTexture(texData);
-
-	assets.resetRenderTarget();
-	return tex;
+	playButton.draw(space.topLeft(), scrollRect);
+	deleteButton.draw(space.topLeft(), scrollRect);
 }
 
 void Selector::onNewItem() {
@@ -219,6 +232,7 @@ void Selector::onNewItem() {
 		(int)files.size() * itemH - scrollRect.h);
 	scroll = maxScroll;
 	input.clearInput();
+	items.clear();
 }
 
 bool Selector::allowNewItems(bool val) {

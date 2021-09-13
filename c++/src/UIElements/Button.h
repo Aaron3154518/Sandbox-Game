@@ -19,15 +19,15 @@ public:
 
 	bool clicked(SDL_Point mouse);
 	void draw(SDL_Point parentPos = SDL_Point{ 0,0 },
-		Rect boundary = TextureData::NO_RECT());
+		Rect boundary = RenderData::NO_RECT());
 
 	void setRect(const Rect& rect);
 	void setHoverImg(const std::string& id);
 	void setHoverImg(SharedTexture tex);
 
 private:
-	Asset normal, hover;
-	TextureData data;
+	Asset img, hover;
+	RenderData data;
 };
 
 #endif

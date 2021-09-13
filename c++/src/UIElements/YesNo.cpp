@@ -45,10 +45,10 @@ void YesNo::draw() {
 		AssetManager::BorderType::outside, BLACK);
 	yesButton.draw();
 	noButton.draw();
-	Rect r = promptTex.dest;
-	promptTex.dest += promptTex.boundary.topLeft() - SDL_Point{ 0,scroll };
+
+	promptTex.dest.y -= scroll;
 	w.assets().drawTexture(promptTex);
-	promptTex.dest = r;
+	promptTex.dest.y += scroll;
 }
 
 void YesNo::setRect(const Rect& rect) {
@@ -69,14 +69,15 @@ void YesNo::setRect(const Rect& rect) {
 
 	// Render the prompt
 	AssetManager& assets = Window::Get().assets();
-	TextData td;
-	td.x = lineW / 2;
-	td.xMode = TextData::PosType::center;
-	td.w = lineW;
-	td.text = prompt;
+	WrappedTextData td;
 	td.setFont(assets.createFont(FontData{ -1, lineH / 2 }));
-	promptTex = assets.renderTextWrapped(td);
+	td.text = prompt;
+	td.w = lineW;
+	promptTex.asset.setTexture(assets.renderTextWrapped(td));
 	promptTex.boundary = boundary;
+	promptTex.fitToAsset(assets, lineW, 0);
+	promptTex.dest.setCX(boundary.cX());
+	promptTex.dest.y = boundary.y;
 
 	// Update scrolling
 	int oldMax = maxScroll;

@@ -10,8 +10,8 @@ const std::string Player::IMG = gameVals::entities() + "player_pig.png";
 
 Player::Player() {
 	// Setup rectangles
-	mTex.textureId = IMG;
-	cursorTex.dest = Rect(0, 0, gameVals::ITEM_W(), gameVals::ITEM_W());
+	rData.asset.setAssetId(IMG);
+	cursorData.dest = Rect(0, 0, gameVals::ITEM_W(), gameVals::ITEM_W());
 	SharedTexture tex = Window::Get().assets().getAsset(IMG);
 	mRect = Rect::getMinRect(tex.get(), (int)(gameVals::BLOCK_W() * 3 / 2), 0);
 	dim = { (double)mRect.w / gameVals::BLOCK_W(),
@@ -202,8 +202,8 @@ void Player::draw() {
 	AssetManager& assets = Window::Get().assets();
 
 	// Player image
-	mTex.dest = mRect - shift;
-	assets.drawTexture(mTex);
+	rData.dest = mRect - shift;
+	assets.drawTexture(rData);
 
 #ifdef DEBUG_PLAYER_VISUAL
 	assets.thickRect(pickUpRange - shift, 1,
@@ -220,9 +220,9 @@ void Player::draw() {
 	// Draw held item
 	ItemInfo mouseItem = inventory.getHeldItem();
 	if (mouseItem.isItem()) {
-		cursorTex.setTexture(mouseItem.getImage());
-		cursorTex.dest.setCenter(mousePos());
-		assets.drawTexture(cursorTex);
+		cursorData.asset.setTexture(mouseItem.getImage());
+		cursorData.dest.setCenter(mousePos());
+		assets.drawTexture(cursorData);
 	}
 }
 

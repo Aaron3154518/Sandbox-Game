@@ -4,7 +4,7 @@
 PlayerSelector::PlayerSelector() {
 	input.setHint("Enter Player Name");
 	allowNewItems(true);
-	title = "Select a Player";
+	setTitle("Select a Player");
 }
 
 PlayerSelector::PlayerSelector(std::string univ) : PlayerSelector() {

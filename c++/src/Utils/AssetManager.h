@@ -69,6 +69,9 @@ typedef std::shared_ptr<TTF_Font> SharedFont;
 Font makeFont(TTF_Font* font = NULL);
 SharedFont makeSharedFont(TTF_Font* font = NULL);
 
+// Forward Declaration
+class AssetManager;
+
 struct FontData {
 	int w = -1, h = -1;
 	std::string sampleText = "";
@@ -76,42 +79,49 @@ struct FontData {
 };
 
 struct TextData {
-	enum PosType : uint8_t {
-		topleft = 0, center, botright
-	};
+	std::string text = "";
+	SDL_Color color = BLACK;
+	SDL_Color bkgrnd = TRANSPARENT;
 
 	// True - use font, false - use fontId
 	bool useFont = false;
+	std::string fontId = "";
 	SharedFont font = makeSharedFont();
-	std::string text = "", fontId = "";
-	SDL_Color color = BLACK, bkgrnd = TRANSPARENT;
-	double x = 0., y = 0.;
-	PosType xMode = PosType::topleft, yMode = PosType::topleft;
-	int w = 0, h = 0; // <= 0 for unbounded
 
-	void adjustRect(Rect& r) const;
-	void setPos(const Rect& r);
-	void constrainToRect(const Rect& r);
-
+	void setFontId(const std::string& id);
 	void setFont(const SharedFont& newFont);
+	SharedFont getFont(AssetManager& assets) const;
+};
+
+// TODO: Set h, variable w
+struct WrappedTextData : public TextData {
+	int w = 0;
+	Rect::PosType textDir = Rect::PosType::pCenter;
 };
 
 struct Asset {
+	// True - use texture, false - use textureId
 	bool useTexture = false;
 	std::string assetId = "";
 	SharedTexture texture;
+
+	void setAssetId(const std::string& id);
+	void setTexture(const SharedTexture& tex);
+	SharedTexture getTexture(AssetManager& assets) const;
+
+	Rect getMinRect(AssetManager& assets, int maxW, int maxH) const;
 };
 
-struct TextureData {
+struct RenderData {
 	static const Rect& NO_RECT();
 
-	// True - use texture, false - use textureId
-	bool useTexture = false;
-	SharedTexture texture = makeSharedTexture();
-	std::string textureId = "";
+	Asset asset;
 	Rect dest, area = NO_RECT(), boundary = NO_RECT();
 
-	void setTexture(const SharedTexture& tex);
+	void fitToAsset(AssetManager& assets);
+	void fitToAsset(AssetManager& assets, int maxW, int maxH);
+
+	void addBoundary(const Rect& bounds);
 };
 
 class AssetManager {
@@ -162,25 +172,21 @@ public:
 	void removeFont(std::string id);
 
 	SharedTexture getAsset(std::string id);
-	SharedTexture getAsset(const TextureData& data);
 
-	SharedFont getFont(std::string id) const;
-	SharedFont getFont(const TextData& data) const;
+	SharedFont getFont(std::string id);
 
 	// Split text
 	static std::vector<std::string> splitText(const std::string& text,
 		SharedFont font, int maxW);
 
 	// Render text
-	TextureData renderText(const TextData& data) const;
-	TextureData renderTextWrapped(const TextData& data) const;
+	Texture renderText(const TextData& data);
+	Texture renderTextWrapped(const WrappedTextData& data);
 
 	// Draw textures/text
-	void drawTexture(const TextureData& data);
-	void drawText(const TextData& data);
-	void drawTextWrapped(const TextData& data);
+	void drawTexture(const RenderData& data);
 
-	Rect getMinRect(std::string id, int maxW, int maxH);
+	//Rect getMinRect(std::string id, int maxW, int maxH);
 
 	// Draw rectangles
 	enum BorderType : uint8_t { outside = 0, middle, inside };
@@ -194,11 +200,9 @@ public:
 		const SDL_Color& color, SDL_BlendMode mode = SDL_BLENDMODE_NONE);
 
 	// Brighten a texture
-	SharedTexture brightenTexture(SharedTexture src, Uint8 val);
-	SharedTexture brightenTexture(std::string id, Uint8 val);
+	Texture brightenTexture(SharedTexture src, Uint8 val);
+	Texture brightenTexture(std::string id, Uint8 val);
 
-	//void drawProgressBar(Number amnt, Number cap, Rect& rect, SDL_Color color, SDL_Color bkgrnd) const;
-	//void drawProgressBarLog(Number amnt, Number cap, Rect& rect, SDL_Color color, SDL_Color bkgrnd) const;
 private:
 	RendererPtr mRenderer = RendererPtr(NULL, SDL_DestroyRenderer);
 
@@ -209,6 +213,5 @@ private:
 	std::vector<std::string> queuedAssets;
 	std::vector<std::pair<std::string, FontData>> queuedFonts;
 };
-//}
 
 #endif /* Asset Manager */

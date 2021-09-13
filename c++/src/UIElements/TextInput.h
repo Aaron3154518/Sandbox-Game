@@ -26,21 +26,26 @@ public:
 	void setHint(const std::string& hint);
 	void setFont(const std::string& id);
 	void setFont(SharedFont font);
-	void setXMode(TextData::PosType mode);
-	void setYMode(TextData::PosType mode);
+	void setXMode(Rect::PosType mode);
+	void setYMode(Rect::PosType mode);
 	void setCharConstraint(const std::function<bool(const char& ch)>& chFunc);
 
 	std::string getInput() { return currInput.str(); }
-	void clearInput() { currInput.str(""); }
+	void clearInput() { currInput.str(""); updateMe = true; }
 	void addInput(const std::string& str);
 private:
 	std::string hintText = "";
 	TextData textData;
+	RenderData rData;
+	Rect::PosType xMode = Rect::PosType::pTopLeft,
+		yMode = Rect::PosType::pCenter;
 	SDL_Color bkgrnd = BLACK;
+	bool updateMe = true;
 
 	Uint32 time;
 	std::ostringstream currInput;
-	std::function<bool(const char& ch)> validChar = [](const char& ch) { return true; };
+	std::function<bool(const char& ch)> validChar =
+		[](const char& ch) { return true; };
 };
 
 #endif

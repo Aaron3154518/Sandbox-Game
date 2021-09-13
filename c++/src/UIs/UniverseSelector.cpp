@@ -4,7 +4,7 @@
 UniverseSelector::UniverseSelector() {
 	input.setHint("Enter Universe Name");
 	allowNewItems(true);
-	title = "Select a Universe";
+	setTitle("Select a Universe");
 }
 
 UniverseSelector::UniverseSelector(std::string _player) : UniverseSelector() {

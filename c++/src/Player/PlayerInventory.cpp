@@ -101,9 +101,9 @@ PlayerInventory::PlayerInventory() : Inventory(DIM) {
 }
 
 void PlayerInventory::draw() {
-	mTex.dest = mRect;
+	rData.dest = mRect;
 	// TODO: only draw part, draw data
-	Window::Get().assets().drawTexture(mTex);
+	Window::Get().assets().drawTexture(rData);
 	if (open) {
 		SDL_Point p{ 0,0 };
 		armorInv.draw(p);
@@ -115,7 +115,7 @@ void PlayerInventory::draw() {
 	}
 
 	if (drawDescription) {
-		drawHoverItem(toInvPos(mousePos() - mTex.dest.topLeft()));
+		drawHoverItem(toInvPos(mousePos() - rData.dest.topLeft()));
 	}
 
 #ifdef PLAYER_DEBUG
@@ -336,7 +336,7 @@ void PlayerInventory::toggleOpen() {
 	open = !open;
 	int difference = gameVals::INV_W() * (dim.y - 1);
 	mRect.h += open ? difference : -difference;
-	mTex.area = open ? TextureData::NO_RECT() : Rect(0, 0, mRect.w, mRect.h);
+	rData.area = open ? RenderData::NO_RECT() : Rect(0, 0, mRect.w, mRect.h);
 	if (!open) { crafting.setOpen(false); }
 }
 

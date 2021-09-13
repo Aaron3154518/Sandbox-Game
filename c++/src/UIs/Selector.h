@@ -25,11 +25,13 @@ public:
 	void drawScroll();
 
 	Rect getRect() { return mRect; }
+
+	void setTitle(const std::string& newTitle);
 protected:
 	void initUI();
 	void tickUI(Event& e);
 
-	Texture drawItem(int idx);
+	void drawItem(int idx, const Rect& space);
 	bool allowNewItems(bool val);
 
 	void onNewItem();
@@ -41,11 +43,17 @@ protected:
 
 	std::vector<std::string> files;
 
-	std::string title = "Select <item>";
 	int scroll = 0, maxScroll = 0;
-	Rect mRect, scrollRect, itemRect, titleRect;
+	Rect mRect, scrollRect, itemRect;
+
 	Button newButton, playButton, deleteButton, exitButton;
-	TextData itemText;
+	RenderData title;
+
+	// Used to render each item
+	TextData itemText, titleText;
+	// Loaded item textures for files[sIdx : sIdx + items.size()]
+	int sIdx = 0;
+	std::vector<RenderData> items;
 
 	Rect inputName;
 	TextInput input;
@@ -59,6 +67,8 @@ protected:
 	int scrollAmnt = (int)(itemH / 3);
 	// Font resources
 	const std::string ITEM_FONT;
+	static const SDL_Color BKGRND, SCROLL_BKGRND;
+	static const std::string PLAY_IMG, DELETE_IMG, ADD_IMG, EXIT_IMG;
 };
 
 #endif

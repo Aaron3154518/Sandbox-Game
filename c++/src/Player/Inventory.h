@@ -88,8 +88,8 @@ protected:
 	bool whiteList = true;
 
 	Rect mRect;
-	TextureData mTex;
-	TextData td;
+	RenderData rData;
+	TextData textData;
 	// Should we draw a description
 	bool drawDescription = false;
 

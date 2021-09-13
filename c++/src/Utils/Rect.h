@@ -10,6 +10,10 @@
 //namespace utils {
 class Rect : public SDL_Rect {
 public:
+    enum PosType : uint8_t {
+        pTopLeft = 0, pCenter, pBotRight
+    };
+
     Rect();
     Rect(int x, int y, int w, int h);
     Rect(const SDL_Rect& other);
@@ -31,15 +35,16 @@ public:
     bool invalid() const { return w < 0 || h < 0; }
 
     void shift(int dX, int dY);
-    void setPos(int nX, int nY);
+    void setPos(const Rect& r, PosType mode);
+    void setPos(const Rect& r, PosType xMode, PosType yMode);
     void setX2(double nX2) { x = (int)(nX2 - w); }
     void setY2(double nY2) { y = (int)(nY2 - h); }
-    void setTopLeft(SDL_Point tl) { setPos(tl.x, tl.y); }
-    void setBottomRight(SDL_Point br) { setX2(br.x); setY2(br.y); }
     void setCX(double nCX) { x = (int)(nCX - w / 2); }
     void setCY(double nCY) { y = (int)(nCY - h / 2); }
     void setCenter(double nCX, double nCY);
     void setCenter(const SDL_Point& pos);
+    void setTopLeft(const SDL_Point& pos);
+    void setBottomRight(const SDL_Point& pos);
     void resize(int nW, int nH, bool center);
     void resizeFactor(double factor, bool center);
 

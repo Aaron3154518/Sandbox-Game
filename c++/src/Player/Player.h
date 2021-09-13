@@ -76,7 +76,7 @@ private:
 	*/
 
 	// Player image
-	TextureData mTex, cursorTex;
+	RenderData rData, cursorData;
 	Rect mRect, spriteRect, armRect;
 	Point<double> dim;
 

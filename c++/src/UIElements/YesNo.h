@@ -29,7 +29,7 @@ private:
 	bool answer = false;
 	std::string prompt = "No prompt provided";
 	int scroll = 0, maxScroll = 0, scrollAmnt = 1;
-	TextureData promptTex;
+	RenderData promptTex;
 	Button yesButton, noButton;
 
 	const static std::string YES_IMG, NO_IMG;
