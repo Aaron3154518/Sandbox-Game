@@ -782,7 +782,7 @@ void WorldAccess::draw(SDL_Point center) {
 	int ubY = (int)ceil(std::min(screen.y2(), worldH) / gameVals::BLOCK_W());
 	// TODO: batch rendering to avoid texture reassignment
 	// Draw blocks
-	assets.rect(&worldRect, skyColor());
+	RectData({ skyColor() }).set(worldRect).render(assets);
 	RenderData data;
 	data.dest = Rect(lbX * gameVals::BLOCK_W() - screen.x,
 		lbY * gameVals::BLOCK_W() - screen.y,
@@ -803,7 +803,7 @@ void WorldAccess::draw(SDL_Point center) {
 	// Draw dropped items
 	drawDroppedItems(worldRect);
 	// Draw border
-	assets.thickRect(worldRect, 2, AssetManager::BorderType::inside, BLACK);
+	RectData({ BLACK }).set(worldRect, -2).render(assets);
 	// Draw player
 	data.asset.setAssetId(gameVals::entities() + "player_pig.png");
 	data.fitToAsset(assets, gameVals::BLOCK_W(), gameVals::BLOCK_W() * 2);

@@ -20,6 +20,8 @@ public:
     ~Rect();
 
     Rect& operator =(const SDL_Rect& rhs);
+    bool operator ==(const Rect& rhs);
+    bool operator !=(const Rect& rhs) { return !(*this == rhs); }
 
     int x2() const { return x + w; }
     int y2() const { return y + h; }
@@ -45,8 +47,10 @@ public:
     void setCenter(const SDL_Point& pos);
     void setTopLeft(const SDL_Point& pos);
     void setBottomRight(const SDL_Point& pos);
+    void resize(SDL_Point nDim, bool center);
     void resize(int nW, int nH, bool center);
     void resizeFactor(double factor, bool center);
+    void normalize();
 
     static Rect getMinRect(SDL_Texture* tex, int maxW, int maxH);
     static Rect getMinRect(int w, int h, int maxW, int maxH);

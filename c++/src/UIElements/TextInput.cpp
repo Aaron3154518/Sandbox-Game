@@ -44,7 +44,7 @@ void TextInput::draw() {
 		rData.asset.setTexture(
 			Window::Get().assets().createTexture(mRect.w, mRect.h));
 		assets.setRenderTarget(rData.asset.texture.get());
-		assets.rect(NULL, bkgrnd);
+		RectData({ bkgrnd }).set().render(assets);
 
 		RenderData data;
 		data.boundary = Rect(0, 0, mRect.w, mRect.h);
@@ -84,7 +84,7 @@ void TextInput::draw() {
 		Rect r(0, 0, cW / 2, cH);
 		r.setCY(mRect.cY());
 		r.setCX(mRect.x + std::min(w, mRect.w) - std::max(cW / 2, 1));
-		assets.rect(&r, WHITE);
+		RectData({ WHITE }).set(r).render(assets);
 	}
 }
 

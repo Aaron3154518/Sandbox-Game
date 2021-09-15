@@ -72,6 +72,7 @@ SharedFont makeSharedFont(TTF_Font* font = NULL);
 // Forward Declaration
 class AssetManager;
 
+// Text rendering structs
 struct FontData {
 	int w = -1, h = -1;
 	std::string sampleText = "";
@@ -99,6 +100,7 @@ struct WrappedTextData : public TextData {
 	Rect::PosType textDir = Rect::PosType::pCenter;
 };
 
+// Texture rendering struct
 struct Asset {
 	// True - use texture, false - use textureId
 	bool useTexture = false;
@@ -124,6 +126,56 @@ struct RenderData {
 	void addBoundary(const Rect& bounds);
 };
 
+// Shape rendering struct
+struct ShapeData {
+	SDL_Color color = BLACK;
+	SDL_BlendMode blendMode = SDL_BLENDMODE_NONE;
+	Rect boundary = RenderData::NO_RECT();
+};
+
+// How to use ShapeData:
+/*
+struct ChildData : public ShapeData {
+	// Copy member vars from data into this
+	ChildData(const ShapeData& data);
+	// Setup ChildData with vars, return *this
+	ChildData& set(vars...);
+	... // Overload set() as much as you want
+
+	// Render ChildData
+	void render(AssetManager& assets);
+
+	// Member variables
+	var1, var2, ....
+};
+*/
+
+// Rectangle
+struct RectData : public ShapeData {
+	RectData(const ShapeData& data);
+	RectData& set();
+	RectData& set(const Rect& r);
+	RectData& set(Rect r, int thickness, bool center = false);
+
+	void render(AssetManager& assets);
+
+private:
+	Rect r1, r2;
+};
+
+// Circle
+struct CircleData : public ShapeData {
+	CircleData(const ShapeData& data);
+	CircleData& set(SDL_Point _c, int r);
+	CircleData& set(SDL_Point _c, int r, int thickness, bool center = false);
+
+	void render(AssetManager& asstes);
+
+private:
+	SDL_Point c{ 0,0 };
+	int r1 = 0, r2 = 0;
+};
+
 class AssetManager {
 public:
 	typedef std::unique_ptr<SDL_Renderer, void(*)(SDL_Renderer*)> RendererPtr;
@@ -139,7 +191,8 @@ public:
 
 	// Renderer functions
 	SDL_Renderer* renderer();
-	SDL_Point getRenderSize() const;
+	SDL_Point getTargetSize() const;
+	void getTargetSize(int* w, int* h) const;
 	void setDrawColor(const SDL_Color& c);
 	void resetDrawColor();
 	void setRenderTarget(SDL_Texture* tex);
@@ -172,7 +225,6 @@ public:
 	void removeFont(std::string id);
 
 	SharedTexture getAsset(std::string id);
-
 	SharedFont getFont(std::string id);
 
 	// Split text
@@ -185,19 +237,6 @@ public:
 
 	// Draw textures/text
 	void drawTexture(const RenderData& data);
-
-	//Rect getMinRect(std::string id, int maxW, int maxH);
-
-	// Draw rectangles
-	enum BorderType : uint8_t { outside = 0, middle, inside };
-	void rect(Rect* r, const SDL_Color& color,
-		SDL_BlendMode mode = SDL_BLENDMODE_NONE);
-	void thickRect(Rect r, int thickness, BorderType border,
-		const SDL_Color& color);
-	void circle(SDL_Point c, int r, const SDL_Color& color,
-		SDL_BlendMode mode = SDL_BLENDMODE_NONE);
-	void thickCircle(SDL_Point c, int r, int thickness, BorderType border,
-		const SDL_Color& color, SDL_BlendMode mode = SDL_BLENDMODE_NONE);
 
 	// Brighten a texture
 	Texture brightenTexture(SharedTexture src, Uint8 val);

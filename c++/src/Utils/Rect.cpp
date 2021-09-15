@@ -27,6 +27,10 @@ Rect& Rect::operator=(const SDL_Rect& rhs) {
 	return *this;
 }
 
+bool Rect::operator==(const Rect& rhs) {
+	return x == rhs.x && y == rhs.y && w == rhs.w && h == rhs.h;
+}
+
 void Rect::shift(int dX, int dY) {
 #ifdef DEBUG
 	std::cerr << "\033[92mMoving Rectangle\033[0m" << std::endl;
@@ -73,6 +77,10 @@ void Rect::setBottomRight(const SDL_Point& pos) {
 	setX2(pos.x); setY2(pos.y);
 }
 
+void Rect::resize(SDL_Point nDim, bool center) {
+	resize(nDim.x, nDim.y, center);
+}
+
 void Rect::resize(int nW, int nH, bool center) {
 #ifdef DEBUG
 	std::cerr << "\033[92mResizing Rectangle\033[0m" << std::endl;
@@ -92,6 +100,13 @@ void Rect::resize(int nW, int nH, bool center) {
 
 void Rect::resizeFactor(double factor, bool center) {
 	resize((int)(w * factor + .5), (int)(h * factor + .5), center);
+}
+
+void Rect::normalize() {
+	// Swap x and x2
+	if (w < 0) { x += w; w *= -1; }
+	// Swap y and y2
+	if (h < 0) { y += h; h *= -1; }
 }
 
 Rect Rect::getMinRect(SDL_Texture* tex, int maxW, int maxH) {

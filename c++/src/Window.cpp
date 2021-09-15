@@ -67,7 +67,7 @@ void Window::run() {
 }
 
 SDL_Point Window::screenDim() const {
-    return mAssetManager.getRenderSize();
+    return mAssetManager.getTargetSize();
 }
 SDL_Renderer* Window::renderer() { return mAssetManager.renderer(); }
 AssetManager& Window::assets() { return mAssetManager; }

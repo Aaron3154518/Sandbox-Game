@@ -110,6 +110,139 @@ void RenderData::addBoundary(const Rect& bounds) {
 	SDL_IntersectRect(&boundary, &bounds, &boundary);
 }
 
+// RectData
+RectData::RectData(const ShapeData& data) {
+	color = data.color;
+	blendMode = data.blendMode;
+	boundary = data.boundary;
+}
+
+RectData& RectData::set() {
+	r1 = r2 = Rect(0, 0, 0, 0);
+	return *this;
+}
+
+RectData& RectData::set(const Rect& r) {
+	r1 = Rect(0, 0, 0, 0);
+	r2 = r; r2.normalize();
+	return *this;
+}
+
+RectData& RectData::set(Rect r, int thickness, bool center) {
+	r.normalize();
+	r1 = r2 = r;
+	if (center) {
+		thickness = std::abs(thickness);
+		r1.resize(r1.w - thickness, r1.h - thickness, true);
+		r2.resize(r1.w + thickness, r1.h + thickness, true);
+	} else {
+		int dw = 2 * thickness;
+		if (dw > 0) { r2.resize(r2.w + dw, r2.h + dw, true); }
+		else { r1.resize(r1.w + dw, r1.h + dw, true); }
+	}
+	if (r1.invalid()) { r1 = Rect(0, 0, 0, 0); }
+	return *this;
+}
+
+void RectData::render(AssetManager& assets) {
+	assets.setBlendMode(blendMode);
+	assets.setDrawColor(color);
+	// Start with bounds as the target dimensions
+	Rect bounds; bounds.resize(assets.getTargetSize(), false);
+	// Make sure part of the boundary is inside the target
+	// bounds is now intersected with boundary
+	if (!boundary.invalid()
+		&& SDL_IntersectRect(&boundary, &bounds, &bounds) == SDL_FALSE) {
+		return;
+	}
+	// Fill entire render target
+	if (r2.empty()) {
+		SDL_RenderFillRect(assets.renderer(), &bounds);
+	// Intersect r2 and bounds
+	} else if (SDL_IntersectRect(&r2, &bounds, &bounds) == SDL_TRUE) {
+		// Start at r1
+		Rect r = r1;
+		// Fill r2 if r is empty or not within bounds
+		// Intersect r with bounds
+		if (r.empty() || SDL_IntersectRect(&bounds, &r, &r) == SDL_FALSE) {
+			SDL_RenderFillRect(assets.renderer(), &bounds);
+		// Fill bounds except for r
+		} else {
+			// bounds is inclusive so draw once more when r = bounds
+			do {
+				// Expand rect
+				if (r.x > bounds.x) { r.x--; r.w++; }
+				if (r.y > bounds.y) { r.y--; r.h++; }
+				if (r.x < bounds.x2()) { r.w++; }
+				if (r.y < bounds.y2()) { r.h++; }
+				SDL_RenderDrawRect(assets.renderer(), &r);
+			} while (r != bounds);
+		}
+	}
+	assets.resetDrawColor();
+	assets.resetBlendMode();
+}
+
+// CircleData
+CircleData::CircleData(const ShapeData& data) {
+	color = data.color;
+	blendMode = data.blendMode;
+	boundary = data.boundary;
+}
+
+CircleData& CircleData::set(SDL_Point _c, int r) {
+	c = _c;
+	r1 = 0;
+	r2 = std::abs(r);
+	return *this;
+}
+
+CircleData& CircleData::set(SDL_Point _c, int r, int thickness, bool center) {
+	c = _c;
+	r = std::abs(r);
+	if (center) { r2 = r + std::abs(thickness) / 2; }
+	else { r2 = thickness < 0 ? r : r + thickness; }
+	r1 = std::max(r2 - std::abs(thickness), 0);
+	return *this;
+}
+
+void CircleData::render(AssetManager& assets) {
+	assets.setBlendMode(blendMode);
+	assets.setDrawColor(color);
+	// Get boundary rect
+	Rect bounds; bounds.resize(assets.getTargetSize(), false);
+	if (!boundary.invalid()
+		&& SDL_IntersectRect(&boundary, &bounds, &bounds) == SDL_FALSE) {
+		return;
+	}
+	// Circle
+	int dx = -1;
+	while (++dx < r2) {
+		int dy1 = dx >= r1 ? 0 : (int)(std::sqrt(r1 * r1 - dx * dx) + .5);
+		int dy2 = (int)(std::sqrt(r2 * r2 - dx * dx) + .5);
+		// Iterate through dx, -dx
+		do {
+			int x = c.x + dx;
+			// Make sure x is in bounds
+			if (x >= bounds.x && x <= bounds.x2()) {
+				// Iterate through [dy1, dy2], [-dy2, -dy1]
+				do {
+					int y1 = std::max(c.y + dy1, bounds.y);
+					int y2 = std::min(c.y + dy2, bounds.y2());
+					// Make sure at least one y is in bounds
+					if (y1 <= bounds.y2() && y2 >= bounds.y) {
+						SDL_RenderDrawLine(assets.renderer(), x, y1, x, y2);
+					}
+					int tmp = -dy1; dy1 = -dy2; dy2 = tmp;
+				} while (dy1 < 0);
+			}
+		} while ((dx *= -1) < 0);
+	}
+
+	assets.resetDrawColor();
+	assets.resetBlendMode();
+}
+
 // AssetManager
 void AssetManager::initAssets(SDL_Window* w) {
 	if (!w) {
@@ -140,10 +273,13 @@ void AssetManager::quit() {
 SDL_Renderer* AssetManager::renderer() {
 	return mRenderer.get();
 }
-SDL_Point AssetManager::getRenderSize() const {
+SDL_Point AssetManager::getTargetSize() const {
 	SDL_Point size;
-	SDL_GetRendererOutputSize(mRenderer.get(), &size.x, &size.y);
+	getTargetSize(&size.x, &size.y);
 	return size;
+}
+void AssetManager::getTargetSize(int* w, int* h) const {
+	SDL_GetRendererOutputSize(mRenderer.get(), w, h);
 }
 void AssetManager::setDrawColor(const SDL_Color& c) {
 	SDL_SetRenderDrawColor(mRenderer.get(), c.r, c.g, c.b, c.a);
@@ -219,7 +355,8 @@ Texture AssetManager::createTexture(int w, int h, SDL_Color bkgrnd) {
 		SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, w, h));
 	setRenderTarget(tex.get());
 	SDL_SetTextureBlendMode(tex.get(), SDL_BLENDMODE_BLEND);
-	rect(NULL, TRANSPARENT);
+	RectData({ TRANSPARENT,SDL_BLENDMODE_BLEND }).set(RenderData::NO_RECT()).
+		render(*this);
 	resetRenderTarget();
 	return tex;
 }
@@ -478,10 +615,7 @@ Texture AssetManager::renderTextWrapped(const WrappedTextData& data) {
 void AssetManager::drawTexture(const RenderData& data) {
 	SDL_Texture* target = SDL_GetRenderTarget(mRenderer.get());
 	Rect renderBounds;
-	if (!target) {
-		SDL_Point dim = getRenderSize();
-		renderBounds.resize(dim.x, dim.y, false);
-	} else { getTextureSize(target, &renderBounds.w, &renderBounds.h); }
+	getTargetSize(&renderBounds.w, &renderBounds.h);
 	// Make sure we are actually drawing something
 	if (data.dest.empty() || data.dest.invalid() ||
 		data.area.empty() || data.boundary.empty()) {
@@ -555,91 +689,6 @@ void AssetManager::drawTexture(const RenderData& data) {
 	}
 
 	SDL_RenderCopy(mRenderer.get(), tex.get(), &texRect, &destRect);
-}
-
-// TODO: negatic thickness (SDL_gfx)
-// TODO: boundary
-// Functions to draw a rectangle
-void AssetManager::rect(Rect* r, const SDL_Color& color,
-	SDL_BlendMode mode) {
-	setBlendMode(mode);
-	setDrawColor(color);
-	SDL_RenderFillRect(mRenderer.get(), r);
-	resetDrawColor();
-	resetBlendMode();
-}
-
-void AssetManager::thickRect(Rect r, int thickness,
-	AssetManager::BorderType border, const SDL_Color& color) {
-	int lb, ub;
-	switch (border) {
-		case BorderType::inside:
-			lb = -thickness; ub = 0; break;
-		case BorderType::outside:
-			lb = 0; ub = thickness; break;
-		case BorderType::middle:
-			lb = -(int)(thickness / 2);
-			ub = (int)(((double)thickness / 2) + .5);
-			break;
-		default:
-			lb = ub = 0; break;
-	}
-	setDrawColor(color);
-	// Set inital rect
-	r.x -= lb; r.y -= lb; r.w += lb * 2; r.h += lb * 2;
-	while (lb++ < ub) {
-		// Expand rect each time
-		r.x--; r.y--; r.w += 2; r.h += 2;
-		if (r.w <= 0 || r.h <= 0) { break; }
-		SDL_RenderDrawRect(mRenderer.get(), &r);
-	}
-	resetDrawColor();
-}
-
-void AssetManager::circle(SDL_Point c, int r, const SDL_Color& color,
-	SDL_BlendMode mode) {
-	thickCircle(c, r, r, BorderType::inside, color, mode);
-}
-
-void AssetManager::thickCircle(SDL_Point c, int r, int thickness,
-	BorderType border, const SDL_Color& color, SDL_BlendMode mode) {
-	if (r <= 0) { return; }
-	switch (border) {
-		case BorderType::inside:
-		{
-			setBlendMode(mode);
-			setDrawColor(color);
-			int r2 = r - thickness;
-			int dx = 0;
-			while (dx < r) {
-				int ub = (int)(std::sqrt(r * r - dx * dx) + .5);
-				int lb = dx >= r2 ? 0 : (int)(std::sqrt(r2 * r2 - dx * dx) + .5);
-				double x = c.x + dx;
-				SDL_RenderDrawLine(mRenderer.get(), x, c.y + lb, x, c.y + ub);
-				SDL_RenderDrawLine(mRenderer.get(), x, c.y - lb, x, c.y - ub);
-				x = c.x - dx;
-				SDL_RenderDrawLine(mRenderer.get(), x, c.y + lb, x, c.y + ub);
-				SDL_RenderDrawLine(mRenderer.get(), x, c.y - lb, x, c.y - ub);
-				dx++;
-			}
-			resetDrawColor();
-			resetBlendMode();
-			break;
-		}
-		case BorderType::outside:
-			thickCircle(c, r + thickness, thickness, BorderType::inside,
-				color, mode);
-			break;
-		case BorderType::middle:
-		{
-			int lb = -(int)(thickness / 2);
-			int ub = (int)(((double)thickness / 2) + .5);
-			thickCircle(c, r + ub, ub - lb, BorderType::inside, color, mode);
-			break;
-		}
-		default:
-			break;
-	}
 }
 
 Texture AssetManager::brightenTexture(SharedTexture src, Uint8 val) {

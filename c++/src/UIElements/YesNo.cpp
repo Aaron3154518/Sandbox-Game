@@ -39,15 +39,15 @@ bool YesNo::handleEvents(Event& e) {
 }
 
 void YesNo::draw() {
-	Window& w = Window::Get();
-	w.assets().rect(&mRect, GRAY);
-	w.assets().thickRect(promptTex.boundary, TEXT_OUTLINE_W,
-		AssetManager::BorderType::outside, BLACK);
+	AssetManager& assets = Window::Get().assets();
+	RectData({ GRAY }).set(mRect).render(assets);
+	RectData({}).set(promptTex.boundary, TEXT_OUTLINE_W).render(assets);
+
 	yesButton.draw();
 	noButton.draw();
 
 	promptTex.dest.y -= scroll;
-	w.assets().drawTexture(promptTex);
+	assets.drawTexture(promptTex);
 	promptTex.dest.y += scroll;
 }
 

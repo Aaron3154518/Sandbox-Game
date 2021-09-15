@@ -206,10 +206,8 @@ void Player::draw() {
 	assets.drawTexture(rData);
 
 #ifdef DEBUG_PLAYER_VISUAL
-	assets.thickRect(pickUpRange - shift, 1,
-		AssetManager::BorderType::outside, GREEN);
-	assets.thickRect(placementRange - shift, 1,
-		AssetManager::BorderType::outside, RED);
+	RectData({ GREEN }).set(pickUpRange - shift, 1).render(assets);
+	RectData({ RED }).set(placementRange - shift, 1).render(assets);
 #endif
 
 	// Inventory

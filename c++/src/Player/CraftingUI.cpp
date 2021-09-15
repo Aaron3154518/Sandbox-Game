@@ -86,13 +86,18 @@ bool CraftingUI::handleEvents(Event& e) {
 
 void CraftingUI::draw() {
 	AssetManager& assets = Window::Get().assets();
-	assets.rect(&craftersRect, { 200,200,0,128 }, SDL_BLENDMODE_BLEND);
-	assets.rect(&recipeRect, { 0,255,128,128 }, SDL_BLENDMODE_BLEND);
-	assets.rect(&optionsRect, { 200,0,200,128 }, SDL_BLENDMODE_BLEND);
-	assets.rect(&resultRect, { 255,0,0,128 }, SDL_BLENDMODE_BLEND);
-	assets.rect(&ingredientRect, { 128,128,128,128 }, SDL_BLENDMODE_BLEND);
-	craftButton.draw();
+	RectData rectData({ { 200,200,0,128 }, SDL_BLENDMODE_BLEND });
+	rectData.set(craftersRect).render(assets);
+	rectData.color = { 0,255,128,128 };
+	rectData.set(recipeRect).render(assets);
+	rectData.color = { 200,0,200,128 };
+	rectData.set(optionsRect).render(assets);
+	rectData.color = { 255,0,0,128 };
+	rectData.set(resultRect).render(assets);
+	rectData.color = { 128,128,128,128 };
+	rectData.set(ingredientRect).render(assets);
 
+	craftButton.draw();
 	crafterSpinner.draw();
 }
 

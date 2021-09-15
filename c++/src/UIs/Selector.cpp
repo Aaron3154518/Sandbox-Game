@@ -163,7 +163,7 @@ void Selector::handleEvents(Event& e) {
 
 void Selector::draw() {
 	AssetManager& assets = Window::Get().assets();
-	assets.rect(&mRect, BKGRND);
+	RectData({ BKGRND }).set(mRect).render(assets);
 
 	// Draw title
 	assets.drawTexture(title);
@@ -185,7 +185,7 @@ void Selector::draw() {
 void Selector::drawScroll() {
 	AssetManager& assets = Window::Get().assets();
 
-	assets.rect(&scrollRect, SCROLL_BKGRND);
+	RectData({ SCROLL_BKGRND }).set(scrollRect).render(assets);
 	int lb = scroll / itemH, ub = std::ceil((double)(scroll + scrollRect.h) / itemH);
 	if (ub > files.size()) { ub = files.size(); }
 	if (lb != sIdx || ub != sIdx + items.size()) {

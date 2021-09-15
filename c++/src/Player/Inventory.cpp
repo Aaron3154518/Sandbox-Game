@@ -45,9 +45,9 @@ void Inventory::draw(SDL_Point topLeft) {
 void Inventory::drawInventory() {
 	AssetManager& assets = Window::Get().assets();
 	assets.setRenderTarget(rData.asset.texture.get());
-	assets.rect(NULL, BKGRND, SDL_BLENDMODE_BLEND);
-	assets.thickRect(Rect(0, 0, mRect.w, mRect.h),
-		gameVals::INV_MARGIN(), AssetManager::BorderType::inside, BLACK);
+	RectData({ BKGRND, SDL_BLENDMODE_BLEND }).set().render(assets);
+	RectData({ BLACK }).set(Rect(0, 0, mRect.w, mRect.h),
+		-gameVals::INV_MARGIN()).render(assets);
 	assets.resetRenderTarget();
 	SDL_Point loc;
 	for (loc.y = 0; loc.y < dim.y; loc.y++) {
@@ -55,8 +55,8 @@ void Inventory::drawInventory() {
 			// updatePos resets render target
 			updatePos(loc);
 			assets.setRenderTarget(rData.asset.texture.get());
-			assets.thickRect(getInvRect(loc), gameVals::INV_MARGIN(),
-				AssetManager::BorderType::inside, BLACK);
+			RectData({ BLACK }).set(getInvRect(loc),
+				-gameVals::INV_MARGIN()).render(assets);
 			assets.resetRenderTarget();
 		}
 	}
@@ -177,8 +177,8 @@ void Inventory::selectPos(SDL_Point pos) {
 	if (validPos(pos)) {
 		AssetManager& assets = Window::Get().assets();
 		assets.setRenderTarget(rData.asset.texture.get());
-		assets.thickRect(getInvRect(pos), 2 * gameVals::INV_MARGIN(),
-			AssetManager::BorderType::middle, SELECT_COLOR);
+		RectData({ SELECT_COLOR }).set(getInvRect(pos),
+			2 * gameVals::INV_MARGIN(), true).render(assets);
 		assets.resetRenderTarget();
 	}
 }
@@ -187,8 +187,8 @@ void Inventory::unselectPos(SDL_Point pos) {
 	if (validPos(pos)) {
 		AssetManager& assets = Window::Get().assets();
 		assets.setRenderTarget(rData.asset.texture.get());
-		assets.thickRect(getInvRect(pos), 2 * gameVals::INV_MARGIN(),
-			AssetManager::BorderType::middle, BLACK);
+		RectData({}).set(getInvRect(pos), 2 * gameVals::INV_MARGIN(), true).
+			render(assets);
 		assets.resetRenderTarget();
 	}
 }
@@ -281,7 +281,7 @@ void Inventory::updatePos(SDL_Point loc) {
 
 	AssetManager& assets = Window::Get().assets();
 	assets.setRenderTarget(rData.asset.texture.get());
-	assets.rect(&r, BKGRND);
+	RectData({ BKGRND }).set(r).render(assets);
 	if (item.isItem()) {
 		RenderData itemTex;
 		itemTex.boundary = r;

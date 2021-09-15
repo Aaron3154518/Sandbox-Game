@@ -35,7 +35,7 @@ void Spinner::draw(SDL_Point parentPos) {
 	if (rects.size() != items.size()) { redraw(); }
 	AssetManager& assets = Window::Get().assets();
 	Rect r = mRect + parentPos;
-	if (bkgrnd != TRANSPARENT) { assets.rect(&r, bkgrnd); }
+	if (bkgrnd != TRANSPARENT) { RectData({ bkgrnd }).set(r).render(assets); }
 	RenderData rData;
 	rData.boundary = r;
 	for (int i = 0; i < items.size() && i < rects.size(); i++) {
@@ -43,9 +43,8 @@ void Spinner::draw(SDL_Point parentPos) {
 		rData.fitToAsset(assets, rects[i].w, rects[i].h);
 		rData.dest.setCenter(rects[i].cX(), rects[i].cY());
 		rData.dest += r.topLeft();
-		assets.thickCircle(rData.dest.center(), rects[i].w / 2, 2,
-			AssetManager::BorderType::middle, { 0,255,0,128 },
-			SDL_BLENDMODE_BLEND);
+		CircleData({ {0,255,0,128}, SDL_BLENDMODE_BLEND, rData.boundary }).
+			set(rData.dest.center(), rects[i].w / 2, 2, true).render(assets);
 		assets.drawTexture(rData);
 	}
 }
