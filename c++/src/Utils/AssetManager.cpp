@@ -6,34 +6,81 @@ constexpr auto ID_LEN = 4;
 //#define DEBUG_ALLOC
 
 #ifdef DEBUG_ALLOC
+// Unable to track pointers that start null but are reset() to a valid pointer
+int surfCreateCnt = 0, surfDestroyCnt = 0;
+void destroySurface(SDL_Surface* surf) {
+	surfDestroyCnt++;
+	SDL_FreeSurface(surf);
+}
+Surface makeSurface(SDL_Surface* surf) {
+	if (surf) { surfCreateCnt++; }
+	return Surface(surf, destroySurface);
+}
+SharedSurface makeSharedSurface(SDL_Surface* surf) {
+	if (surf) { surfCreateCnt++; }
+	return SharedSurface(surf, destroySurface);
+}
+
 int texCreateCnt = 0, texDestroyCnt = 0;
 void destroyTexture(SDL_Texture* tex) {
+	texDestroyCnt++;
 	SDL_DestroyTexture(tex);
-	std::cerr << "Destroyed Texture: " << texDestroyCnt++ << std::endl;
 }
 Texture makeTexture(SDL_Texture* tex) {
-	std::cerr << "Created Texture: " << texCreateCnt++ << std::endl;
+	if (tex) { texCreateCnt++; }
 	return Texture(tex, destroyTexture);
 }
 SharedTexture makeSharedTexture(SDL_Texture* tex) {
-	std::cerr << "Created Texture: " << texCreateCnt++ << std::endl;
+	if (tex) { texCreateCnt++; }
 	return SharedTexture(tex, destroyTexture);
 }
 
 int fontCreateCnt = 0, fontDestroyCnt = 0;
 void destroyFont(TTF_Font* font) {
+	fontDestroyCnt++;
 	TTF_CloseFont(font);
-	std::cerr << "Destroyed Font: " << fontDestroyCnt++ << std::endl;
+#ifdef DEBUG_FONTS
+	std::cerr << "-F " << (bool)font << " " << font << std::endl;
+#endif
 }
 Font makeFont(TTF_Font* font) {
-	std::cerr << "Created Font: " << fontCreateCnt++ << std::endl;
+	if (font) { fontCreateCnt++; }
+#ifdef DEBUG_FONTS
+	std::cerr << "+F " << (bool)font << " " << font << std::endl;
+#endif
 	return Font(font, destroyFont);
 }
 SharedFont makeSharedFont(TTF_Font* font) {
-	std::cerr << "Created Font: " << fontCreateCnt++ << std::endl;
+	if (font) { fontCreateCnt++; }
+#ifdef DEBUG_FONTS
+	std::cerr << "+F " << (bool)font << " " << font << std::endl;
+#endif
 	return SharedFont(font, destroyFont);
 }
+
+void printMemoryStats() {
+	std::cerr << "Allocation and Deallocation Statistics:" << std::endl;
+
+	std::cerr << "Surfaces:" << std::endl;
+	std::cerr << "\tCreated: " << surfCreateCnt << ", Destroyed: "
+		<< surfDestroyCnt << std::endl;
+
+	std::cerr << "Textures:" << std::endl;
+	std::cerr << "\tCreated: " << texCreateCnt << ", Destroyed: "
+		<< texDestroyCnt << std::endl;
+
+	std::cerr << "Fonts:" << std::endl;
+	std::cerr << "\tCreated: " << fontCreateCnt << ", Destroyed: "
+		<< fontDestroyCnt << std::endl;
+}
 #else
+Surface makeSurface(SDL_Surface* surf) {
+	return Surface(surf, SDL_FreeSurface);
+}
+SharedSurface makeSharedSurface(SDL_Surface* surf) {
+	return SharedSurface(surf, SDL_FreeSurface);
+}
+
 Texture makeTexture(SDL_Texture* tex) {
 	return Texture(tex, SDL_DestroyTexture);
 }
@@ -47,6 +94,8 @@ Font makeFont(TTF_Font* font) {
 SharedFont makeSharedFont(TTF_Font* font) {
 	return SharedFont(font, TTF_CloseFont);
 }
+
+void printMemoryStats() {}
 #endif
 
 bool operator==(const SDL_Color& lhs, const SDL_Color& rhs) {
@@ -268,6 +317,8 @@ void AssetManager::quit() {
 	assets.clear();
 	fonts.clear();
 	mRenderer.reset();
+
+	printMemoryStats();
 }
 
 SDL_Renderer* AssetManager::renderer() {
@@ -550,13 +601,13 @@ Texture AssetManager::renderText(const TextData& data) {
 		std::cerr << "renderText(): Invalid font" << std::endl;
 		return tex;
 	}
-	SDL_Surface* surface = NULL;
+	Surface surface = makeSurface();
 	if (data.bkgrnd == TRANSPARENT) {
-		surface = TTF_RenderText_Blended(font.get(),
-			data.text.c_str(), data.color);
+		surface.reset(TTF_RenderText_Blended(font.get(),
+			data.text.c_str(), data.color));
 	} else {
-		surface = TTF_RenderText_Shaded(font.get(),
-			data.text.c_str(), data.color, data.bkgrnd);
+		surface.reset(TTF_RenderText_Shaded(font.get(),
+			data.text.c_str(), data.color, data.bkgrnd));
 	}
 	if (!surface) {
 #ifdef DEBUG_RENDER
@@ -564,8 +615,8 @@ Texture AssetManager::renderText(const TextData& data) {
 #endif
 		return tex;
 	}
-	tex = makeTexture(SDL_CreateTextureFromSurface(mRenderer.get(), surface));
-	SDL_FreeSurface(surface);
+	tex = makeTexture(SDL_CreateTextureFromSurface(
+		mRenderer.get(), surface.get()));
 	return tex;
 }
 
@@ -582,21 +633,20 @@ Texture AssetManager::renderTextWrapped(const WrappedTextData& data) {
 	// TODO: Switch to all SDL_Texture* (faster)?
 	int lineH = TTF_FontHeight(font.get());
 	int h = lineH * lines.size();
-	SDL_Surface* surf = SDL_CreateRGBSurface(0, data.w, h, 32,
-		rmask, gmask, bmask, amask);
+	Surface surf = makeSurface(SDL_CreateRGBSurface(0, data.w, h, 32,
+		rmask, gmask, bmask, amask));
 	if (data.bkgrnd != TRANSPARENT) {
-		SDL_FillRect(surf, NULL, toUint(data.bkgrnd));
+		SDL_FillRect(surf.get(), NULL, toUint(data.bkgrnd));
 	}
 	Rect lineR(0, 0, data.w, lineH);
 	for (std::string line : lines) {
 		if (line != "") {
-			SDL_Surface* lineSurf = TTF_RenderText_Blended(font.get(),
-				line.c_str(), data.color);
+			Surface lineSurf = makeSurface(TTF_RenderText_Blended(font.get(),
+				line.c_str(), data.color));
 			if (lineSurf) {
 				Rect lineRect = Rect(0, 0, lineSurf->w, lineSurf->h);
 				lineRect.setPos(lineR, data.textDir, Rect::PosType::pCenter);
-				SDL_BlitSurface(lineSurf, NULL, surf, &lineRect);
-				SDL_FreeSurface(lineSurf);
+				SDL_BlitSurface(lineSurf.get(), NULL, surf.get(), &lineRect);
 			} else {
 #ifdef RENDER_DEBUG
 				std::cerr << "line '" << line << "' produced a null surface"
@@ -606,8 +656,7 @@ Texture AssetManager::renderTextWrapped(const WrappedTextData& data) {
 		}
 		lineR.y += lineH;
 	}
-	tex = makeTexture(SDL_CreateTextureFromSurface(mRenderer.get(), surf));
-	SDL_FreeSurface(surf);
+	tex = makeTexture(SDL_CreateTextureFromSurface(mRenderer.get(), surf.get()));
 	return tex;
 }
 

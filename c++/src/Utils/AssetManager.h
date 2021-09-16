@@ -58,7 +58,12 @@ static Uint32 toUint(SDL_Color c) {
 #endif
 }
 
-// Memory management for textures and fonts
+// Memory management for surfaces, textures and fonts
+typedef std::unique_ptr<SDL_Surface, void(*)(SDL_Surface*)> Surface;
+typedef std::shared_ptr<SDL_Surface> SharedSurface;
+Surface makeSurface(SDL_Surface* surf = NULL);
+SharedSurface makeSharedSurface(SDL_Surface* surf = NULL);
+
 typedef std::unique_ptr<SDL_Texture, void(*)(SDL_Texture*)> Texture;
 typedef std::shared_ptr<SDL_Texture> SharedTexture;
 Texture makeTexture(SDL_Texture* tex = NULL);
@@ -68,6 +73,8 @@ typedef std::unique_ptr<TTF_Font, void(*)(TTF_Font*)> Font;
 typedef std::shared_ptr<TTF_Font> SharedFont;
 Font makeFont(TTF_Font* font = NULL);
 SharedFont makeSharedFont(TTF_Font* font = NULL);
+
+void printMemoryStats();
 
 // Forward Declaration
 class AssetManager;
