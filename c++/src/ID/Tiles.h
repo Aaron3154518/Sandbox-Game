@@ -1,6 +1,9 @@
 #ifndef ID_TILES_H
 #define ID_TILES_H
 
+#include <climits>
+#include <map>
+
 namespace tile {
 	// Order never changes!
 	enum Id : uint16_t {
@@ -34,10 +37,13 @@ namespace tile {
 		GEODE,
 		PORTAL,
 		PEDESTAL,
-
+		HAND_CRAFTING,
 
 		numTiles
 	};
+
+	// Order of crafting stations
+	int getCraftOrder(Id id);
 
 	// TODO: operator bool(const Id& id) { return id != Id::numTiles; }
 	//bool toBool(const Id& id) { return id != Id::numTiles; }

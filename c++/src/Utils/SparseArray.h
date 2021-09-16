@@ -4,41 +4,62 @@
 #include <iostream>
 #include <map>
 #include <pair>
+#include <stdexcept>
 
-// Good for single element access
-namespace singleAccess {
-	template<typename T>
-	class SparseArray {
-		typedef std::map<std::pair<int, int> T>::iterator Iter;
-	public:
-		SparseArray() : SparseArray(0, 0) {}
-		SparseArray(int _w, int _h) : w(_w), h(_h) {}
-		~SparseArray() = default;
+struct CmpCoords {
+	bool operator()(const std::pair<int, int>& lhs,
+		const std::pair<int, int>& rhs);
+};
 
-		// Iteration range - [begin, end)
-		Iter& begin() { return mArray.begin(); }
-		Iter& end() { return mArray.end(); }
-		// Iteration range - row = row, col = [colLb, colUb)
-		Iter& beginRow(int row, int colLb = 0, int colUb = w);
-		Iter& endRow(int row, int colLb = 0, int colUb = w);
+// Less overhead from maps
+template<typename T>
+class SparseArray {
+	typedef std::map<std::pair<int, int> T>::iterator Iter;
+public:
+	SparseArray() : SparseArray(0, 0) {}
+	SparseArray(int _w, int _h) : w(_w), h(_h) {}
+	~SparseArray() = default;
 
-	private:
-		int w, h;
-		std::map<std::pair<int, int>, T> mArray;
-	};
+	bool inBounds(int c, int r) const {
+		return c >= 0 && c < w && r >= 0 && r < h;
+	}
+	std::pair<int, int> getCoord(int c, int r) const {
+		return std::make_pair(r, c);
+	}
 
-	template<typename T>
-	inline SparseArray<T>::Iter& SparseArray<T>::beginRow(int row, int colLb, int colUb) {
+	void insert(int c, int r, const T& val) {
+		if (inBounds(c, r)) { mArray[getCoord(c, r)] = val; }
+	}
+	void remove(int c, int r) {
+		auto it = mArray.find(getCoord(c, r));
+		if (it != mArray.end()) { mArray.erase(it); }
+	}
+	const T& get(int c, int r) {
+		auto it = mArray.find(getCoord(c, r));
+		if (it == mArray.end()) {
+			throw std::out_of_range("SparseArray::get(): invalid coordinates");
+		}
+		return it->second;
+	}
+
+	// Iteration range - [begin, end)
+	Iter& begin() { return mArray.begin(); }
+	Iter& end() { return mArray.end(); }
+	// Iteration range - row = row, col = [colLb, colUb)
+	Iter& beginRow(int row, int colLb = 0, int colUb = w) {
 		return mArray.upper_bound(std::make_pair(row, colLb - 1));
 	}
-	template<typename T>
-	intline SparseArray<T>::Iter& SparseArray<T>::endRow(int row, int colLb, int colUb) {
+	Iter& endRow(int row, int colLb = 0, int colUb = w) {
 		return mArray.upper_bound(std::make_pair(row, colUb));
 	}
-}
 
+private:
+	int w, h;
+	std::map<std::pair<int, int>, T, CmpCoords> mArray;
+};
 
-// Good for block element access
+// More structured
+/*
 template<typename T>
 class SparseArray {
 	typedef std::map<int, T> Row;
@@ -73,5 +94,6 @@ inline void SparseArray<T>::remove(int row, int col) {
 	auto row = find(row);
 	if (row != end()) { row.erase(col); }
 }
+*/
 
 #endif

@@ -18,7 +18,8 @@ namespace tile {
 	class Stone : public Tile { NEW_TILE(Stone) };
 
 	// Crafting Stations
-	class WorkTable : public CraftingStation { NEW_TILE(WorkTable) };
+	class HandCrafting : public CraftingTile { NEW_TILE(HandCrafting) };
+	class WorkTable : public CraftingTile { NEW_TILE(WorkTable) };
 }
 
 #endif

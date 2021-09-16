@@ -5,13 +5,10 @@
 // Crafting
 //	- R/LClick on item W/ item amnt = max craftable/1
 
+const int CraftingUI::ALL = -1;
 const SDL_Point CraftingUI::DIM{ 8, 5 };
 const std::string CraftingUI::CRAFT = gameVals::images()
 + "crafting_toggle.png";
-
-std::set<Recipe> CraftingUI::HAND_CRAFTS = {
-	{item::Id::WORK_TABLE, 1, {{item::Id::WOOD, 10}}}
-};
 
 CraftingUI::CraftingUI() {
 	const int HALF = gameVals::INV_W() / 2;
@@ -26,14 +23,6 @@ CraftingUI::CraftingUI() {
 
 	craftersRect = Rect(mRect.x, mRect.y, mRect.w, gameVals::INV_W());
 	crafterSpinner.setRect(craftersRect);
-	std::vector<std::string> files = {"work_table.png", "crusher/crusher_0.png", "crusher/crusher_1.png",
-		"crusher/crusher_2.png", "crusher/crusher_3.png", "crusher/crusher_4.png", "forge/forge_0.png",
-		"forge/forge_1.png", "forge/forge_2.png"};
-	std::vector<Asset> assetVec;
-	for (std::string file : files) {
-		assetVec.push_back(Asset{ false, gameVals::items() + file });
-	}
-	crafterSpinner.set(assetVec);
 
 	recipeRect = Rect(mRect.x, craftersRect.y2(),
 		mRect.w, mRect.h - gameVals::INV_W() * 2);
@@ -55,14 +44,39 @@ CraftingUI::CraftingUI() {
 	craftRect.setCY(ingredientRect.cY());
 	craftButton = Button(CRAFT, 75);
 	craftButton.setRect(craftRect);
+}
 
-	// TODO: (remove this) Add all items to hand crafts + make hand_crafts const again
-	for (int i = 0; i < item::Id::numItems; i++) {
-		HAND_CRAFTS.insert(Recipe{ static_cast<item::Id>(i), 1 });
+void CraftingUI::updateCrafters() {
+	std::map<tile::Id, int> updates;
+	for (auto& pair : crafters) { updates[pair.first]++; }
+	std::vector<Asset> assetVec;
+	// Get all crafting stations
+	Rect r = World::toBlockRect(Game::Player().getPlacementRange());
+	for (auto& pair : Game::World().getCraftingBlocks(r)) {
+		updates[pair.second]--;
+		assetVec.push_back(Asset{ true,"",
+			Tile::getTile(pair.second)->getImage(pair.first) });
 	}
+	bool updateMe = false;
+	for (auto& pair : updates) {
+		if (pair.second != 0) {
+			updateMe = true;
+			if (pair.second == 1) {
+				crafters.erase(crafters.find(pair.first));
+			} else {
+				crafters[pair.first];
+			}
+		}
+	}
+	if (updateMe) {
+		crafterSpinner.set(assetVec);
+	}
+	// Update recipes
 }
 
 bool CraftingUI::handleEvents(Event& e) {
+	updateCrafters();
+
 	if (!crafterSpinner.handleEvents(e)) {
 		if (any8(e[Event::Mouse::LEFT], Event::Button::M_CLICKED)) {
 			if (craftButton.clicked(e.mouse)) {

@@ -33,6 +33,8 @@ public:
 	Point<double> getCPosf() const;
 	Point<double> getPos() const { return pos; }
 	void setPos(const Point<double>& newP);
+	const Rect& getPickUpRange() const;
+	const Rect& getPlacementRange() const;
 	PlayerInventory& getInventory() { return inventory; }
 
 	bool collidesPlayer(Rect blockRect) const;

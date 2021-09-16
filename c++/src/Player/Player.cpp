@@ -368,8 +368,16 @@ void Player::setPos(const Point<double>& newPos) {
 	placementRange.setCenter(mRect.center());
 }
 
+const Rect& Player::getPickUpRange() const {
+	return pickUpRange;
+}
+
+const Rect& Player::getPlacementRange() const {
+	return placementRange;
+}
+
 bool Player::collidesPlayer(Rect blockRect) const {
-	Rect r = toBlockRect(mRect);
+	Rect r = World::toBlockRect(mRect);
 	return rectsOverlap(r, blockRect);
 }
 

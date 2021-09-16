@@ -127,10 +127,10 @@ struct Recipe {
 	bool operator<(const Recipe& r) const;
 };
 
-class CraftingStation : public Tile {
+class CraftingTile : public Tile {
 public:
-	CraftingStation();
-	~CraftingStation() = default;
+	CraftingTile();
+	~CraftingTile() = default;
 
 	const std::set<Recipe>& getRecipes() const { return recipes; }
 

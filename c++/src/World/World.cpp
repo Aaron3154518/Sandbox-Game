@@ -5,6 +5,11 @@
 
 const std::string FIRST_WORLD = "Earth";
 
+bool World::CmpPoint::operator()(const SDL_Point& lhs,
+	const SDL_Point& rhs) const {
+	return lhs.x < rhs.x || (lhs.x == rhs.x && lhs.y < rhs.y);
+}
+
 // World
 World::~World() {
 	fr.close();
@@ -204,6 +209,7 @@ double World::loadBlocks(IO& io, double progress, int numRows) {
 							Block& b2 = blocks[row + dy][i + dx];
 							b2 = b;
 							b2.setSrc(dx, dy);
+							updateBlock(i + dx, row + dy);
 						}
 					}
 					i += bDim.x;
@@ -661,6 +667,15 @@ SDL_Point World::toBlockPos(SDL_Point p) {
 	return result;
 }
 
+Rect World::toBlockRect(Rect r) {
+	int lbX = std::floor((double)r.x / gameVals::BLOCK_W());
+	int lbY = std::floor((double)r.y / gameVals::BLOCK_W());
+	int ubX = std::ceil((double)r.x2() / gameVals::BLOCK_W());
+	int ubY = std::ceil((double)r.y2() / gameVals::BLOCK_W());
+	// x range = [lbX, ubX), y range = [lbY, ubY)
+	return Rect(lbX, lbY, ubX - lbX, ubY - lbY);
+}
+
 // Getters/Setters
 const Block& World::getBlock(int x, int y) const {
 	return getBlock(SDL_Point{ x,y });
@@ -678,7 +693,9 @@ void World::setBlock(int x, int y, const Block& b) {
 }
 void World::setBlock(SDL_Point loc, const Block& b) {
 	if (isInWorld(loc)) {
-		if (saving()) { blockChanges[loc] = b; } else { blocks[loc.y][loc.x] = b; }
+		if (saving()) { blockChanges[loc] = b; }
+		else { blocks[loc.y][loc.x] = b; }
+		updateBlock(loc);
 	}
 }
 void World::setBlockData(int x, int y, ByteArray& data) {
@@ -692,6 +709,63 @@ void World::setBlockData(SDL_Point loc, ByteArray& data) {
 			blockChanges[loc] = b;
 		} else { blocks[loc.y][loc.x].data = data; }
 	}
+}
+void World::updateBlock(int c, int r) {
+	updateBlock(SDL_Point{ c, r });
+}
+void World::updateBlock(SDL_Point loc) {
+	if (isInWorld(loc)) {
+		const Block& b = getBlock(loc);
+		bool isCrafter = Tile::getTile(b.id)->
+			getTileData(Tile::TileData::crafting);
+		if (isCrafter) { craftingBlocks[loc.y].insert(loc.x); }
+		else {
+			auto rIt = craftingBlocks.find(loc.y);
+			if (rIt != craftingBlocks.end()) {
+				auto cIt = rIt->second.find(loc.x);
+				if (cIt != rIt->second.end()) {
+					rIt->second.erase(cIt);
+				}
+				if (rIt->second.empty()) {
+					craftingBlocks.erase(rIt);
+				}
+			}
+		}
+	}
+}
+
+std::vector<std::pair<SDL_Point, tile::Id>>
+World::getCraftingBlocks(Rect area) {
+	// Constrain area to world bounds
+	if (area.x < 0) { area.x = 0; }
+	if (area.y < 0) { area.y = 0; }
+	if (area.x2() >= dim.x) { area.w = dim.x - area.x; }
+	if (area.y2() >= dim.y) { area.h = dim.y - area.y; }
+	// Find all crafting block types
+	std::multimap<int, std::pair<SDL_Point, tile::Id>> blocksMap;
+	auto rIt = craftingBlocks.lower_bound(area.y);
+	while (rIt != craftingBlocks.end() && rIt->first <= area.y2()) {
+		auto cIt = rIt->second.lower_bound(area.x);
+		while (cIt != rIt->second.end() && *cIt <= area.x2()) {
+			tile::Id id = getBlock(*cIt, rIt->first).id;
+			blocksMap.insert(std::make_pair(tile::getCraftOrder(id),
+				std::make_pair(SDL_Point{ *cIt, rIt->first }, id)));
+			++cIt;
+		}
+		++rIt;
+	}
+	// Add hand crafting recipes
+	blocksMap.insert(std::make_pair(
+		tile::getCraftOrder(tile::Id::HAND_CRAFTING),
+		std::make_pair(SDL_Point{ 0,0 }, tile::Id::HAND_CRAFTING)));
+
+	// Flatten to vector
+	std::vector<std::pair<SDL_Point, tile::Id>> blocks;
+	blocks.resize(blocksMap.size());
+	int i = 0;
+	for (auto& pair : blocksMap) { blocks[i++] = pair.second; }
+
+	return blocks;
 }
 
 void World::dropItem(const DroppedItem& drop, DroppedItem::DropDir dir) {

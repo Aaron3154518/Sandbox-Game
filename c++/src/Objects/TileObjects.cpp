@@ -27,6 +27,16 @@ namespace tile {
 	}
 
 	// Crafting Stations
+	ADD_TILE(HandCrafting, HAND_CRAFTING) {
+		img = "../entities/dragon/dragon_0.png";
+		mapColor = { 64,64,255 };
+		recipes = {
+			{I::WORK_TABLE, 1, {{I::WOOD, 10}}}
+		};
+		for (int i = 0; i < item::Id::numItems; i++) {
+			recipes.insert(Recipe{ static_cast<item::Id>(i), 1 });
+		}
+	}
 	ADD_TILE(WorkTable, WORK_TABLE) {
 		img = "work_table.png";
 		mapColor = { 54,78,154 };

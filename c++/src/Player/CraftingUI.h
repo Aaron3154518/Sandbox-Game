@@ -31,6 +31,8 @@ public:
 	void toggleOpen();
 
 private:
+	void updateCrafters();
+
 	Rect mRect, craftersRect, recipeRect;
 	Rect resultRect, ingredientRect;
 	Rect optionsRect;
@@ -52,11 +54,13 @@ private:
 	};
 	std::map<tile::Id, Crafter> crafters;
 	Spinner crafterSpinner;
-	// Selected crafter and recipe
-	tile::Id cSelected = tile::Id::AIR;
+	// Selected recipe
+	bool rIsSelected = false;
+	Recipe rSelected;
 
-	const static SDL_Point DIM;
-	const static std::string CRAFT;
+	static const int ALL;
+	static const SDL_Point DIM;
+	static const std::string CRAFT;
 	static std::set<Recipe> HAND_CRAFTS;
 };
 

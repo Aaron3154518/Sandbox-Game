@@ -4,6 +4,7 @@
 #include <cmath>
 #include <fstream>
 #include <iomanip>
+#include <set>
 #include <vector>
 
 #include <SDL.h>
@@ -24,6 +25,7 @@
 struct Block {
 	tile::Id id = tile::Id::AIR;
 	uint8_t src = 0;
+	// TODO: don't copy this
 	ByteArray data;
 
 	void setSrc(uint8_t dx, uint8_t dy) { src = (dx & 0x0F) | ((dy << 4) & 0xF0); }
@@ -76,6 +78,8 @@ public:
 	void setBlockData(int x, int y, ByteArray& data);
 	void setBlockData(SDL_Point loc, ByteArray& data);
 
+	std::vector<std::pair<SDL_Point, tile::Id>> getCraftingBlocks(Rect area);
+
 	void dropItem(const DroppedItem& drop, DroppedItem::DropDir dir);
 	void dropItem(const DroppedItem& drop, DroppedItem::DropDir dir,
 		Point<double> pos);
@@ -96,18 +100,13 @@ public:
 	static const Block& airBlock();
 	static Block createBlock(tile::Id tileId, uint8_t dx = 0, uint8_t dy = 0);
 	static SDL_Point toBlockPos(SDL_Point p);
+	static Rect toBlockRect(Rect r);
 	// Constants
 	static constexpr int SEC_PER_DAY = 60 * 24;
 	static constexpr int MS_PER_DAY = SEC_PER_DAY * 1000;
 	static constexpr int NOON = (int)(MS_PER_DAY / 2);
 	static constexpr int DAY = (int)(MS_PER_DAY / 4);
 	static constexpr int NIGHT = DAY * 3;
-
-	struct cmpPos {
-		bool operator()(const SDL_Point& p1, const SDL_Point& p2) const {
-			return (p1.y < p2.y) || (p1.y == p2.y && p1.x < p2.x);
-		}
-	};
 
 protected:
 	void tick(Timestep& dt);
@@ -138,6 +137,8 @@ private:
 	double saveBlocks(IO& io, double progress, int numRows);
 	double saveMap(IO& io, double progress);
 
+	void updateBlock(int c, int r);
+	void updateBlock(SDL_Point loc);
 	void applyBlockChanges();
 
 	// World type
@@ -153,10 +154,17 @@ private:
 	// World time
 	uint32_t time = 0;
 
+	// TODO: move to utils
+	struct CmpPoint {
+		bool operator()(const SDL_Point& lhs, const SDL_Point& rhs) const;
+	};
+
+	// Sparse array for special block types
+	std::map<int, std::set<int>> craftingBlocks;
 	// 2D array of blocks
 	std::vector<std::vector<Block>> blocks;
 	// Temporary data which stores world changes during saving
-	std::map<SDL_Point, Block, cmpPos> blockChanges;
+	std::map<SDL_Point, Block, CmpPoint> blockChanges;
 
 	std::list<DroppedItem> droppedItems;
 

@@ -114,15 +114,6 @@ bool eq(double f1, double f2, double err) {
 }
 int toInt(double d, double err) { return (int)(d + err); }
 
-Rect toBlockRect(Rect r) {
-    int lbX = r.x / gameVals::BLOCK_W();
-    int lbY = r.y / gameVals::BLOCK_W();
-    int ubX = (int)std::ceil((double)r.x2() / gameVals::BLOCK_W());
-    int ubY = (int)std::ceil((double)r.y2() / gameVals::BLOCK_W());
-    // x range = [lbX, ubX), y range = [lbY, ubY)
-    return Rect(lbX, lbY, ubX - lbX, ubY - lbY);
-}
-
 bool rectsOverlap(Rect r1, Rect r2) {
     Rect res;
     return SDL_IntersectRect(&r1, &r2, &res) == SDL_TRUE;

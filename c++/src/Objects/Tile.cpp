@@ -92,6 +92,6 @@ bool Recipe::operator<(const Recipe& r) const {
 }
 
 // CraftingStation
-CraftingStation::CraftingStation() {
+CraftingTile::CraftingTile() {
 	setTileData(TileData::crafting, true);
 }
