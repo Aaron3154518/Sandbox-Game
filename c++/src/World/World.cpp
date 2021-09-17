@@ -739,8 +739,8 @@ World::getCraftingBlocks(Rect area) {
 	// Constrain area to world bounds
 	if (area.x < 0) { area.x = 0; }
 	if (area.y < 0) { area.y = 0; }
-	if (area.x2() >= dim.x) { area.w = dim.x - area.x; }
-	if (area.y2() >= dim.y) { area.h = dim.y - area.y; }
+	if (area.x2() >= dim.x) { area.w = dim.x - area.x - 1; }
+	if (area.y2() >= dim.y) { area.h = dim.y - area.y - 1; }
 	// Find all crafting block types
 	std::multimap<int, std::pair<SDL_Point, tile::Id>> blocksMap;
 	auto rIt = craftingBlocks.lower_bound(area.y);
@@ -748,7 +748,7 @@ World::getCraftingBlocks(Rect area) {
 		auto cIt = rIt->second.lower_bound(area.x);
 		while (cIt != rIt->second.end() && *cIt <= area.x2()) {
 			tile::Id id = getBlock(*cIt, rIt->first).id;
-			blocksMap.insert(std::make_pair(tile::getCraftOrder(id),
+			blocksMap.insert(std::make_pair(tile::getTileOrder(id),
 				std::make_pair(SDL_Point{ *cIt, rIt->first }, id)));
 			++cIt;
 		}
@@ -756,8 +756,18 @@ World::getCraftingBlocks(Rect area) {
 	}
 	// Add hand crafting recipes
 	blocksMap.insert(std::make_pair(
-		tile::getCraftOrder(tile::Id::HAND_CRAFTING),
+		tile::getTileOrder(tile::Id::HAND_CRAFTING),
 		std::make_pair(SDL_Point{ 0,0 }, tile::Id::HAND_CRAFTING)));
+
+	/*for (int r = area.y; r <= area.y2(); r++) {
+		for (int c = area.x; c <= area.x2(); c++) {
+			tile::Id id = getBlock(c, r).id;
+			if (id != tile::Id::AIR) {
+				blocksMap.insert(std::make_pair(tile::getTileOrder(id),
+					std::make_pair(SDL_Point{ c,r }, id)));
+			}
+		}
+	}*/
 
 	// Flatten to vector
 	std::vector<std::pair<SDL_Point, tile::Id>> blocks;

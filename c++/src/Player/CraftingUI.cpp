@@ -48,15 +48,21 @@ CraftingUI::CraftingUI() {
 
 void CraftingUI::updateCrafters() {
 	std::map<tile::Id, int> updates;
-	for (auto& pair : crafters) { updates[pair.first]++; }
 	std::vector<Asset> assetVec;
 	// Get all crafting stations
 	Rect r = World::toBlockRect(Game::Player().getPlacementRange());
 	for (auto& pair : Game::World().getCraftingBlocks(r)) {
-		updates[pair.second]--;
-		assetVec.push_back(Asset{ true,"",
-			Tile::getTile(pair.second)->getImage(pair.first) });
+		int& val = updates[pair.second];
+		// No duplicates
+		if (val == 0) {
+			--val;
+			assetVec.push_back(Asset{ true, "",
+				Tile::getTile(pair.second)->getImage(pair.first) });
+		}
 	}
+	// Compare with previously in range
+	for (auto& pair : crafters) { updates[pair.first]++; }
+	// Check for updates
 	bool updateMe = false;
 	for (auto& pair : updates) {
 		if (pair.second != 0) {

@@ -10,18 +10,18 @@ namespace tile {
 		AIR = 0,
 		DIRT,
 		STONE,
-		CAT,
-		ZOMBIE,
+		CAT, // R
+		ZOMBIE, // R
 		DIMENSION_HOPPER,
 		CHEST,
 		SNOW,
 		WORLD_BUILDER,
 		WORK_TABLE,
-		DOOM_BUNNY,
+		DOOM_BUNNY, // R
 		WOOD,
 		LEAVES,
-		HELICOPTER,
-		BIRDIE,
+		HELICOPTER, // R
+		BIRDIE, // R
 		BOULDER1,
 		BOULDER2,
 		BOULDER3,
@@ -43,10 +43,7 @@ namespace tile {
 	};
 
 	// Order of crafting stations
-	int getCraftOrder(Id id);
-
-	// TODO: operator bool(const Id& id) { return id != Id::numTiles; }
-	//bool toBool(const Id& id) { return id != Id::numTiles; }
+	int getTileOrder(Id id);
 }
 
 #endif
