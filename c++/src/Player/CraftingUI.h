@@ -35,6 +35,8 @@ private:
 	void updateCrafters();
 	void updateRecipes();
 
+	void drawRecipes();
+
 	int numRecipes();
 
 	Rect mRect, craftersRect, recipeRect;

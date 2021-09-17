@@ -34,7 +34,7 @@ namespace tile {
 			{I::WORK_TABLE, 1, {{I::WOOD, 10}}}
 		};
 		for (int i = 0; i < item::Id::numItems; i++) {
-			recipes.insert(Recipe{ static_cast<item::Id>(i), 1 });
+			recipes.insert(Recipe{ static_cast<I>(i), 1 });
 		}
 	}
 	ADD_TILE(WorkTable, WORK_TABLE) {
@@ -62,5 +62,4 @@ namespace tile {
 			{I::MAGIC_WAND, 1, {{I::WOOD, 5}, {I::OPAL, 2}}}
 		};
 	}
-
 }

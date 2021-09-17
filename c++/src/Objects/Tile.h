@@ -132,12 +132,12 @@ public:
 	CraftingTile();
 	~CraftingTile() = default;
 
-	const std::set<Recipe>& getRecipes() const { return recipes; }
+	const std::multiset<Recipe>& getRecipes() const { return recipes; }
 
 protected:
 	// Makes recipes easier to hardcode
 	using I = item::Id;
-	std::set<Recipe> recipes;
+	std::multiset<Recipe> recipes;
 };
 
 #define NEW_TILE(TYPE) \

@@ -111,8 +111,7 @@ void CraftingUI::updateRecipes() {
 
 int CraftingUI::numRecipes() {
 	int numItems = 0;
-	//auto cIt = crafters.find(cSelected);
-	auto cIt = crafters.begin();
+	auto cIt = crafters.find(cSelected);
 	if (cIt != crafters.end()) {
 		numItems = cIt->second.size();
 	} else {
@@ -172,52 +171,99 @@ void CraftingUI::draw() {
 
 	craftButton.draw();
 	crafterSpinner.draw();
+	drawRecipes();
+}
 
+void CraftingUI::drawRecipes() {
+	AssetManager& assets = Window::Get().assets();
 	// Draw recipies
-	rectData.color = { 0,255,128,128 };
-	rectData.set(recipeRect).render(assets);
+	RectData({ { 0,255,128,128 }, SDL_BLENDMODE_BLEND }).
+		set(recipeRect).render(assets);
 	// Get number of items
 	int numItems = numRecipes();
 	// Get top left and bot right indexes
 	int lb = R_DIM.x * (int)(rScroll / itemW);
 	int ub = R_DIM.x * std::ceil((double)(rScroll + recipeRect.h) / itemW);
 	if (lb < 0) { lb = 0; }
+	if (lb >= numItems) { lb = numItems; }
 	if (ub > numItems) { ub = numItems; }
+	// Set up the item rect
+	Rect r(0, 0, imgW, imgW);
+	r.setCX(recipeRect.x + itemW / 2);
+	r.setCY(recipeRect.y + itemW / 2 - (rScroll % itemW));
+	// Lambda for drawing a recipe
+	auto drawItem = [this, &assets, &r](const std::pair<item::Id, int>& p) {
+		RenderData rData;
+		rData.boundary = recipeRect;
+		// Item image
+		rData.asset.setTexture(
+			Item::getItem(p.first)->getImage());
+		rData.fitToAsset(assets, r.w, r.h);
+		rData.dest.setCenter(r.cX(), r.cY());
+		assets.drawTexture(rData);
+		// Item text
+		textData.text = std::to_string(p.second);
+		rData.asset.setTexture(assets.renderText(textData));
+		rData.fitToAsset(assets, 0, gameVals::INV_FONT_W());
+		rData.dest.setBottomRight(r.bottomRight());
+		assets.drawTexture(rData);
+	};
 	// Draw recipes
-	//auto cIt = crafters.find(cSelected);
-	auto cIt = crafters.begin();
+	auto cIt = crafters.find(cSelected);
 	if (cIt != crafters.end()) {
 		// Move iterator to starting value
 		int i = 0;
 		auto rIt = cIt->second.begin();
 		while (i < lb) { ++rIt; ++i; }
-		// Set up the item rect
-		Rect r(0, 0, imgW, imgW);
-		r.setCX(recipeRect.x + itemW / 2);
-		r.setCY(recipeRect.y + itemW / 2 - (rScroll % itemW));
-		// Draw each item
-		RenderData rData;
-		rData.boundary = recipeRect;
+		
 		while (i++ < ub) {
-			// Item image
-			rData.asset.setTexture(
-				Item::getItem(rIt->second.first)->getImage());
-			rData.fitToAsset(assets, r.w, r.h);
-			rData.dest.setCenter(r.cX(), r.cY());
-			assets.drawTexture(rData);
-			// Item text
-			textData.text = std::to_string(rIt->second.second);
-			rData.asset.setTexture(assets.renderText(textData));
-			rData.fitToAsset(assets, 0, gameVals::INV_FONT_W());
-			rData.dest.setBottomRight(r.bottomRight());
-			assets.drawTexture(rData);
+			drawItem((rIt++)->second);
 
 			// Move the rect
 			if (i % R_DIM.x == 0) {
 				r.y += itemW;
 				r.setCX(recipeRect.x + itemW / 2);
 			} else { r.x += itemW; }
-			++rIt;
+		}
+	} else if (!crafters.empty()) {
+		std::pair<item::Id, int> result;
+		std::vector<Recipes::iterator> iters;
+		for (auto& pair : crafters) {
+			iters.push_back(pair.second.begin());
+		}
+		// Lambda for computing the next recipe
+		auto next = [this, &iters, &result]() -> bool {
+			int i = 0, idx = -1, currItem = INT_MAX;
+			// Find smallest id item
+			for (auto& pair : crafters) {
+				if (iters[i] != pair.second.end()
+					&& iters[i]->first < currItem) {
+					currItem = iters[i]->first;
+					idx = i;
+				}
+				++i;
+			}
+			// Take the item
+			if (idx >= 0) {
+				result = iters[idx]->second;
+				++iters[idx];
+				return true;
+			}
+			return false;
+		};
+
+		// Skip to first value
+		int i = 0;
+		while (i < lb && next()) { ++i; }
+
+		while (i++ < ub && next()) {
+			drawItem(result);
+
+			// Move the rect
+			if (i % R_DIM.x == 0) {
+				r.y += itemW;
+				r.setCX(recipeRect.x + itemW / 2);
+			} else { r.x += itemW; }
 		}
 	}
 }
