@@ -20,7 +20,7 @@ World/World \
 Player/Player Player/Inventory Player/PlayerInventory Player/CraftingUI \
 Objects/Tile Objects/TileObjects Objects/Item Objects/ItemObjects \
 Objects/DroppedItem \
-ID/Tiles
+ID/Tiles ID/Items
 SRCS := $(patsubst %, $(SRC)/%.$(CEXT), $(SRCS))
 EXCLUDE := $(wildcard $(SRC)/*_unittest.$(CEXT) $(SRC)/**/*_unittest.$(CEXT))
 SRCS := $(filter-out $(EXCLUDE), $(SRCS))

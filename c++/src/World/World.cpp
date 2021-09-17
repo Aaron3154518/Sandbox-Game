@@ -734,7 +734,7 @@ void World::updateBlock(SDL_Point loc) {
 	}
 }
 
-std::vector<std::pair<SDL_Point, tile::Id>>
+std::multimap<int, std::pair<SDL_Point, tile::Id>>
 World::getCraftingBlocks(Rect area) {
 	// Constrain area to world bounds
 	if (area.x < 0) { area.x = 0; }
@@ -758,24 +758,7 @@ World::getCraftingBlocks(Rect area) {
 	blocksMap.insert(std::make_pair(
 		tile::getTileOrder(tile::Id::HAND_CRAFTING),
 		std::make_pair(SDL_Point{ 0,0 }, tile::Id::HAND_CRAFTING)));
-
-	/*for (int r = area.y; r <= area.y2(); r++) {
-		for (int c = area.x; c <= area.x2(); c++) {
-			tile::Id id = getBlock(c, r).id;
-			if (id != tile::Id::AIR) {
-				blocksMap.insert(std::make_pair(tile::getTileOrder(id),
-					std::make_pair(SDL_Point{ c,r }, id)));
-			}
-		}
-	}*/
-
-	// Flatten to vector
-	std::vector<std::pair<SDL_Point, tile::Id>> blocks;
-	blocks.resize(blocksMap.size());
-	int i = 0;
-	for (auto& pair : blocksMap) { blocks[i++] = pair.second; }
-
-	return blocks;
+	return blocksMap;
 }
 
 void World::dropItem(const DroppedItem& drop, DroppedItem::DropDir dir) {

@@ -78,7 +78,8 @@ public:
 	void setBlockData(int x, int y, ByteArray& data);
 	void setBlockData(SDL_Point loc, ByteArray& data);
 
-	std::vector<std::pair<SDL_Point, tile::Id>> getCraftingBlocks(Rect area);
+	std::multimap<int, std::pair<SDL_Point, tile::Id>>
+		getCraftingBlocks(Rect area);
 
 	void dropItem(const DroppedItem& drop, DroppedItem::DropDir dir);
 	void dropItem(const DroppedItem& drop, DroppedItem::DropDir dir,

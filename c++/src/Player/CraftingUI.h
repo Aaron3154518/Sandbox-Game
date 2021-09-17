@@ -37,8 +37,6 @@ private:
 
 	void drawRecipes();
 
-	int numRecipes();
-
 	Rect mRect, craftersRect, recipeRect;
 	Rect resultRect, ingredientRect;
 	Rect optionsRect;
@@ -50,16 +48,19 @@ private:
 	Button craftButton;
 
 	// Recipes
-	typedef std::multimap<int, std::pair<item::Id, int>> Recipes;
-	std::map<tile::Id, Recipes> crafters;
-	tile::Id cSelected = tile::Id::AIR;
+	std::vector<RecipePtr> recipes;
+	struct Crafter {
+		tile::Id id = tile::Id::AIR;
+		int orderId = INT_MAX;
+		SDL_Point pos = { 0,0 };
+		std::vector<RecipePtr> recipes;
+		int rSelected = -1;
+	};
+	std::vector<Crafter> crafters;
+	int cSelected = -1;
 	Spinner crafterSpinner;
 	// Recipe scroll
 	int rScroll = 0, rMaxScroll = 0;
-	// Crafter of selected recipe
-	tile::Id crSelected = tile::Id::AIR;
-	// Selected recipe // TODO: order #
-	Recipe rSelected;
 
 
 	// Dimensions values

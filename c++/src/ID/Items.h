@@ -1,6 +1,10 @@
 #ifndef ID_ITEMS_H
 #define ID_ITEMS_H
 
+#include <climits>
+// Comilation fails without this
+#include <map>
+
 namespace item {
 	// Order never changes!
 	enum Id : uint16_t {
@@ -55,6 +59,8 @@ namespace item {
 
 		numItems
 	};
+
+	int getItemOrder(Id id);
 }
 
 #endif

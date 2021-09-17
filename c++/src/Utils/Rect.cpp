@@ -172,6 +172,9 @@ Rect operator -(Rect lhs, const SDL_Point& rhs) {
 bool operator ==(const SDL_Point& lhs, const SDL_Point& rhs) {
 	return lhs.x == rhs.x && lhs.y == rhs.y;
 }
+bool operator !=(const SDL_Point& lhs, const SDL_Point& rhs) {
+	return !(lhs == rhs);
+}
 // Point with point
 SDL_Point& operator +=(SDL_Point& lhs, const SDL_Point& rhs) {
 	lhs.x += rhs.x; lhs.y += rhs.y;

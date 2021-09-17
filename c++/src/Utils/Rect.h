@@ -67,6 +67,7 @@ public:
 // TODO: Move these!
 // For comparing SDL_Points
 bool operator ==(const SDL_Point& lhs, const SDL_Point& rhs);
+bool operator !=(const SDL_Point& lhs, const SDL_Point& rhs);
 // Point with point
 SDL_Point& operator +=(SDL_Point& lhs, const SDL_Point& rhs);
 SDL_Point operator +(SDL_Point lhs, const SDL_Point& rhs);

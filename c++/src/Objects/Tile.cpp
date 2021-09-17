@@ -81,17 +81,50 @@ void Tile::setTileData(const DataKeys& keys, bool val) {
 	for (TileData key : keys) { data[key] = val; }
 }
 
-bool Recipe::hasResult() const {
-	return resultAmnt > 0 && resultItem != item::Id::NONE
-		&& resultItem != item::Id::numItems;
-}
 
 // Recipe
-bool Recipe::operator<(const Recipe& r) const {
-	return resultItem < r.resultItem;
+Recipe::Recipe(item::Id id, int amnt,
+	std::initializer_list<Ingredient> iList) :
+	result({ id,amnt }) {
+	for (const Ingredient& i : iList) {
+		ingredients.insert(std::make_pair(item::getItemOrder(i.id), i));
+	}
+}
+
+Recipe::Recipe(const Recipe& other) : result(other.result) {
+	for (auto& pair : other.ingredients) {
+		ingredients.insert(std::make_pair(item::getItemOrder(pair.second.id),
+			pair.second));
+	}
+}
+
+bool Recipe::hasResult() const {
+	return result.amnt > 0 && result.id != item::Id::NONE
+		&& result.id != item::Id::numItems;
+}
+
+const Ingredient& Recipe::getResult() const {
+	return result;
+}
+
+const std::multimap<int, Ingredient>& Recipe::getIngredients() const {
+	return ingredients;
 }
 
 // CraftingStation
 CraftingTile::CraftingTile() {
 	setTileData(TileData::crafting, true);
+}
+
+const std::multimap<int, RecipePtr>& CraftingTile::getRecipes() const {
+	return recipes;
+}
+
+void CraftingTile::addRecipe(const Recipe& r) {
+	recipes.insert(std::make_pair(item::getItemOrder(r.getResult().id),
+		std::make_shared<Recipe>(r)));
+}
+
+void CraftingTile::addRecipes(std::initializer_list<Recipe> list) {
+	for (const Recipe& r : list) { addRecipe(r); }
 }

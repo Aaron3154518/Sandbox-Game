@@ -2,6 +2,7 @@
 #define ID_TILES_H
 
 #include <climits>
+// Comilation fails without this
 #include <map>
 
 namespace tile {
@@ -42,7 +43,6 @@ namespace tile {
 		numTiles
 	};
 
-	// Order of crafting stations
 	int getTileOrder(Id id);
 }
 

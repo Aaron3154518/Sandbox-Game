@@ -118,26 +118,44 @@ private:
 	static std::vector<TilePtr>& getTiles();
 };
 
+struct Ingredient {
+	item::Id id = item::Id::NONE;
+	int amnt = 0;
+};
+
 struct Recipe {
-	item::Id resultItem = item::Id::NONE;
-	int resultAmnt = 0;
-	std::map<item::Id, int> ingredients;
+	Recipe(item::Id id, int amnt,
+		std::initializer_list<Ingredient> iList = {});
+	Recipe(const Recipe& other);
 
 	bool hasResult() const;
-	bool operator<(const Recipe& r) const;
+
+	const Ingredient& getResult() const;
+	const std::multimap<int, Ingredient>& getIngredients() const;
+
+private:
+	Ingredient result;
+	std::multimap<int, Ingredient> ingredients;
 };
+
+typedef std::shared_ptr<const Recipe> RecipePtr;
 
 class CraftingTile : public Tile {
 public:
 	CraftingTile();
 	~CraftingTile() = default;
 
-	const std::multiset<Recipe>& getRecipes() const { return recipes; }
+	const std::multimap<int, RecipePtr>& getRecipes() const;
 
 protected:
 	// Makes recipes easier to hardcode
 	using I = item::Id;
-	std::multiset<Recipe> recipes;
+
+	void addRecipe(const Recipe& r);
+	void addRecipes(std::initializer_list<Recipe> list);
+
+private:
+	std::multimap<int, RecipePtr> recipes;
 };
 
 #define NEW_TILE(TYPE) \
