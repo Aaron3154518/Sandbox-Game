@@ -152,23 +152,23 @@ void PlayerInventory::handleEvents(Event& e) {
 			e.handleKey(SDLK_ESCAPE);
 		}
 
-		// Hotbar
-		if (e.checkScroll()) {
-			if (e.scroll > 0 && hotbarItem < dim.x - 1) {
-				selectHotbar(hotbarItem + 1);
-			} else if (e.scroll < 0 && hotbarItem > 0) {
-				selectHotbar(hotbarItem - 1);
-			}
-		}
-		for (const auto& pair : gameVals::KEY_NUMS()) {
-			if (any8(e[pair.first], Event::Button::PRESSED)) {
-				selectHotbar((pair.second + 9) % 10);
-				e.handleKey(pair.first);
-			}
-		}
-
 		// Crafting UI
 		if (!crafting.open || !crafting.handleEvents(e)) {
+			// Hotbar
+			if (e.checkScroll()) {
+				if (e.scroll > 0 && hotbarItem < dim.x - 1) {
+					selectHotbar(hotbarItem + 1);
+				} else if (e.scroll < 0 && hotbarItem > 0) {
+					selectHotbar(hotbarItem - 1);
+				}
+			}
+			for (const auto& pair : gameVals::KEY_NUMS()) {
+				if (any8(e[pair.first], Event::Button::PRESSED)) {
+					selectHotbar((pair.second + 9) % 10);
+					e.handleKey(pair.first);
+				}
+			}
+
 			// TODO: Auto move items
 
 			// Left/right click

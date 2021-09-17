@@ -64,7 +64,6 @@ public:
 	static Rect getInvRect(SDL_Point pos);
 
 protected:
-
 	std::list<SDL_Point> getSpaceForItem(const ItemInfo& item) const;
 
 	void updatePos(SDL_Point loc);
@@ -93,10 +92,8 @@ protected:
 	// Should we draw a description
 	bool drawDescription = false;
 
-	const static SDL_Color BKGRND, SELECT_COLOR;
-	const static std::string FONT_ID;
-
-private:
+	static const SDL_Color BKGRND, SELECT_COLOR;
+	static const std::string FONT_ID;
 };
 
 #endif
