@@ -40,6 +40,7 @@ namespace gameVals {
 	int FRAME_DELAY();
 
 	// Game constants
+	const std::string& DEF_IMG();
 	float FLOAT_ERR();
 	double DOUBLE_ERR();
 	int MIN_W();

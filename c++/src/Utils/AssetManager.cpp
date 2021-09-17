@@ -415,7 +415,9 @@ Texture AssetManager::loadImage(std::string fileName) {
 	struct stat buffer;
 	if (stat(fileName.c_str(), &buffer) != 0) {
 		std::cerr << "Could not find image file: " << fileName << std::endl;
-		return makeTexture();
+		if (fileName != gameVals::DEF_IMG()) {
+			return loadImage(gameVals::DEF_IMG());
+		} else { return makeTexture(); }
 	}
 	return makeTexture(IMG_LoadTexture(mRenderer.get(), fileName.c_str()));
 }

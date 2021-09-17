@@ -92,6 +92,10 @@ namespace gameVals {
 	}
 
 	// Game constants
+	const std::string& DEF_IMG() {
+		const static std::string _DEF_IMG = res() + "default.png";
+		return _DEF_IMG;
+	}
 	float FLOAT_ERR() { return 1e-5; }
 	double DOUBLE_ERR() { return 1e-10; }
 	int MIN_W() { return 800; }
