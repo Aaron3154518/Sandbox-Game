@@ -74,23 +74,24 @@ void CraftingUI::updateCrafters() {
 	bIt = blocks.begin();
 	auto cIt = crafters.begin();
 	while (!updateMe && bIt != blocks.end()) {
-		updateMe = cIt->orderId != bIt->first || cIt->pos != bIt->second.first;
+		updateMe = cIt->id != bIt->second.second
+			|| cIt->pos != bIt->second.first;
 		++cIt; ++bIt;
 	}
 
 	if (updateMe) {
-		int prevPos = cSelected == -1 ? -1 : crafters[cSelected].orderId;
+		int prevSelected = cSelected == -1 ? -1 : crafters[cSelected].id;
 		cSelected = -1;
 		crafters.clear();
 		std::vector<Asset> assetVec;
 
 		for (const auto& pair : blocks) {
-			crafters.push_back(Crafter{ pair.second.second, pair.first,
+			crafters.push_back(Crafter{ pair.second.second,
 				pair.second.first });
 			assetVec.push_back(Asset{ true, "",
 				Tile::getTile(pair.second.second)
 				->getImage(pair.second.first) });
-			if (pair.first == prevPos) {
+			if (pair.first == prevSelected) {
 				cSelected = crafters.size() - 1;
 			}
 		}
@@ -120,6 +121,7 @@ void CraftingUI::updateRecipes() {
 		}
 	}
 
+	rCrafterIdxs.clear();
 	recipes.clear();
 	bool running = true;
 	while (running) {
@@ -136,7 +138,9 @@ void CraftingUI::updateRecipes() {
 		}
 
 		if (idx >= 0) {
+			// TODO: check can craft - ask player inventory and block
 			// Add the recipe
+			rCrafterIdxs.push_back(idx);
 			recipes.push_back(iters[idx]->second);
 			// Log the index of the recipe in the Crafter object
 			crafters[idx].recipes.push_back(iters[idx]->second);
@@ -170,6 +174,14 @@ bool CraftingUI::handleEvents(Event& e) {
 				handled = true;
 			}
 		}
+		
+		// Check mouse hover
+		if (SDL_PointInRect(&e.mouse, &recipeRect)) {
+			rHover = std::floor(
+				(e.mouse.y - recipeRect.y + rScroll) / itemW) * R_DIM.x
+				+ std::floor((e.mouse.x - recipeRect.x) / itemW);
+			if (rHover >= getRecipeList().size()) { rHover = -1; }
+		}
 
 		// Left click
 		if (any8(e[Event::Mouse::LEFT], Event::Button::M_CLICKED)) {
@@ -196,6 +208,7 @@ bool CraftingUI::handleEvents(Event& e) {
 				}
 			} else if (SDL_PointInRect(&e.mouse, &recipeRect)) {
 				std::cerr << "Recipes" << std::endl;
+				std::cerr << rHover << std::endl;
 			} else if (SDL_PointInRect(&e.mouse, &optionsRect)) {
 				std::cerr << "Ingredient Options" << std::endl;
 			} else if (SDL_PointInRect(&e.mouse, &resultRect)) {
@@ -265,6 +278,31 @@ void CraftingUI::drawRecipes() {
 			r.setCX(recipeRect.x + itemW / 2);
 		} else { r.x += itemW; }
 	}
+
+	// Draw hover
+	if (rHover >= 0) {
+		if (rHover < rCrafterIdxs.size() && cSelected == -1) {
+			const Crafter& crafter = crafters[rCrafterIdxs[rHover]];
+
+			SDL_Point mouse = mousePos();
+			r.x = mouse.x; r.setY2(mouse.y);
+			CircleData({ {100,100,255,128}, SDL_BLENDMODE_BLEND })
+				.set(r.center(), itemW / 2).render(assets);
+			CircleData({ {200,200,64,255}, SDL_BLENDMODE_BLEND })
+				.set(r.center(), itemW / 2, -2).render(assets);
+			RenderData imgData;
+			imgData.asset.setTexture(
+				Tile::getTile(crafter.id)->getImage(crafter.pos));
+			imgData.fitToAsset(assets, r.w, r.h);
+			imgData.dest.setCenter(r.cX(), r.cY());
+			assets.drawTexture(imgData);
+		}
+		rHover = -1;
+	}
+}
+
+std::vector<RecipePtr>& CraftingUI::getRecipeList() {
+	return cSelected == -1 ? recipes : crafters[cSelected].recipes;
 }
 
 void CraftingUI::setOpen(bool val) {

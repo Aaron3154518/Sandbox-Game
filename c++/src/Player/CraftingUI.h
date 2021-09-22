@@ -17,6 +17,7 @@
 #include "../Utils/AssetManager.h"
 #include "../Utils/Event.h"
 #include "../Utils/Rect.h"
+#include "../Utils/Utils.h"
 #include "../Window.h"
 
 class CraftingUI {
@@ -37,6 +38,8 @@ private:
 
 	void drawRecipes();
 
+	std::vector<RecipePtr>& getRecipeList();
+
 	Rect mRect, craftersRect, recipeRect;
 	Rect resultRect, ingredientRect;
 	Rect optionsRect;
@@ -49,15 +52,15 @@ private:
 
 	// Recipes
 	std::vector<RecipePtr> recipes;
+	std::vector<int> rCrafterIdxs;
 	struct Crafter {
 		tile::Id id = tile::Id::AIR;
-		int orderId = INT_MAX;
 		SDL_Point pos = { 0,0 };
 		std::vector<RecipePtr> recipes;
 		int rSelected = -1;
 	};
 	std::vector<Crafter> crafters;
-	int cSelected = -1;
+	int cSelected = -1, rHover = -1;
 	Spinner crafterSpinner;
 	// Recipe scroll
 	int rScroll = 0, rMaxScroll = 0;
