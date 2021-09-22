@@ -42,7 +42,7 @@ namespace tile {
 		setTileData(TileData::onSurface, true);
 		hardness = 1;
 		addRecipes({
-			Recipe(I::SNOW, 1, {{I::SNOW_BALL, 4}}),
+			Recipe(I::SNOW, 1, {{I::SNOWBALL, 4}}),
 			Recipe(I::FOREST, 1, {{I::DIRT, 50}, {I::CAT, 1}}),
 			Recipe(I::MOUNTAIN, 1, {{I::STONE, 10}, {I::SNOW, 15}}),
 			Recipe(I::VALLEY, 1, {{I::STONE, 50}, {I::ZOMBIE, 1}}),
@@ -51,7 +51,7 @@ namespace tile {
 			Recipe(I::CRUSHER, 1, {{I::STONE, 15}, {I::SHINY_STONE_1, 10}}),
 			Recipe(I::CHEST, 1, {{I::WOOD, 15}, {I::STONE, 5}}),
 			Recipe(I::WORLD_BUILDER, 1, {{I::STONE, 25}, {I::OBSIDIAN, 5}}),
-			Recipe(I::SNOW_BALL, 1),
+			Recipe(I::SNOWBALL, 1),
 			Recipe(I::MAGIC_BALL, 1, {{I::GLASS, 10}}),
 			Recipe(I::REINFORCED_MAGIC_BALL, 1, {{I::MAGIC_BALL, 2}, {I::IRON_BAR, 5}}),
 			Recipe(I::SHINY_MAGIC_BALL, 1, {{I::REINFORCED_MAGIC_BALL, 2}, {I::GOLD_BAR, 10}}),

@@ -74,8 +74,9 @@ namespace item {
 			case Id::CHESTPLATE: i++;
 			case Id::HELMET: i++;
 			// Tools
-			case Id::SNOW_BALL: i++;
 			case Id::BASIC_PICKAXE: i++;
+			// Weapons
+			case Id::SNOWBALL: i++;
 			case Id::BASIC_SWORD: i++;
 				break;
 			default: return INT_MAX;

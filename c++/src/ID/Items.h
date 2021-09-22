@@ -26,7 +26,7 @@ namespace item {
 		MOUNTAIN,
 		VALLEY,
 		WORK_TABLE,
-		SNOW_BALL,
+		SNOWBALL,
 		DOOM_BUNNY, // R
 		DRAGON_CLAW,
 		WOOD,
