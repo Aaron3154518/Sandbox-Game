@@ -96,6 +96,7 @@ void CraftingUI::updateCrafters() {
 		}
 
 		crafterSpinner.set(assetVec);
+		crafterSpinner.setSelected(cSelected, true);
 
 		if (cSelected == -1) { rScroll = 0; }
 	}
