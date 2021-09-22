@@ -80,8 +80,8 @@ void CraftingUI::updateCrafters() {
 	}
 
 	if (updateMe) {
-		int prevSelected = cSelected == -1 ? -1 : crafters[cSelected].id;
-		cSelected = -1;
+		int prevSelected = cSelected < 0 ? cSelected : crafters[cSelected].id;
+		int newSelected = -1;
 		crafters.clear();
 		std::vector<Asset> assetVec;
 
@@ -91,13 +91,13 @@ void CraftingUI::updateCrafters() {
 			assetVec.push_back(Asset{ true, "",
 				Tile::getTile(pair.second.second)
 				->getImage(pair.second.first) });
-			if (pair.first == prevSelected) {
-				cSelected = crafters.size() - 1;
+			if (pair.second.second == prevSelected) {
+				newSelected = crafters.size() - 1;
 			}
 		}
 
 		crafterSpinner.set(assetVec);
-		crafterSpinner.setSelected(cSelected, true);
+		selectCrafter(newSelected);
 
 		if (cSelected == -1) { rScroll = 0; }
 	}
@@ -192,9 +192,7 @@ bool CraftingUI::handleEvents(Event& e) {
 			} else if (SDL_PointInRect(&e.mouse, &craftersRect)) {
 				int clickIdx = crafterSpinner.mouseOnItem();
 				if (clickIdx >= 0 && clickIdx < crafters.size()) {
-					crafterSpinner.setSelected(cSelected, false);
-					cSelected = clickIdx == cSelected ? -1 : clickIdx;
-					crafterSpinner.setSelected(cSelected, true);
+					selectCrafter(clickIdx == cSelected ? -1 : clickIdx);
 					// Update scroll
 					if (cSelected == -1) {
 						rMaxScroll = std::max(0, itemW * (int)std::ceil(
@@ -208,7 +206,10 @@ bool CraftingUI::handleEvents(Event& e) {
 				}
 			} else if (SDL_PointInRect(&e.mouse, &recipeRect)) {
 				std::cerr << "Recipes" << std::endl;
-				std::cerr << rHover << std::endl;
+				if (cSelected == -1
+					&& rHover >= 0 && rHover < rCrafterIdxs.size()) {
+					selectCrafter(rCrafterIdxs[rHover]);
+				}
 			} else if (SDL_PointInRect(&e.mouse, &optionsRect)) {
 				std::cerr << "Ingredient Options" << std::endl;
 			} else if (SDL_PointInRect(&e.mouse, &resultRect)) {
@@ -242,8 +243,7 @@ void CraftingUI::drawRecipes() {
 	// Draw recipies
 	RectData({ { 0,255,128,128 }, SDL_BLENDMODE_BLEND }).
 		set(recipeRect).render(assets);
-	const std::vector<RecipePtr>& rVec = cSelected == -1 ? recipes :
-		crafters[cSelected].recipes;
+	const std::vector<RecipePtr>& rVec = getRecipeList();
 	// Get top left and bot right indexes
 	int lb = R_DIM.x * std::floor(rScroll / itemW);
 	int ub = R_DIM.x * std::ceil((double)(rScroll + recipeRect.h) / itemW);
@@ -303,6 +303,13 @@ void CraftingUI::drawRecipes() {
 
 std::vector<RecipePtr>& CraftingUI::getRecipeList() {
 	return cSelected == -1 ? recipes : crafters[cSelected].recipes;
+}
+
+void CraftingUI::selectCrafter(int newCrafter) {
+	if (newCrafter >= crafters.size()) { newCrafter = -1; }
+	crafterSpinner.setSelected(cSelected, false);
+	cSelected = newCrafter;
+	crafterSpinner.setSelected(cSelected, true);
 }
 
 void CraftingUI::setOpen(bool val) {

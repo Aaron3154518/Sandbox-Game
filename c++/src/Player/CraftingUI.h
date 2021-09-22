@@ -39,6 +39,7 @@ private:
 	void drawRecipes();
 
 	std::vector<RecipePtr>& getRecipeList();
+	void selectCrafter(int newCrafter);
 
 	Rect mRect, craftersRect, recipeRect;
 	Rect resultRect, ingredientRect;
