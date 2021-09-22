@@ -48,6 +48,14 @@ bool Event::canUse(Access status) {
     return status == Access::ACTIVE || status == Access::IGNORED;
 }
 
+const Event::MouseButton& Event::getMouse(const Mouse& mouse) {
+    return mouseButtons[mouse];
+}
+
+const Event::KeyButton& Event::getKey(const Key& key) {
+    return keyButtons[key];
+}
+
 void Event::update(Timestep ts) {
     dt = ts;
     uint32_t ms = dt.milliseconds();
@@ -115,6 +123,7 @@ void Event::update(SDL_Event& e) {
             MouseButton& b = mouseButtons[toMouse(e.button.button)];
             b.status = (distance(b.clickPos, mouse) < MAX_CLICK_DIFF ?
                 Button::M_CLICKED : 0) | Button::RELEASED;
+            b.duration = 0;
         }
         break;
         case SDL_MOUSEMOTION:

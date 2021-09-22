@@ -79,7 +79,7 @@ void CraftingUI::updateCrafters() {
 	}
 
 	if (updateMe) {
-		int prevCSelected = cSelected == -1 ? -1 : crafters[cSelected].id;
+		int prevPos = cSelected == -1 ? -1 : crafters[cSelected].orderId;
 		cSelected = -1;
 		crafters.clear();
 		std::vector<Asset> assetVec;
@@ -90,14 +90,14 @@ void CraftingUI::updateCrafters() {
 			assetVec.push_back(Asset{ true, "",
 				Tile::getTile(pair.second.second)
 				->getImage(pair.second.first) });
-			if (cSelected == -1 && pair.second.second == prevCSelected) {
+			if (pair.first == prevPos) {
 				cSelected = crafters.size() - 1;
 			}
 		}
 
 		crafterSpinner.set(assetVec);
 
-		if (cSelected == -1 && prevCSelected != -1) { rScroll = 0; }
+		if (cSelected == -1) { rScroll = 0; }
 	}
 
 	updateRecipes();
@@ -110,6 +110,7 @@ void CraftingUI::updateRecipes() {
 	iters.resize(crafters.size());
 	endIters.resize(crafters.size());
 	for (int i = 0; i < crafters.size(); i++) {
+		crafters[i].recipes.clear();
 		CraftingTile* tile = dynamic_cast<CraftingTile*>(
 			Tile::getTile(crafters[i].id).get());
 		if (tile) {
@@ -176,7 +177,22 @@ bool CraftingUI::handleEvents(Event& e) {
 			if (craftButton.clicked(e.mouse)) {
 				std::cerr << "Do Craft" << std::endl;
 			} else if (SDL_PointInRect(&e.mouse, &craftersRect)) {
-				std::cerr << "Crafting Stations" << std::endl;
+				int clickIdx = crafterSpinner.mouseOnItem();
+				if (clickIdx >= 0 && clickIdx < crafters.size()) {
+					crafterSpinner.setSelected(cSelected, false);
+					cSelected = clickIdx == cSelected ? -1 : clickIdx;
+					crafterSpinner.setSelected(cSelected, true);
+					// Update scroll
+					if (cSelected == -1) {
+						rMaxScroll = std::max(0, itemW * (int)std::ceil(
+							(double)recipes.size() / R_DIM.x) - recipeRect.h);
+					} else {
+						rMaxScroll = std::max(0, itemW * (int)std::ceil(
+							(double)crafters[cSelected].recipes.size() / R_DIM.x)
+							- recipeRect.h);
+					}
+					if (rScroll > rMaxScroll) { rScroll = rMaxScroll; }
+				}
 			} else if (SDL_PointInRect(&e.mouse, &recipeRect)) {
 				std::cerr << "Recipes" << std::endl;
 			} else if (SDL_PointInRect(&e.mouse, &optionsRect)) {

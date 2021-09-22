@@ -80,6 +80,9 @@ struct Event {
     uint8_t operator[](const Key& key);
     void handleKey(Key key);
 
+    const MouseButton& getMouse(const Mouse& mouse);
+    const KeyButton& getKey(const Key& key);
+
     void nextUI(Rect r, bool textInput);
 
     // Privatizeificateify
