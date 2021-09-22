@@ -42,7 +42,7 @@ public:
 	void setPos(SDL_Point pos);
 	Rect getRect() const { return mRect; }
 	void setMaxStack(int val) { maxStack = val; }
-	size_t getMaxStack() const { return maxStack; }
+	int getMaxStack() const { return maxStack; }
 	void setItemList(std::set<item::Id>& list, bool isWhiteList);
 	// Get/set item
 	const ItemInfo& getItem(int x, int y) const;
@@ -62,6 +62,8 @@ public:
 	static SDL_Point toInvPos(SDL_Point pos);
 	static SDL_Point toPxPos(SDL_Point pos);
 	static Rect getInvRect(SDL_Point pos);
+	static void drawItem(const ItemInfo& info, TextData textData,
+		Rect r, Rect boundary = RenderData::NO_RECT());
 
 protected:
 	std::list<SDL_Point> getSpaceForItem(const ItemInfo& item) const;

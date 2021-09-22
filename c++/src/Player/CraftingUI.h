@@ -53,7 +53,8 @@ private:
 
 	// Recipes
 	std::vector<RecipePtr> recipes;
-	std::vector<int> rCrafterIdxs;
+	// For each recipe, pair<crafter index, recipe index>
+	std::vector<std::pair<int, int>> recipeIdxs;
 	struct Crafter {
 		tile::Id id = tile::Id::AIR;
 		SDL_Point pos = { 0,0 };
@@ -63,6 +64,13 @@ private:
 	std::vector<Crafter> crafters;
 	int cSelected = -1, rHover = -1;
 	Spinner crafterSpinner;
+	struct SelectedRecipe {
+		int cIdx = -1, cRIdx = -1;
+		tile::Id cId = tile::Id::AIR;
+		SDL_Point pos = { 0,0 };
+		RecipePtr recipe;
+	};
+	SelectedRecipe rSelected;
 	// Recipe scroll
 	int rScroll = 0, rMaxScroll = 0;
 

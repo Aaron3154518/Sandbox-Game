@@ -19,6 +19,25 @@ Rect Inventory::getInvRect(SDL_Point pos) {
 	return Rect(0, 0, gameVals::INV_W(), gameVals::INV_W()) + toPxPos(pos);
 }
 
+void Inventory::drawItem(const ItemInfo& info, TextData textData,
+	Rect r, Rect boundary) {
+	AssetManager& assets = Window::Get().assets();
+	RenderData rData;
+	rData.boundary = boundary.invalid() ? r : boundary;
+	// Item image
+	rData.asset.setTexture(info.getImage());
+	rData.fitToAsset(assets, r.w, r.h);
+	rData.dest.setCenter(r.cX(), r.cY());
+	assets.drawTexture(rData);
+	// Item text
+	textData.text = std::to_string(info.amnt);
+	rData.asset.setTexture(assets.renderText(textData));
+	rData.fitToAsset(assets, 0,
+		r.h * gameVals::INV_FONT_W() / gameVals::INV_IMG_W());
+	rData.dest.setBottomRight(r.bottomRight());
+	assets.drawTexture(rData);
+}
+
 // Inventory
 Inventory::Inventory(SDL_Point _dim) : dim(_dim) {
 	std::vector<ItemInfo> row(dim.x);
@@ -282,22 +301,7 @@ void Inventory::updatePos(SDL_Point loc) {
 	AssetManager& assets = Window::Get().assets();
 	assets.setRenderTarget(rData.asset.texture.get());
 	RectData({ BKGRND }).set(r).render(assets);
-	if (item.isItem()) {
-		RenderData itemTex;
-		itemTex.boundary = r;
-		// Item image
-		itemTex.asset.setTexture(item.getImage());
-		itemTex.fitToAsset(assets,
-			gameVals::INV_IMG_W(), gameVals::INV_IMG_W());
-		itemTex.dest.setCenter(r.cX(), r.cY());
-		assets.drawTexture(itemTex);
-		// Item text
-		textData.text = std::to_string(item.amnt);
-		itemTex.asset.setTexture(assets.renderText(textData));
-		itemTex.fitToAsset(assets, 0, gameVals::INV_FONT_W());
-		itemTex.dest.setBottomRight(r.bottomRight());
-		assets.drawTexture(itemTex);
-	}
+	if (item.isItem()) { drawItem(item, textData, r); }
 	assets.resetRenderTarget();
 }
 

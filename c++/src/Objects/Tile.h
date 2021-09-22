@@ -118,24 +118,19 @@ private:
 	static std::vector<TilePtr>& getTiles();
 };
 
-struct Ingredient {
-	item::Id id = item::Id::NONE;
-	int amnt = 0;
-};
-
 struct Recipe {
 	Recipe(item::Id id, int amnt,
-		std::initializer_list<Ingredient> iList = {});
+		std::initializer_list<ItemInfo> iList = {});
 	Recipe(const Recipe& other);
 
 	bool hasResult() const;
 
-	const Ingredient& getResult() const;
-	const std::multimap<int, Ingredient>& getIngredients() const;
+	const ItemInfo& getResult() const;
+	const std::multimap<int, ItemInfo>& getIngredients() const;
 
 private:
-	Ingredient result;
-	std::multimap<int, Ingredient> ingredients;
+	ItemInfo result;
+	std::multimap<int, ItemInfo> ingredients;
 };
 
 typedef std::shared_ptr<const Recipe> RecipePtr;

@@ -183,7 +183,7 @@ RectData& RectData::set(Rect r, int thickness, bool center) {
 	if (center) {
 		thickness = std::abs(thickness);
 		r1.resize(r1.w - thickness, r1.h - thickness, true);
-		r2.resize(r1.w + thickness, r1.h + thickness, true);
+		r2.resize(r2.w + thickness, r2.h + thickness, true);
 	} else {
 		int dw = 2 * thickness;
 		if (dw > 0) { r2.resize(r2.w + dw, r2.h + dw, true); }
@@ -222,8 +222,8 @@ void RectData::render(AssetManager& assets) {
 				// Expand rect
 				if (r.x > bounds.x) { r.x--; r.w++; }
 				if (r.y > bounds.y) { r.y--; r.h++; }
-				if (r.x < bounds.x2()) { r.w++; }
-				if (r.y < bounds.y2()) { r.h++; }
+				if (r.x2() < bounds.x2()) { r.w++; }
+				if (r.y2() < bounds.y2()) { r.h++; }
 				SDL_RenderDrawRect(assets.renderer(), &r);
 			} while (r != bounds);
 		}

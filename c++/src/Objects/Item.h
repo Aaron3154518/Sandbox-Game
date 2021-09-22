@@ -114,7 +114,7 @@ private:
 
 struct ItemInfo {
 	ItemInfo() = default;
-	ItemInfo(item::Id id, size_t amnt);
+	ItemInfo(item::Id id, int amnt);
 	~ItemInfo() = default;
 
 	item::Id itemId = item::Id::NONE;

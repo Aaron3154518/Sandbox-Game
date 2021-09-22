@@ -81,33 +81,31 @@ void Tile::setTileData(const DataKeys& keys, bool val) {
 	for (TileData key : keys) { data[key] = val; }
 }
 
-
 // Recipe
 Recipe::Recipe(item::Id id, int amnt,
-	std::initializer_list<Ingredient> iList) :
-	result({ id,amnt }) {
-	for (const Ingredient& i : iList) {
-		ingredients.insert(std::make_pair(item::getItemOrder(i.id), i));
+	std::initializer_list<ItemInfo> iList) :
+	result(id, amnt) {
+	for (const ItemInfo& i : iList) {
+		ingredients.insert(std::make_pair(item::getItemOrder(i.itemId), i));
 	}
 }
 
 Recipe::Recipe(const Recipe& other) : result(other.result) {
 	for (auto& pair : other.ingredients) {
-		ingredients.insert(std::make_pair(item::getItemOrder(pair.second.id),
-			pair.second));
+		ingredients.insert(std::make_pair(
+			item::getItemOrder(pair.second.itemId), pair.second));
 	}
 }
 
 bool Recipe::hasResult() const {
-	return result.amnt > 0 && result.id != item::Id::NONE
-		&& result.id != item::Id::numItems;
+	return result.isItem();
 }
 
-const Ingredient& Recipe::getResult() const {
+const ItemInfo& Recipe::getResult() const {
 	return result;
 }
 
-const std::multimap<int, Ingredient>& Recipe::getIngredients() const {
+const std::multimap<int, ItemInfo>& Recipe::getIngredients() const {
 	return ingredients;
 }
 
@@ -121,7 +119,7 @@ const std::multimap<int, RecipePtr>& CraftingTile::getRecipes() const {
 }
 
 void CraftingTile::addRecipe(const Recipe& r) {
-	recipes.insert(std::make_pair(item::getItemOrder(r.getResult().id),
+	recipes.insert(std::make_pair(item::getItemOrder(r.getResult().itemId),
 		std::make_shared<Recipe>(r)));
 }
 

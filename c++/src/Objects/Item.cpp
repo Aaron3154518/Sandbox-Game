@@ -6,7 +6,7 @@ const ItemInfo& ItemInfo::NO_ITEM() {
 	return _NO_ITEM;
 }
 
-ItemInfo::ItemInfo(item::Id id, size_t _amnt) :
+ItemInfo::ItemInfo(item::Id id, int _amnt) :
 	itemId(id), amnt(_amnt), data(Item::getItem(id)->newItemData()) {}
 
 void ItemInfo::read(IO& io) {

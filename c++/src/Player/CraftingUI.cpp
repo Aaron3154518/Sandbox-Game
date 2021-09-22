@@ -12,6 +12,8 @@ const std::string CraftingUI::FONT_ID = Window::Get().assets().addFont(
 const std::string CraftingUI::CRAFT = gameVals::images()
 + "crafting_toggle.png";
 
+const SDL_Color R_SELECT_COLOR{ 255,175,64,255 };
+
 CraftingUI::CraftingUI() :
 	itemW(gameVals::INV_W()), imgW(gameVals::INV_IMG_W()) {
 
@@ -121,7 +123,7 @@ void CraftingUI::updateRecipes() {
 		}
 	}
 
-	rCrafterIdxs.clear();
+	recipeIdxs.clear();
 	recipes.clear();
 	bool running = true;
 	while (running) {
@@ -140,7 +142,8 @@ void CraftingUI::updateRecipes() {
 		if (idx >= 0) {
 			// TODO: check can craft - ask player inventory and block
 			// Add the recipe
-			rCrafterIdxs.push_back(idx);
+			recipeIdxs.push_back(
+				std::make_pair(idx, crafters[idx].recipes.size()));
 			recipes.push_back(iters[idx]->second);
 			// Log the index of the recipe in the Crafter object
 			crafters[idx].recipes.push_back(iters[idx]->second);
@@ -193,6 +196,7 @@ bool CraftingUI::handleEvents(Event& e) {
 				int clickIdx = crafterSpinner.mouseOnItem();
 				if (clickIdx >= 0 && clickIdx < crafters.size()) {
 					selectCrafter(clickIdx == cSelected ? -1 : clickIdx);
+					rSelected.cIdx = -1;
 					// Update scroll
 					if (cSelected == -1) {
 						rMaxScroll = std::max(0, itemW * (int)std::ceil(
@@ -205,10 +209,23 @@ bool CraftingUI::handleEvents(Event& e) {
 					if (rScroll > rMaxScroll) { rScroll = rMaxScroll; }
 				}
 			} else if (SDL_PointInRect(&e.mouse, &recipeRect)) {
-				std::cerr << "Recipes" << std::endl;
-				if (cSelected == -1
-					&& rHover >= 0 && rHover < rCrafterIdxs.size()) {
-					selectCrafter(rCrafterIdxs[rHover]);
+				auto& rVec = getRecipeList();
+				if (rHover >= 0 && rHover < rVec.size()) {
+					// Get the recipe from the current list
+					rSelected.recipe = rVec[rHover];
+					// Switch to the corresponding crafter
+					if (cSelected == -1) {
+						selectCrafter(recipeIdxs[rHover].first);
+						rVec = getRecipeList();
+						rSelected.cRIdx = recipeIdxs[rHover].second;
+						// Attempt to center on the item
+						rScroll = std::min(std::max(itemW *
+							((int)std::floor(rSelected.cRIdx / R_DIM.x) - 1),
+							0), rMaxScroll);
+					} else {
+						rSelected.cRIdx = rHover;
+					}
+					rSelected.cIdx = cSelected;
 				}
 			} else if (SDL_PointInRect(&e.mouse, &optionsRect)) {
 				std::cerr << "Ingredient Options" << std::endl;
@@ -254,22 +271,28 @@ void CraftingUI::drawRecipes() {
 	Rect r(0, 0, imgW, imgW);
 	r.setCX(recipeRect.x + itemW / 2);
 	r.setCY(recipeRect.y + itemW / 2 - (rScroll % itemW));
-	// Setup render data
-	RenderData rData;
-	rData.boundary = recipeRect;
+	// Selected recipe
+	if (rSelected.cIdx != -1 && rSelected.cIdx == cSelected
+		&& rSelected.cRIdx >= 0 && rSelected.cRIdx < rVec.size()) {
+		// Outline selected in recipe rect
+		int idx = rSelected.cRIdx - lb;
+		int dx = itemW * (idx % R_DIM.x);
+		int dy = itemW * std::floor(idx / R_DIM.x);
+		r.shift(dx, dy);
+		RectData({ R_SELECT_COLOR, SDL_BLENDMODE_NONE, recipeRect })
+			.set(r, (itemW - imgW) / 2).render(assets);
+		r.shift(-dx, -dy);
+		
+		// Draw recipe result
+		if (rSelected.recipe) {
+			Inventory::drawItem(rSelected.recipe->getResult(),
+				textData, resultRect);
+		}
+	}
+
+	// Draw the result items
 	while (lb < ub) {
-		// Item image
-		rData.asset.setTexture(
-			Item::getItem(rVec[lb]->getResult().id)->getImage());
-		rData.fitToAsset(assets, r.w, r.h);
-		rData.dest.setCenter(r.cX(), r.cY());
-		assets.drawTexture(rData);
-		// Item text
-		textData.text = std::to_string(rVec[lb]->getResult().amnt);
-		rData.asset.setTexture(assets.renderText(textData));
-		rData.fitToAsset(assets, 0, gameVals::INV_FONT_W());
-		rData.dest.setBottomRight(r.bottomRight());
-		assets.drawTexture(rData);
+		Inventory::drawItem(rVec[lb]->getResult(), textData, r, recipeRect);
 
 		// Move the rect
 		lb++;
@@ -281,8 +304,8 @@ void CraftingUI::drawRecipes() {
 
 	// Draw hover
 	if (rHover >= 0) {
-		if (rHover < rCrafterIdxs.size() && cSelected == -1) {
-			const Crafter& crafter = crafters[rCrafterIdxs[rHover]];
+		if (rHover < recipeIdxs.size() && cSelected == -1) {
+			const Crafter& crafter = crafters[recipeIdxs[rHover].first];
 
 			SDL_Point mouse = mousePos();
 			r.x = mouse.x; r.setY2(mouse.y);

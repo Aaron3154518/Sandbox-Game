@@ -3,8 +3,8 @@
 constexpr double MIN_SCROLL_V = .005;
 constexpr int KEY_LEN = 4;
 
-constexpr SDL_Color CIRCLE_COLOR{ 0,255,0,128 };
-constexpr SDL_Color SELECT_COLOR{ 0,0,255,128 };
+constexpr SDL_Color CIRCLE_COLOR{ 0,255,0,255 };
+constexpr SDL_Color SELECT_COLOR{ 0,0,255,255 };
 
 int Spinner::mouseOnItem() {
 	SDL_Point mouse = mousePos();

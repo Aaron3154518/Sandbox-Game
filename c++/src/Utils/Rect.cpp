@@ -87,8 +87,8 @@ void Rect::resize(int nW, int nH, bool center) {
 	std::cerr << "Before: " << *this << std::endl;
 #endif
 	double oldCX = cX(), oldCY = cY();
-	w = abs(nW);
-	h = abs(nH);
+	w = nW;
+	h = nH;
 	if (center) {
 		x = (int)(oldCX - w / 2);
 		y = (int)(oldCY - h / 2);

@@ -30,7 +30,7 @@ namespace tile {
 	ADD_TILE(HandCrafting, HAND_CRAFTING) {
 		img = "../entities/dragon/dragon_0.png";
 		mapColor = { 64,64,255 };
-		addRecipe(Recipe(I::WORK_TABLE, 1, { {I::WOOD, 10} }));
+		addRecipe(Recipe(I::WORK_TABLE, 1, { ItemInfo(I::WOOD, 10) }));
 		for (int i = 0; i < item::Id::numItems; i++) {
 			addRecipe(Recipe(static_cast<I>(i), 1));
 		}
@@ -42,22 +42,22 @@ namespace tile {
 		setTileData(TileData::onSurface, true);
 		hardness = 1;
 		addRecipes({
-			Recipe(I::SNOW, 1, {{I::SNOWBALL, 4}}),
-			Recipe(I::FOREST, 1, {{I::DIRT, 50}, {I::CAT, 1}}),
-			Recipe(I::MOUNTAIN, 1, {{I::STONE, 10}, {I::SNOW, 15}}),
-			Recipe(I::VALLEY, 1, {{I::STONE, 50}, {I::ZOMBIE, 1}}),
-			Recipe(I::DESERT, 1, {{I::SAND, 50}, {I::GLASS, 15}}),
-			Recipe(I::BASIC_SWORD, 1, {{I::WOOD, 10}, {I::STONE, 20}}),
-			Recipe(I::CRUSHER, 1, {{I::STONE, 15}, {I::SHINY_STONE_1, 10}}),
-			Recipe(I::CHEST, 1, {{I::WOOD, 15}, {I::STONE, 5}}),
-			Recipe(I::WORLD_BUILDER, 1, {{I::STONE, 25}, {I::OBSIDIAN, 5}}),
+			Recipe(I::SNOW, 1, {ItemInfo(I::SNOWBALL, 4)}),
+			Recipe(I::FOREST, 1, {ItemInfo(I::DIRT, 50), ItemInfo(I::CAT, 1)}),
+			Recipe(I::MOUNTAIN, 1, {ItemInfo(I::STONE, 10), ItemInfo(I::SNOW, 15)}),
+			Recipe(I::VALLEY, 1, {ItemInfo(I::STONE, 50), ItemInfo(I::ZOMBIE, 1)}),
+			Recipe(I::DESERT, 1, {ItemInfo(I::SAND, 50), ItemInfo(I::GLASS, 15)}),
+			Recipe(I::BASIC_SWORD, 1, {ItemInfo(I::WOOD, 10), ItemInfo(I::STONE, 20)}),
+			Recipe(I::CRUSHER, 1, {ItemInfo(I::STONE, 15), ItemInfo(I::SHINY_STONE_1, 10)}),
+			Recipe(I::CHEST, 1, {ItemInfo(I::WOOD, 15), ItemInfo(I::STONE, 5)}),
+			Recipe(I::WORLD_BUILDER, 1, {ItemInfo(I::STONE, 25), ItemInfo(I::OBSIDIAN, 5)}),
 			Recipe(I::SNOWBALL, 1),
-			Recipe(I::MAGIC_BALL, 1, {{I::GLASS, 10}}),
-			Recipe(I::REINFORCED_MAGIC_BALL, 1, {{I::MAGIC_BALL, 2}, {I::IRON_BAR, 5}}),
-			Recipe(I::SHINY_MAGIC_BALL, 1, {{I::REINFORCED_MAGIC_BALL, 2}, {I::GOLD_BAR, 10}}),
-			Recipe(I::GIANT_MAGIC_BALL, 1, {{I::SHINY_MAGIC_BALL, 2}, {I::OBSIDIAN, 5}}),
+			Recipe(I::MAGIC_BALL, 1, {ItemInfo(I::GLASS, 10)}),
+			Recipe(I::REINFORCED_MAGIC_BALL, 1, {ItemInfo(I::MAGIC_BALL, 2), ItemInfo(I::IRON_BAR, 5)}),
+			Recipe(I::SHINY_MAGIC_BALL, 1, {ItemInfo(I::REINFORCED_MAGIC_BALL, 2), ItemInfo(I::GOLD_BAR, 10)}),
+			Recipe(I::GIANT_MAGIC_BALL, 1, {ItemInfo(I::SHINY_MAGIC_BALL, 2), ItemInfo(I::OBSIDIAN, 5)}),
 			// TODO: Groups of items(e.g. any gem)
-			Recipe(I::MAGIC_WAND, 1, {{I::WOOD, 5}, {I::OPAL, 2}})
+			Recipe(I::MAGIC_WAND, 1, {ItemInfo(I::WOOD, 5), ItemInfo(I::OPAL, 2)})
 			});
 	}
 }
