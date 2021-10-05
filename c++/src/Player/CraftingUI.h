@@ -73,6 +73,8 @@ private:
 	SelectedRecipe rSelected;
 	// Recipe scroll
 	int rScroll = 0, rMaxScroll = 0;
+	// Time hovering over recipe
+	int rHoverTime = 0;
 
 
 	// Dimensions values

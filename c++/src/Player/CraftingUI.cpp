@@ -14,6 +14,9 @@ const std::string CraftingUI::CRAFT = gameVals::images()
 
 const SDL_Color R_SELECT_COLOR{ 255,175,64,255 };
 
+// Delay before showing a recipe's crafting station
+constexpr int HOVER_DELAY = 500;
+
 CraftingUI::CraftingUI() :
 	itemW(gameVals::INV_W()), imgW(gameVals::INV_IMG_W()) {
 
@@ -179,12 +182,17 @@ bool CraftingUI::handleEvents(Event& e) {
 		}
 		
 		// Check mouse hover
+		int tmp = rHover;
 		if (SDL_PointInRect(&e.mouse, &recipeRect)) {
+			int tmp = rHover;
 			rHover = std::floor(
 				(e.mouse.y - recipeRect.y + rScroll) / itemW) * R_DIM.x
 				+ std::floor((e.mouse.x - recipeRect.x) / itemW);
 			if (rHover >= getRecipeList().size()) { rHover = -1; }
-		}
+		} else { rHover = -1; }
+		if (rHover == -1 || tmp != rHover) {
+			rHoverTime = 0;
+		} else { rHoverTime += e.dt.milliseconds(); }
 
 		// Left click
 		if (any8(e[Event::Mouse::LEFT], Event::Button::M_CLICKED)) {
@@ -303,7 +311,7 @@ void CraftingUI::drawRecipes() {
 	}
 
 	// Draw hover
-	if (rHover >= 0) {
+	if (rHover >= 0 && rHoverTime >= HOVER_DELAY) {
 		if (rHover < recipeIdxs.size() && cSelected == -1) {
 			const Crafter& crafter = crafters[recipeIdxs[rHover].first];
 
@@ -320,7 +328,6 @@ void CraftingUI::drawRecipes() {
 			imgData.dest.setCenter(r.cX(), r.cY());
 			assets.drawTexture(imgData);
 		}
-		rHover = -1;
 	}
 }
 
