@@ -17,6 +17,7 @@ const SDL_Color R_SELECT_COLOR{ 255,175,64,255 };
 // Delay before showing a recipe's crafting station
 constexpr int HOVER_DELAY = 500;
 
+// CraftingUI
 CraftingUI::CraftingUI() :
 	itemW(gameVals::INV_W()), imgW(gameVals::INV_IMG_W()) {
 
@@ -47,12 +48,12 @@ CraftingUI::CraftingUI() :
 	resultRect.setCX(mRect.x + HALF);
 	resultRect.setCY(recipeRect.y2() + HALF);
 
-	ingredientRect = Rect(mRect.x + itemW, recipeRect.y2(),
+	ingredients.mRect = Rect(mRect.x + itemW, recipeRect.y2(),
 		itemW * (R_DIM.x - 2), itemW);
 
 	Rect craftRect = Rect(0, 0, BUTTON_W, BUTTON_W);
-	craftRect.setCX(ingredientRect.x2() + HALF);
-	craftRect.setCY(ingredientRect.cY());
+	craftRect.setCX(ingredients.mRect.x2() + HALF);
+	craftRect.setCY(ingredients.mRect.cY());
 	craftButton = Button(CRAFT, 75);
 	craftButton.setRect(craftRect);
 }
@@ -194,17 +195,28 @@ bool CraftingUI::handleEvents(Event& e) {
 			rHoverTime = 0;
 		} else { rHoverTime += e.dt.milliseconds(); }
 
+		// Check dragging selected
+		if (rSelected.recipe) {
+			ingredients.dragV(e);
+			if (ingredients.isDragging()) {
+				handled = true;
+			}
+		}
+
 		// Left click
-		if (any8(e[Event::Mouse::LEFT], Event::Button::M_CLICKED)) {
+		if (!ingredients.isDragging()
+			&& any8(e[Event::Mouse::LEFT], Event::Button::M_CLICKED)) {
 			bool tmp = handled;
 			handled = true;
 			if (craftButton.clicked(e.mouse)) {
 				std::cerr << "Do Craft" << std::endl;
+			// Select crafter
 			} else if (SDL_PointInRect(&e.mouse, &craftersRect)) {
 				int clickIdx = crafterSpinner.mouseOnItem();
 				if (clickIdx >= 0 && clickIdx < crafters.size()) {
 					selectCrafter(clickIdx == cSelected ? -1 : clickIdx);
-					rSelected.cIdx = -1;
+					rSelected.recipe.reset();
+					ingredients.reset();
 					// Update scroll
 					if (cSelected == -1) {
 						rMaxScroll = std::max(0, itemW * (int)std::ceil(
@@ -216,11 +228,18 @@ bool CraftingUI::handleEvents(Event& e) {
 					}
 					if (rScroll > rMaxScroll) { rScroll = rMaxScroll; }
 				}
+			// Select recipe
 			} else if (SDL_PointInRect(&e.mouse, &recipeRect)) {
 				auto& rVec = getRecipeList();
 				if (rHover >= 0 && rHover < rVec.size()) {
 					// Get the recipe from the current list
 					rSelected.recipe = rVec[rHover];
+					ingredients.reset();
+					if (rSelected.recipe) {
+						ingredients.maxScroll = std::max(0,
+							itemW * (int)rSelected.recipe->getIngredients().size()
+							- ingredients.mRect.w);
+					}
 					// Switch to the corresponding crafter
 					if (cSelected == -1) {
 						selectCrafter(recipeIdxs[rHover].first);
@@ -239,8 +258,10 @@ bool CraftingUI::handleEvents(Event& e) {
 				std::cerr << "Ingredient Options" << std::endl;
 			} else if (SDL_PointInRect(&e.mouse, &resultRect)) {
 				std::cerr << "Recipe Result" << std::endl;
-			} else if (SDL_PointInRect(&e.mouse, &ingredientRect)) {
-				std::cerr << "Recipe Ingredients" << std::endl;
+			} else if (SDL_PointInRect(&e.mouse, &ingredients.mRect)) {
+				if (rSelected.recipe) {
+					std::cerr << "Show Ingredient Options" << std::endl;
+				}
 			} else { handled = tmp; }
 		}
 	} else { handled = true; }
@@ -256,7 +277,7 @@ void CraftingUI::draw() {
 	rectData.color = { 255,0,0,128 };
 	rectData.set(resultRect).render(assets);
 	rectData.color = { 128,128,128,128 };
-	rectData.set(ingredientRect).render(assets);
+	rectData.set(ingredients.mRect).render(assets);
 
 	craftButton.draw();
 	crafterSpinner.draw();
@@ -279,29 +300,43 @@ void CraftingUI::drawRecipes() {
 	Rect r(0, 0, imgW, imgW);
 	r.setCX(recipeRect.x + itemW / 2);
 	r.setCY(recipeRect.y + itemW / 2 - (rScroll % itemW));
+
 	// Selected recipe
-	if (rSelected.cIdx != -1 && rSelected.cIdx == cSelected
-		&& rSelected.cRIdx >= 0 && rSelected.cRIdx < rVec.size()) {
+	if (rSelected.recipe && rSelected.cIdx == cSelected) {
+		SDL_Point topLeft = r.topLeft();
 		// Outline selected in recipe rect
 		int idx = rSelected.cRIdx - lb;
-		int dx = itemW * (idx % R_DIM.x);
-		int dy = itemW * std::floor(idx / R_DIM.x);
-		r.shift(dx, dy);
+		r.x += itemW * (idx % R_DIM.x);
+		r.y += itemW * std::floor(idx / R_DIM.x);
 		RectData({ R_SELECT_COLOR, SDL_BLENDMODE_NONE, recipeRect })
 			.set(r, (itemW - imgW) / 2).render(assets);
-		r.shift(-dx, -dy);
 		
-		// Draw recipe result
 		if (rSelected.recipe) {
+			// Draw recipe result
 			Inventory::drawItem(rSelected.recipe->getResult(),
 				textData, resultRect);
+			// Draw recipe ingredients
+			int iLB = R_DIM.x * std::floor(ingredients.scroll / itemW);
+			r.setCX(ingredients.mRect.x + itemW / 2
+				- ((int)ingredients.scroll % itemW));
+			r.setCY(ingredients.mRect.y + itemW / 2);
+			auto iIter = rSelected.recipe->getIngredients().begin();
+			auto iEnd = rSelected.recipe->getIngredients().end();
+			std::advance(iIter, std::floor(ingredients.scroll / itemW));
+			while (r.x < ingredients.mRect.x2() && iIter != iEnd) {
+				Inventory::drawItem(iIter->second, textData,
+					r, ingredients.mRect);
+				r.x += itemW;
+				iIter++;
+			}
 		}
+
+		r.setTopLeft(topLeft);
 	}
 
 	// Draw the result items
 	while (lb < ub) {
 		Inventory::drawItem(rVec[lb]->getResult(), textData, r, recipeRect);
-
 		// Move the rect
 		lb++;
 		if (lb % R_DIM.x == 0) {
@@ -310,24 +345,23 @@ void CraftingUI::drawRecipes() {
 		} else { r.x += itemW; }
 	}
 
-	// Draw hover
-	if (rHover >= 0 && rHoverTime >= HOVER_DELAY) {
-		if (rHover < recipeIdxs.size() && cSelected == -1) {
-			const Crafter& crafter = crafters[recipeIdxs[rHover].first];
+	// Draw recipe hover
+	if (rHover >= 0 && rHoverTime >= HOVER_DELAY
+		&& rHover < recipeIdxs.size() && cSelected == -1) {
+		const Crafter& crafter = crafters[recipeIdxs[rHover].first];
 
-			SDL_Point mouse = mousePos();
-			r.x = mouse.x; r.setY2(mouse.y);
-			CircleData({ {100,100,255,128}, SDL_BLENDMODE_BLEND })
-				.set(r.center(), itemW / 2).render(assets);
-			CircleData({ {200,200,64,255}, SDL_BLENDMODE_BLEND })
-				.set(r.center(), itemW / 2, -2).render(assets);
-			RenderData imgData;
-			imgData.asset.setTexture(
-				Tile::getTile(crafter.id)->getImage(crafter.pos));
-			imgData.fitToAsset(assets, r.w, r.h);
-			imgData.dest.setCenter(r.cX(), r.cY());
-			assets.drawTexture(imgData);
-		}
+		SDL_Point mouse = mousePos();
+		r.x = mouse.x; r.setY2(mouse.y);
+		CircleData({ {100,100,255,128}, SDL_BLENDMODE_BLEND })
+			.set(r.center(), itemW / 2).render(assets);
+		CircleData({ {200,200,64,255}, SDL_BLENDMODE_BLEND })
+			.set(r.center(), itemW / 2, -2).render(assets);
+		RenderData imgData;
+		imgData.asset.setTexture(
+			Tile::getTile(crafter.id)->getImage(crafter.pos));
+		imgData.fitToAsset(assets, r.w, r.h);
+		imgData.dest.setCenter(r.cX(), r.cY());
+		assets.drawTexture(imgData);
 	}
 }
 

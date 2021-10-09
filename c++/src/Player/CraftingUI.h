@@ -17,6 +17,7 @@
 #include "../Utils/AssetManager.h"
 #include "../Utils/Event.h"
 #include "../Utils/Rect.h"
+#include "../Utils/UIUtils.h"
 #include "../Utils/Utils.h"
 #include "../Window.h"
 
@@ -33,6 +34,19 @@ public:
 	void toggleOpen();
 
 private:
+	struct Crafter {
+		tile::Id id = tile::Id::AIR;
+		SDL_Point pos = { 0,0 };
+		std::vector<RecipePtr> recipes;
+		int rSelected = -1;
+	};
+	struct SelectedRecipe {
+		int cIdx = -1, cRIdx = -1;
+		tile::Id cId = tile::Id::AIR;
+		SDL_Point pos = { 0,0 };
+		RecipePtr recipe;
+	};
+
 	void updateCrafters();
 	void updateRecipes();
 
@@ -42,8 +56,10 @@ private:
 	void selectCrafter(int newCrafter);
 
 	Rect mRect, craftersRect, recipeRect;
-	Rect resultRect, ingredientRect;
+	Rect resultRect;
 	Rect optionsRect;
+	// Ingredients
+	DragData ingredients;
 	bool open = false;
 
 	TextData textData;
@@ -55,27 +71,15 @@ private:
 	std::vector<RecipePtr> recipes;
 	// For each recipe, pair<crafter index, recipe index>
 	std::vector<std::pair<int, int>> recipeIdxs;
-	struct Crafter {
-		tile::Id id = tile::Id::AIR;
-		SDL_Point pos = { 0,0 };
-		std::vector<RecipePtr> recipes;
-		int rSelected = -1;
-	};
+	
 	std::vector<Crafter> crafters;
 	int cSelected = -1, rHover = -1;
 	Spinner crafterSpinner;
-	struct SelectedRecipe {
-		int cIdx = -1, cRIdx = -1;
-		tile::Id cId = tile::Id::AIR;
-		SDL_Point pos = { 0,0 };
-		RecipePtr recipe;
-	};
 	SelectedRecipe rSelected;
 	// Recipe scroll
 	int rScroll = 0, rMaxScroll = 0;
 	// Time hovering over recipe
 	int rHoverTime = 0;
-
 
 	// Dimensions values
 	int itemW = 0, imgW = 0;

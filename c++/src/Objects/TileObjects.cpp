@@ -30,7 +30,7 @@ namespace tile {
 	ADD_TILE(HandCrafting, HAND_CRAFTING) {
 		img = "../entities/dragon/dragon_0.png";
 		mapColor = { 64,64,255 };
-		addRecipe(Recipe(I::WORK_TABLE, 1, { ItemInfo(I::WOOD, 10) }));
+		addRecipe(Recipe(I::WORK_TABLE, 1, { ItemInfo(I::WOOD, 10),ItemInfo(I::WOOD, 10),ItemInfo(I::WOOD, 10),ItemInfo(I::WOOD, 10),ItemInfo(I::WOOD, 10),ItemInfo(I::WOOD, 10),ItemInfo(I::WOOD, 10),ItemInfo(I::WOOD, 10),ItemInfo(I::WOOD, 10),ItemInfo(I::WOOD, 10),ItemInfo(I::WOOD, 10),ItemInfo(I::WOOD, 10),ItemInfo(I::WOOD, 10),ItemInfo(I::WOOD, 10),ItemInfo(I::WOOD, 10),ItemInfo(I::WOOD, 10) }));
 		for (int i = 0; i < item::Id::numItems; i++) {
 			addRecipe(Recipe(static_cast<I>(i), 1));
 		}

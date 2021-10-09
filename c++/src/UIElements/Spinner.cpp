@@ -1,6 +1,5 @@
 #include "Spinner.h"
 
-constexpr double MIN_SCROLL_V = .005;
 constexpr int KEY_LEN = 4;
 
 constexpr SDL_Color CIRCLE_COLOR{ 0,255,0,255 };
@@ -8,8 +7,8 @@ constexpr SDL_Color SELECT_COLOR{ 0,0,255,255 };
 
 int Spinner::mouseOnItem() {
 	SDL_Point mouse = mousePos();
-	if (SDL_PointInRect(&mouse, &mRect)) {
-		mouse -= mRect.topLeft();
+	if (SDL_PointInRect(&mouse, &dragData.mRect)) {
+		mouse -= dragData.mRect.topLeft();
 		for (int i = 0; i < rects.size(); i++) {
 			if (SDL_PointInRect(&mouse, &rects[i])) {
 				return i;
@@ -20,48 +19,23 @@ int Spinner::mouseOnItem() {
 }
 
 bool Spinner::handleEvents(Event& e) {
-	if (scrollV != 0.) {
-		scroll += scrollV * e.dt.milliseconds();
-		scrollV /= std::pow(2, e.dt.seconds());
-		if (std::abs(scrollV) < MIN_SCROLL_V) { scrollV = 0; }
-		redraw();
-	}
-	
-	if (dragging) {
-		if (any8(e[Event::Mouse::LEFT], Event::Button::RELEASED)) {
-			scrollV = -e.mouseDx / e.dt.milliseconds();
-			dragging = false;
-		} else if (e.mouseDx != 0) {
-			scroll -= e.mouseDx;
-			moved = true;
-			redraw();
-		}
-		return moved;
-	}
-
-	if (SDL_PointInRect(&e.mouse, &mRect)
-		&& any8(e[Event::Mouse::LEFT], Event::Button::HELD)) {
-		scrollV = 0.;
-		dragging = true;
-		moved = false;
-		return true;
-	}
-	return false;
+	if (dragData.dragV(e)) { redraw(); }
+	return dragData.isDragging();
 }
 
 void Spinner::draw() {
 	if (rects.size() != items.size()) { redraw(); }
 	AssetManager& assets = Window::Get().assets();
 	if (bkgrnd != TRANSPARENT) {
-		RectData({ bkgrnd }).set(mRect).render(assets);
+		RectData({ bkgrnd }).set(dragData.mRect).render(assets);
 	}
 	RenderData rData;
-	rData.boundary = mRect;
+	rData.boundary = dragData.mRect;
 	for (int i = 0; i < rects.size(); i++) {
 		rData.asset = items[i];
 		rData.fitToAsset(assets, rects[i].w, rects[i].h);
 		rData.dest.setCenter(rects[i].cX(), rects[i].cY());
-		rData.dest += mRect.topLeft();
+		rData.dest += dragData.mRect.topLeft();
 		CircleData({ selected[i] ? SELECT_COLOR : CIRCLE_COLOR,
 			SDL_BLENDMODE_BLEND, rData.boundary }).
 			set(rData.dest.center(), rects[i].w / 2, 2, true).render(assets);
@@ -75,18 +49,14 @@ void Spinner::redraw() {
 
 	if (itemW == 0 || size == 0) { return; }
 
-	double scrollFrac = scroll / itemW;
-	if (scrollFrac < 0 || scrollFrac > size - 1) {
-		scrollFrac = scrollFrac < 0 ? 0 : size - 1;
-		scroll = scrollFrac * itemW;
-		scrollV = 0.;
-	}
+	double scrollFrac = dragData.scroll / itemW;
 	// This is the starting item
 	int idx = (int)(scrollFrac + .5);
+	if (idx < 0 || idx > size) { return; }
 
-	const double xRad = mRect.w / 2;
+	const double xRad = dragData.mRect.w / 2;
 	const double dw = -itemW / 2;
-	const double cX = mRect.w / 2, cY = mRect.h / 2;
+	const double cX = dragData.mRect.w / 2, cY = dragData.mRect.h / 2;
 	const int w = itemW;
 	auto wAt = [w, dw, xRad](double x) {
 		return w + dw * std::abs(x) / xRad;
@@ -129,11 +99,14 @@ void Spinner::remove(const std::string& id) {
 void Spinner::set(const std::vector<Asset>& vec) {
 	items = vec;
 	selected = std::vector<bool>(items.size(), false);
+	dragData.maxScroll = itemW * (items.size() - 1);
 	redraw();
 }
 
 void Spinner::clear() {
 	items.clear();
+	selected.clear();
+	dragData.reset();
 	updateMe = true;
 }
 
@@ -148,8 +121,8 @@ void Spinner::setSelected(int idx, bool select) {
 }
 
 void Spinner::setRect(const Rect& r) {
-	mRect = r;
-	itemW = mRect.h * 7 / 8;
+	dragData.mRect = r;
+	itemW = dragData.mRect.h * 7 / 8;
 }
 
 void Spinner::setBackground(const SDL_Color& color) {

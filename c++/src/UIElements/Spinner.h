@@ -9,6 +9,7 @@
 #include "../Utils/AssetManager.h"
 #include "../Utils/Point.h"
 #include "../Utils/Rect.h"
+#include "../Utils/UIUtils.h"
 #include "../Utils/Utils.h"
 #include "../Window.h"
 
@@ -31,12 +32,11 @@ public:
 	void setBackground(const SDL_Color& color);
 
 private:
-	Rect mRect;
 	SDL_Color bkgrnd = TRANSPARENT;
 
-	bool dragging = false, moved = false, updateMe = false;
+	DragData dragData;
+	bool updateMe = false;
 	int itemW = 1;
-	double scroll = 0., scrollV = 0.;
 
 	std::vector<Asset> items;
 	std::vector<Rect> rects;
